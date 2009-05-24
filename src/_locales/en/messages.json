@@ -1,0 +1,68 @@
+{
+  "description": {
+    "message": "A browser Extension for auto loading paginated web pages. AutoPagerize use in many web site, and provide efficiently web browsing."
+  },
+  "options" : {
+    "message": "Options"
+  },
+  "exclude_patterns" : {
+    "message": "Exclude Patterns"
+  },
+  "example" : {
+    "message": "Example"
+  },
+  "regexp" : {
+    "message": "Regexp"
+  },
+  "wildcard" : {
+    "message": "Wildcard"
+  },
+  "save" : {
+    "message": "Save"
+  },
+  "status" : {
+    "message": "Status"
+  },
+  "on_off" : {
+    "message": "On/Off"
+  },
+  "go_to_web" : {
+    "message": "Go to website"
+  },
+  "on" : {
+    "message": "On"
+  },
+  "off" : {
+    "message": "Off"
+  },
+  "loading" : {
+    "message": "Loading"
+  },
+  "terminated" : {
+    "message": "All page loaded"
+  },
+  "error" : {
+    "message": "Error"
+  },
+  "display_message_bar" : {
+    "message": "Display Message Bar"
+  },
+  "siteinfo" : {
+    "message": "Siteinfo"
+  },
+  "update_siteinfo" : {
+    "message": "Update Siteinfo"
+  },
+  "updated_at" : {
+    "message": "Updated at"
+  },
+  "size" : {
+    "message": "Size"
+  },
+  "update_siteinfo_complete" : {
+    "message": "Updated."
+  },
+  "dummy" : {
+    "message": ""
+  }
+}
