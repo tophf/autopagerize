@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+
+<head>
+  <link href="options.css" rel="stylesheet"/>
+  <script src="locale.js"></script>
+  <script src="utils.js"></script>
+  <script src="storage-chrome.js"></script>
+  <script src="storage-idb.js"></script>
+  <script src="options.js"></script>
+</head>
+
+<body>
+  <div>
+    <label>
+      <input type="checkbox" id="display_message_bar"/><span tl>display_message_bar</span>
+    </label>
+  </div>
+
+  <details>
+    <summary tl>custom_rules</summary>
+    <textarea id="rules" rows="6" spellcheck="false">
+[{
+  "url": "",
+  "nextLink": "",
+  "pageElement": ""
+}]
+    </textarea>
+
+    <pre class="desc">
+[{
+  "url": "^http://some\\.site/path/",
+  "nextLink": "//a[@rel='next']",
+  "pageElement": "id('main')"
+},
+{
+  "url": "^http://some\\.site/path/",
+  "nextLink": "//span[contains(@class,'someclass')]/following-sibling::a[1]",
+  "pageElement": "id('main')",
+  "insertBefore": "id(\"xcolumn1\")//div[@class=\"prevnext\"]"
+}]
+    </pre>
+  </details>
+
+  <details open>
+    <summary tl>exclude_patterns</summary>
+    <textarea id="excludes" rows="7" spellcheck="false"></textarea>
+    <div class="desc">
+      <span tl>example</span> (<span tl>wildcard</span>):
+      <code>http://www.example.com/search?*</code>
+      <br/>
+      <span tl>example</span> (<span tl>regexp</span>):
+      <code>/[^.]+\.example\.com\//</code>
+    </div>
+  </details>
+
+  <button tl id="btnSave">save</button>
+  <button tl id="btnDiscard" hidden>draft_discard</button>
+
+  <details open>
+    <summary tl>siteinfo</summary>
+
+    <div><span tl>size</span>: <code id="size"></code></div>
+    <div><span tl>updated_at</span>: <code id="updated_at"></code></div>
+
+    <button tl id="btnUpdate">update_siteinfo</button>
+  </details>
+</body>
+</html>
