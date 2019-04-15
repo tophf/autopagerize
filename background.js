@@ -9,11 +9,6 @@ global ensureArray ensureObject
 'use strict';
 
 const DATA_URL = 'http://wedata.net/databases/AutoPagerize/items_all.json';
-const DATA_REQUEST_OPTIONS = {
-  headers: {
-    'Cache-Control': 'no-cache',
-  },
-};
 const KNOWN_KEYS = [
   'url',
   'nextLink',
@@ -107,12 +102,28 @@ function pickKnownKeys(entry) {
   return entry;
 }
 
-async function refreshSiteinfo({force} = {}) {
+/**
+ * @param {object} _
+ * @param {boolean} _.force
+ * @param {function(ProgressEvent)} _.onprogress
+ */
+async function refreshSiteinfo({force, onprogress} = {}) {
   const cache = await idbStorage.cache;
 
   if (force || !cache || cache.expires < Date.now()) {
     try {
-      const json = await (await fetch(DATA_URL, DATA_REQUEST_OPTIONS)).json();
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', DATA_URL);
+      xhr.setRequestHeader('Cache-Control', 'no-cache');
+      xhr.responseType = 'json';
+      xhr.onprogress = onprogress;
+      xhr.timeout = 20e3;
+      const json = await new Promise((resolve, reject) => {
+        xhr.onload = () => resolve(xhr.response);
+        xhr.onerror = reject;
+        xhr.ontimeout = reject;
+        xhr.send();
+      });
       const rules = sanitizeRemoteData(json);
       const expires = Date.now() + CACHE_DURATION;
       if (rules.length) {

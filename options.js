@@ -80,10 +80,20 @@ async function save() {
 
 function update() {
   chrome.runtime.getBackgroundPage(async bg => {
-    $.btnUpdate.disabled = true;
-    const numRules = await bg.refreshSiteinfo({force: true});
+    const btn = $.btnUpdate;
+    const label = btn.textContent;
+    btn.disabled = true;
+
+    const numRules = await bg.refreshSiteinfo({
+      force: true,
+      onprogress(e) {
+        btn.textContent = (e.loaded / 1024).toFixed(0) + ' kiB';
+      },
+    });
+
     renderSiteinfoStats(numRules, numRules > 0 ? new Date() : null);
-    $.btnUpdate.disabled = false;
+    btn.textContent = label;
+    btn.disabled = false;
   });
 }
 
