@@ -2,10 +2,10 @@
 
 {
   const mo = new MutationObserver(mutations => {
-    for (var i = 0, m; (m = mutations[i++]);) {
-      for (var j = 0, added = m.addedNodes, node; (node = added[j++]);) {
+    for (const m of mutations) {
+      for (const node of m.addedNodes) {
         if (node.tagName && node.hasAttribute('tl')) {
-          var textNode = node.childNodes[0];
+          const textNode = node.childNodes[0];
           textNode.nodeValue = chrome.i18n.getMessage(textNode.nodeValue);
         }
       }

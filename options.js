@@ -1,4 +1,5 @@
 /*
+global $
 global CACHE_DURATION
 global idbStorage
 global chromeStorage

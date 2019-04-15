@@ -1,3 +1,5 @@
+/* eslint-env worker */
+/* global idbStorage */
 'use strict';
 
 importScripts('storage-idb.js');

@@ -29,7 +29,7 @@ class AutoPager {
       if (!page)
         return;
       if (!page.nextSibling)
-         page.parentNode.append(' ');
+        page.parentNode.append(' ');
       this.insertPoint = page.nextSibling;
     }
 
@@ -125,7 +125,7 @@ class AutoPager {
     if (this.frame) {
       const style = show && window.settings.display_message_bar ? 'block' : 'none';
       if (this.frame.style.display !== style)
-        this.frame.style.setProperty('display', style, 'important')
+        this.frame.style.setProperty('display', style, 'important');
     }
   }
 
@@ -180,7 +180,10 @@ class AutoPager {
 
     const parent = this.insertPoint.parentNode;
 
-    if (pages[0] && pages[0].tagName === 'TR') {
+    if (!pages.length || pages[0].tagName !== 'TR') {
+      parent.insertBefore(hr, this.insertPoint);
+      parent.insertBefore(p, this.insertPoint);
+    } else {
       let cols = 0;
       for (const sibling of parent.children)
         if (sibling.tagName === 'TD' || sibling.tagName === 'TH')
@@ -191,10 +194,6 @@ class AutoPager {
       const tr = document.createElement('tr');
       tr.appendChild(td);
       parent.insertBefore(tr, this.insertPoint);
-    }
-    else {
-      parent.insertBefore(hr, this.insertPoint);
-      parent.insertBefore(p, this.insertPoint);
     }
 
     const aplink = document.createElement('a');
@@ -294,7 +293,7 @@ function getXPathResult(xpath, node = document, resultType) {
 }
 
 function addDefaultPrefix(xpath, prefix) {
-  const tokenPattern = /([A-Za-z_\u00c0-\ufffd][\w\-.\u00b7-\ufffd]*|\*)\s*(::?|\()?|(".*?"|'.*?'|\d+(?:\.\d*)?|\.(?:\.|\d+)?|[)\]])|(\/\/?|!=|[<>]=?|[(\[|,=+-])|([@$])/g;
+  const tokenPattern = /([A-Za-z_\u00c0-\ufffd][\w\-.\u00b7-\ufffd]*|\*)\s*(::?|\()?|(".*?"|'.*?'|\d+(?:\.\d*)?|\.(?:\.|\d+)?|[)\]])|(\/\/?|!=|[<>]=?|[([|,=+-])|([@$])/g;
   const TERM = 1;
   const OPERATOR = 2;
   const MODIFIER = 3;

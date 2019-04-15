@@ -18,7 +18,7 @@ const idbStorage = new Proxy({
         op.onerror = reject;
       };
     });
-  }
+  },
 }, {
   get(src, key) {
     return src.exec(false, 'get', key);

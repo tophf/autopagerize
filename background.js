@@ -8,6 +8,11 @@ global ensureArray ensureObject
 'use strict';
 
 const DATA_URL = 'http://wedata.net/databases/AutoPagerize/items_all.json';
+const DATA_REQUEST_OPTIONS = {
+  headers: {
+    'Cache-Control': 'no-cache',
+  },
+};
 const KNOWN_KEYS = [
   'url',
   'nextLink',
@@ -113,11 +118,7 @@ async function refreshSiteinfo({force} = {}) {
 
   if (force || !cache || cache.expires < Date.now()) {
     try {
-      const json = await (await fetch(DATA_URL, {
-        headers: {
-          'Cache-Control': 'no-cache',
-        }
-      })).json();
+      const json = await (await fetch(DATA_URL, DATA_REQUEST_OPTIONS)).json();
       const rules = sanitizeRemoteData(json);
       const expires = Date.now() + CACHE_DURATION;
       if (rules.length)
@@ -151,7 +152,7 @@ function isExcluded(url, ...sets) {
 
 function wildcard2regexp(str) {
   return '^' +
-         str.replace(/([-()\[\]{}+?.$^|,:#<!\\])/g, '\\$1')
+         str.replace(/([-()[\]{}+?.$^|,:#<!\\])/g, '\\$1')
             .replace(/\x08/g, '\\x08')
             .replace(/\*/g, '.*');
 }
@@ -174,5 +175,5 @@ function getMatchingRules(...args) {
       resolve(data);
     };
     w.postMessage(args);
-  })
+  });
 }

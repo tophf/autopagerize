@@ -1,4 +1,5 @@
 /*
+global $
 global onDomLoaded
 global chromeStorage
 global dispatchMessageAll
