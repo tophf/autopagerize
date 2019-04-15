@@ -116,7 +116,7 @@ async function refreshSiteinfo({force} = {}) {
       const rules = sanitizeRemoteData(json);
       const expires = Date.now() + CACHE_DURATION;
       if (rules.length) {
-        await idbStorage(true, 'clear');
+        await trimUrlCache(cache && cache.rules, rules);
         idbStorage.cache = {rules, expires};
       }
       return rules.length;
@@ -171,5 +171,37 @@ function getMatchingRules(...args) {
       resolve(data);
     };
     w.postMessage(args);
+  });
+}
+
+function trimUrlCache(oldRules, newRules) {
+  if (!Array.isArray(oldRules) || !oldRules.length)
+    return idbStorage(true, 'clear');
+  const isSameRule = ruleIndex => {
+    const a = oldRules[ruleIndex];
+    const b = newRules[ruleIndex];
+    if (!a || !b)
+      return;
+    for (const k in a)
+      if (a[k] !== b[k])
+        return;
+    for (const k in b)
+      if (!a.hasOwnProperty(k))
+        return;
+    return true;
+  };
+  return new Promise(async resolve => {
+    const ALL_PREFIX_KEYS = IDBKeyRange.bound(URL_CACHE_PREFIX, URL_CACHE_PREFIX + '\uFFFF');
+    const op = (await idbStorage(true)).openCursor(ALL_PREFIX_KEYS);
+    op.onsuccess = () => {
+      const cursor = /** IDBCursorWithValue */ op.result;
+      if (!cursor) {
+        resolve();
+      } else if (ensureArray(cursor.value).every(isSameRule)) {
+        cursor.continue();
+      } else {
+        cursor.delete().onsuccess = () => cursor.continue();
+      }
+    };
   });
 }

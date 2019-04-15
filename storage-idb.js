@@ -15,9 +15,14 @@ const idbStorage = new Proxy(Object.assign(() => {}, {
         const mode = readWrite ? 'readwrite' : 'readonly';
         op = op.result
           .transaction(this.STORE, mode)
-          .objectStore(this.STORE)[method](...params);
-        op.onsuccess = () => resolve(op.result);
-        op.onerror = reject;
+          .objectStore(this.STORE);
+        if (method) {
+          op = op[method](...params);
+          op.onsuccess = () => resolve(op.result);
+          op.onerror = reject;
+        } else {
+          resolve(op);
+        }
       };
     });
   },
