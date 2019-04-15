@@ -152,7 +152,7 @@ function isExcluded(url, ...sets) {
 
 function wildcard2regexp(str) {
   return '^' +
-         str.replace(/([-()[\]{}+?.$^|,:#<!\\])/g, '\\$1')
+         str.replace(/([-()[\]{}+?.$^|\\])/g, '\\$1')
             .replace(/\x08/g, '\\x08')
             .replace(/\*/g, '.*');
 }
