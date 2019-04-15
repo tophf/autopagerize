@@ -9,6 +9,7 @@ const MICROFORMAT = {
   pageElement: '//*[contains(@class, "autopagerize_page_element")]',
 };
 
+/** @type AutoPager */
 let ap = null;
 
 class AutoPager {
@@ -248,7 +249,7 @@ class AutoPager {
   }
 
   static launch(rules) {
-    if (ap)
+    if (ap && ap.loadedURLs[location.href])
       return ap;
     rules.push(MICROFORMAT);
     for (const r of rules) {
