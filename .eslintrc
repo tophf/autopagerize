@@ -42,7 +42,7 @@ rules:
   id-blacklist: [0]
   id-length: [0]
   id-match: [0]
-  indent-legacy: [2, 2, {VariableDeclarator: 0, SwitchCase: 1}]
+  indent-legacy: [2, 2, {VariableDeclarator: 0, SwitchCase: 1, outerIIFEBody: 0}]
   jsx-quotes: [0]
   key-spacing: [0]
   keyword-spacing: [2]

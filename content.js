@@ -1,5 +1,10 @@
 'use strict';
 
+window.loaded = true;
+
+// IIFE simplifies complete unregistering for garbage collection
+(() => {
+
 const BASE_REMAIN_HEIGHT = 400;
 const MIN_REQUEST_INTERVAL = 2000;
 const MICROFORMAT = {
@@ -214,7 +219,13 @@ class AutoPager {
 
   terminate() {
     window.removeEventListener('scroll', AutoPager.scroll);
-    setTimeout(() => this.frame && this.frame.remove(), 1500);
+    setTimeout(() => {
+      if (this.frame)
+        this.frame.remove();
+      delete window.loaded;
+      delete window.settings;
+      chrome.runtime.onMessage.removeListener(onMessage);
+    }, 1500);
   }
 
   error() {
@@ -342,7 +353,7 @@ function important(cssString) {
   return cssString.replace(/;/g, '!important;');
 }
 
-chrome.runtime.onMessage.addListener(msg => {
+function onMessage(msg) {
   switch (msg.name) {
 
     case 'enableRequest':
@@ -360,4 +371,8 @@ chrome.runtime.onMessage.addListener(msg => {
       window.settings = msg.data;
       break;
   }
-});
+}
+
+chrome.runtime.onMessage.addListener(onMessage);
+
+})();

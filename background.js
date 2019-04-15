@@ -77,16 +77,16 @@ async function maybeLaunch(tab) {
 }
 
 async function initContentScript(tabId, settings) {
-  const [type] = await executeScript(tabId, {
+  const [loaded] = await executeScript(tabId, {
     code: `
       window.settings = {
         disable: ${settings.disable},
         display_message_bar: ${settings.display_message_bar},
       };
-      typeof AutoPager;
+      window.loaded;
     `,
   });
-  if (type !== 'function')
+  if (loaded !== true)
     await executeScript(tabId, {file: 'content.js'});
 }
 
