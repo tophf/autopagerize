@@ -1,4 +1,4 @@
-A fork of Autopagerize for Chrome, amost fully reworked to reduce memory consumption and increase performance:
+A fork of [Autopagerize for Chrome](https://github.com/swdyh/autopagerize_for_chrome), fully reworked to reduce memory consumption and increase performance:
 
 * the background page now auto-unloads when inactive
 * the content script is added to a web page only if its URL has a matching rule
