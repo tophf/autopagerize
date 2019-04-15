@@ -53,10 +53,7 @@ function renderSiteinfoStats(numRules, date) {
 
 function parseCustomRules(str) {
   try {
-    let rules = JSON.parse(str);
-    if (!Array.isArray(rules))
-      rules = [rules];
-    return rules;
+    return ensureArray(JSON.parse(str));
   } catch (e) {
     alert(chrome.i18n.getMessage('custom_rules') + '\n\n' + e);
   }
@@ -69,20 +66,16 @@ async function save() {
 
   const settings = ensureObject(await chromeStorage.settings);
 
-  const changed =
-    $.excludes.value.trim() !== ensureArray(settings.excludes).join('\n') ||
-    $.display_message_bar.checked !== settings.display_message_bar ||
-    !deepEqual(rules, ensureArray(settings.rules));
-  if (!changed)
-    return;
-
-  settings.rules = rules;
-  settings.excludes = $.excludes.value.trim().split(/\s+/);
-  settings.display_message_bar = $.display_message_bar.checked;
-  chromeStorage.settings = settings;
-
+  if ($.excludes.value.trim() !== ensureArray(settings.excludes).join('\n') ||
+      $.display_message_bar.checked !== settings.display_message_bar ||
+      !rulesEqual(rules, ensureArray(settings.rules))) {
+    settings.rules = rules;
+    settings.excludes = $.excludes.value.trim().split(/\s+/);
+    settings.display_message_bar = $.display_message_bar.checked;
+    chromeStorage.settings = settings;
+    dispatchMessageAll('updateSettings', settings);
+  }
   discardDraft();
-  dispatchMessageAll('updateSettings', settings);
 }
 
 function update() {
@@ -132,38 +125,16 @@ function discardDraft() {
   document.body.classList.remove('draft');
 }
 
-function deepEqual(a, b) {
-  const typeA = typeof a;
-  if (typeA !== typeof b)
+function rulesEqual(arrayA, arrayB) {
+  if (arrayA.length !== arrayB.length)
     return;
-  // simple
-  if (typeA !== 'object' || !a || !b)
-    return a === b;
-  // arrays
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length)
+  for (let i = 0; i < arrayA.length; i++) {
+    const a = arrayA[i];
+    const b = arrayB[i];
+    if (!a || !b)
       return;
-    const checkedIndexes = [];
-    let minUncheckedIndex = 0;
-    nextA:
-    for (const el of a) {
-      for (let i = minUncheckedIndex; i < b.length; i++) {
-        if (checkedIndexes[i] || !deepEqual(el, b[i]))
-          continue;
-        if (i === minUncheckedIndex)
-          minUncheckedIndex++;
-        else
-          checkedIndexes[i] = 1;
-        continue nextA;
-      }
-      return;
-    }
-    return true;
-  }
-  // objects
-  for (const keyA in a) {
-    if (Object.hasOwnProperty.call(a, keyA)) {
-      if (!Object.hasOwnProperty.call(b, keyA) || !deepEqual(a[keyA], b[keyA]))
+    for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) {
+      if (a[k] !== b[k])
         return;
     }
   }
