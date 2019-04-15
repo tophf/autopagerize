@@ -43,7 +43,12 @@ summary {
   font-size: 75%;
 }
 
-code {
+.desc summary {
+  font-weight: normal;
+}
+
+code,
+.desc pre {
   font-weight: bold;
   color: darkgreen;
 }
