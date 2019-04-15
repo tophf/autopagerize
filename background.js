@@ -57,7 +57,7 @@ chrome.runtime.onStartup.addListener(() => {
 
 async function maybeLaunch(tab) {
   const settings = ensureObject(await chromeStorage.settings);
-  if (isExcluded(tab.url, ensureArray(settings.excludes), EXCLUDES))
+  if (isExcluded(tab.url, settings.excludes, EXCLUDES))
     return;
   const rules = await getMatchingRules(tab.url, settings);
   if (rules.length) {
