@@ -48,7 +48,7 @@ function renderSettings(settings) {
 
 function renderSiteinfoStats(numRules, date) {
   $.size.textContent = numRules;
-  $.updated_at.textContent = date ? new Date(date).toLocaleString() : 'N/A';
+  $.updated_at.textContent = date > 0 ? new Date(date).toLocaleString() : 'N/A';
 }
 
 function parseCustomRules(str) {

@@ -1,5 +1,6 @@
 /*
 global CACHE_DURATION
+global URL_CACHE_PREFIX
 global idbStorage
 global chromeStorage
 global ignoreLastError
@@ -50,15 +51,8 @@ chrome.runtime.onMessage.addListener(function (msg) {
     return action.apply(null, arguments);
 });
 
-chrome.runtime.onStartup.addListener(async () => {
+chrome.runtime.onStartup.addListener(() => {
   setTimeout(refreshSiteinfo, 10e3);
-  const cache = ensureObject(await idbStorage.cache);
-  if (!ensureArray(cache.rules).length) {
-    idbStorage.cache = {
-      rules: await (await fetch('siteinfo.json')).json(),
-      expires: Date.now() - 1,
-    };
-  }
 });
 
 async function maybeLaunch(tab) {
@@ -121,8 +115,10 @@ async function refreshSiteinfo({force} = {}) {
       const json = await (await fetch(DATA_URL, DATA_REQUEST_OPTIONS)).json();
       const rules = sanitizeRemoteData(json);
       const expires = Date.now() + CACHE_DURATION;
-      if (rules.length)
+      if (rules.length) {
+        await idbStorage(true, 'clear');
         idbStorage.cache = {rules, expires};
+      }
       return rules.length;
     } catch (e) {
       return e;
