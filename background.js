@@ -86,7 +86,7 @@ async function initContentScript(tabId, settings) {
 }
 
 function sanitizeRemoteData(data) {
-  return (Array.isArray(data) ? data : [])
+  return ensureArray(data)
     .map(x => x && x.data && x.data.url && pickKnownKeys(x.data))
     .filter(Boolean)
     .sort((a, b) => b.url.length - a.url.length);
@@ -160,7 +160,7 @@ function executeScript(tabId, options) {
   return new Promise(resolve => {
     chrome.tabs.executeScript(tabId, options, results => {
       ignoreLastError();
-      resolve(results || []);
+      resolve(ensureArray(results));
     });
   });
 }
