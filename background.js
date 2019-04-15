@@ -45,28 +45,6 @@ chrome.runtime.onMessage.addListener(function (msg) {
     return action.apply(null, arguments);
 });
 
-chrome.runtime.onInstalled.addListener(() => {
-  if (!localStorage.settings)
-    return;
-  try {
-    idbStorage.cache = {
-      rules: JSON.parse(localStorage.cacheInfo)[DATA_URL].info,
-      expires: Date.now() - 1,
-    };
-  } catch (e) {}
-  try {
-    const settings = JSON.parse(localStorage.settings);
-    chromeStorage.settings = {
-      disable: settings.disable,
-      display_message_bar: settings.display_message_bar,
-      rules: JSON.parse((settings.custom_rules || '').trim() || '[]'),
-      excludes: settings.exclude_patterns.trim().split(/\s+/),
-    };
-  } catch (e) {}
-  delete localStorage.cacheInfo;
-  delete localStorage.settings;
-});
-
 chrome.runtime.onStartup.addListener(async () => {
   setTimeout(refreshSiteinfo, 10e3);
   const cache = ensureObject(await idbStorage.cache);
