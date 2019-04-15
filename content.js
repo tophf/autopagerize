@@ -38,7 +38,6 @@ class AutoPager {
     this.loadedURLs = {};
     this.loadedURLs[location.href] = true;
 
-    this.initMessageBar();
     window.addEventListener('scroll', AutoPager.scroll, {passive: true});
     chrome.runtime.sendMessage('launched');
 
@@ -63,6 +62,8 @@ class AutoPager {
   }
 
   initMessageBar() {
+    if (this.frame && document.contains(this.frame))
+      return;
     this.frame = Object.assign(document.createElement('iframe'), {
       srcdoc: important(`
         <body style="
@@ -123,11 +124,13 @@ class AutoPager {
   }
 
   showLoading(show) {
-    if (this.frame) {
-      const style = show && window.settings.display_message_bar ? 'block' : 'none';
-      if (this.frame.style.display !== style)
-        this.frame.style.setProperty('display', style, 'important');
-    }
+    show = show && window.settings.display_message_bar;
+    if (show)
+      this.initMessageBar();
+    else if (!this.frame)
+      return;
+    const style = show ? 'block' : 'none';
+    this.frame.style.setProperty('display', style, 'important');
   }
 
   load(doc, url) {
