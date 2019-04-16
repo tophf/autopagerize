@@ -1,6 +1,8 @@
-'use strict';
-
-const chromeSync = {
+class ChromeStorage {
+  constructor(area) {
+    /** @type chrome.storage.StorageArea */
+    this.area = area;
+  }
   /**
    * get('key') -> value
    * get(['key1', 'key2']) -> {key1: val1, key2: val2}
@@ -9,23 +11,24 @@ const chromeSync = {
    */
   get(keyOrData) {
     return new Promise(resolve => {
-      chrome.storage.sync.get(keyOrData, data => {
+      this.area.get(keyOrData, data => {
         resolve(typeof keyOrData === 'string' ? data[keyOrData] : data);
       });
     });
-  },
+  }
   /**
    * ensures the returned value for the specified string key is a non-null object
    * @param {String} key
    */
   getObject(key) {
     return new Promise(resolve => {
-      chrome.storage.sync.get(key, data => {
+      this.area.get(key, data => {
         const v = data[key];
         resolve(v && typeof v === 'object' ? v : {});
       });
     });
-  },
+  }
+
   /**
    * set('key', value)
    * set({key1: val1, key2: val2})
@@ -34,11 +37,14 @@ const chromeSync = {
    */
   set(keyOrData, data) {
     return new Promise((resolve, reject) => {
-      chrome.storage.sync.set(
+      this.area.set(
         typeof keyOrData === 'string'
           ? {[keyOrData]: data}
           : keyOrData,
         () => chrome.runtime.lastError ? reject() : resolve());
     });
-  },
-};
+  }
+}
+
+window.chromeSync = new ChromeStorage(chrome.storage.sync);
+window.chromeLocal = new ChromeStorage(chrome.storage.local);

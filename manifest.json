@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "version": "1.0",
-  "minimum_chrome_version": "55",
+  "minimum_chrome_version": "63",
   "name": "AutoPagerize",
   "description": "__MSG_description__",
   "default_locale": "en",
@@ -10,7 +10,7 @@
       "storage-chrome.js",
       "storage-idb.js",
       "vendor/lz-string-unsafe.min.js",
-      "background.js"
+      "bg.js"
     ],
     "persistent": false
   },

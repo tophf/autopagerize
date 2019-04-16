@@ -1,10 +1,11 @@
+/* global idb */
 'use strict';
 
-const CACHE_DURATION = 24 * 60 * 60 * 1000;
-const URL_CACHE_PREFIX = 'cache:';
-const MAX_CACHEABLE_URL_LENGTH = 1000;
+self.CACHE_DURATION = 24 * 60 * 60 * 1000;
+self.URL_CACHE_PREFIX = 'cache:';
+self.MAX_CACHEABLE_URL_LENGTH = 1000;
 
-const idb = {
+self.idb = {
   DB_NAME: 'db',
   STORE_NAME: 'store',
   CLOSE_TIMEOUT: 2000,

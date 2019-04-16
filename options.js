@@ -1,28 +1,30 @@
 /*
 global $
-global CACHE_DURATION
 global idb
 global chromeSync
+global chromeLocal
 global onDomLoaded
 */
 'use strict';
 
 Promise.all([
-  idb.get('cache'),
+  idb.get('cache').then(arrayOrDummy),
   chromeSync.getObject('settings'),
+  chromeLocal.get('siteinfoDate'),
   onDomLoaded(),
 ]).then(([
-  cache = {rules: []},
+  cache,
   settings,
+  siteinfoDate,
 ]) => {
   renderSettings(settings);
-  renderSiteinfoStats(cache.rules.length, cache.expires - CACHE_DURATION);
+  renderSiteinfoStats(cache.length, siteinfoDate);
 
   $.btnSave.onclick = save;
   $.btnUpdate.onclick = update;
   $.btnDiscard.onclick = async () => {
     discardDraft();
-    renderSettings(await chromeSync.get('settings'));
+    renderSettings(await chromeSync.getObject('settings'));
   };
 
   loadDraft();
@@ -31,13 +33,13 @@ Promise.all([
 });
 
 function renderSettings(settings) {
-  const rules = arrayOnly(settings.rules).filter(r => r.url);
+  const rules = arrayOrDummy(settings.rules).filter(r => r.url);
   if (rules.length) {
     $.rules.value = JSON.stringify(rules, null, '  ');
     $.rules.rows = Math.min(20, rules.length * 5 + 3);
     $.rules.closest('details').open = true;
   }
-  const excludes = arrayOnly(settings.excludes);
+  const excludes = arrayOrDummy(settings.excludes);
   $.excludes.value = excludes.join('\n');
   $.excludes.rows = Math.max(2, Math.min(20, excludes.length + 1));
   $.display_message_bar.checked = settings.display_message_bar !== false;
@@ -50,7 +52,7 @@ function renderSiteinfoStats(numRules, date) {
 
 function parseCustomRules(str) {
   try {
-    return arrayOnly(JSON.parse(str));
+    return arrayOrDummy(JSON.parse(str));
   } catch (e) {
     alert(chrome.i18n.getMessage('custom_rules') + '\n\n' + e);
   }
@@ -63,9 +65,9 @@ async function save() {
 
   const settings = await chromeSync.getObject('settings');
 
-  if ($.excludes.value.trim() !== arrayOnly(settings.excludes).join('\n') ||
+  if ($.excludes.value.trim() !== arrayOrDummy(settings.excludes).join('\n') ||
       $.display_message_bar.checked !== settings.display_message_bar ||
-      !rulesEqual(rules, arrayOnly(settings.rules))) {
+      !rulesEqual(rules, arrayOrDummy(settings.rules))) {
     settings.rules = rules;
     settings.excludes = $.excludes.value.trim().split(/\s+/);
     settings.display_message_bar = $.display_message_bar.checked;
@@ -74,23 +76,21 @@ async function save() {
   discardDraft();
 }
 
-function update() {
-  chrome.runtime.getBackgroundPage(async bg => {
-    const btn = $.btnUpdate;
-    const label = btn.textContent;
-    btn.disabled = true;
+async function update() {
+  const btn = $.btnUpdate;
+  const label = btn.textContent;
+  btn.disabled = true;
 
-    const numRules = await bg.refreshSiteinfo({
-      force: true,
-      onprogress(e) {
-        btn.textContent = (e.loaded / 1024).toFixed(0) + ' kiB';
-      },
-    });
-
-    renderSiteinfoStats(numRules, numRules > 0 ? new Date() : null);
-    btn.textContent = label;
-    btn.disabled = false;
+  const numRules = await (await import('/bg-update.js')).updateSiteinfo({
+    force: true,
+    onprogress(e) {
+      btn.textContent = (e.loaded / 1024).toFixed(0) + ' kiB';
+    },
   });
+
+  renderSiteinfoStats(numRules, numRules > 0 ? new Date() : null);
+  btn.textContent = label;
+  btn.disabled = false;
 }
 
 function loadDraft() {
@@ -147,6 +147,6 @@ function rulesEqual(arrayA, arrayB) {
   return true;
 }
 
-function arrayOnly(v) {
+function arrayOrDummy(v) {
   return Array.isArray(v) ? v : [];
 }

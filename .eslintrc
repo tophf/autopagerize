@@ -1,12 +1,22 @@
 # https://github.com/eslint/eslint/blob/master/docs/rules/README.md
 
+parser: babel-eslint
+
 parserOptions:
   ecmaVersion: 2017
+  sourceType: script
 
 env:
   browser: true
   es6: true
   webextensions: true
+
+overrides:
+  - files:
+    - "bg-*.js"
+    parserOptions:
+      sourceType: module
+
 
 rules:
   accessor-pairs: [2]
@@ -42,7 +52,7 @@ rules:
   id-blacklist: [0]
   id-length: [0]
   id-match: [0]
-  indent-legacy: [2, 2, {VariableDeclarator: 0, SwitchCase: 1, outerIIFEBody: 0}]
+  indent-legacy: [2, 2, {VariableDeclarator: 0, SwitchCase: 1}]
   jsx-quotes: [0]
   key-spacing: [0]
   keyword-spacing: [2]
