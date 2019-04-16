@@ -9,15 +9,3 @@ function onDomLoaded() {
     ? Promise.resolve()
     : new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, {once: true}));
 }
-
-function ignoreLastError() {
-  return chrome.runtime.lastError;
-}
-
-function ensureArray(v) {
-  return Array.isArray(v) ? v : [];
-}
-
-function ensureObject(v) {
-  return v && typeof v === 'object' ? v : {};
-}

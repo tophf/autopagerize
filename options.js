@@ -4,13 +4,12 @@ global CACHE_DURATION
 global idb
 global chromeSync
 global onDomLoaded
-global ensureArray ensureObject
 */
 'use strict';
 
 Promise.all([
   idb.get('cache'),
-  chromeSync.get('settings').then(ensureObject),
+  chromeSync.getObject('settings'),
   onDomLoaded(),
 ]).then(([
   cache = {rules: []},
@@ -32,13 +31,13 @@ Promise.all([
 });
 
 function renderSettings(settings) {
-  const rules = ensureArray(settings.rules).filter(r => r.url);
+  const rules = arrayOnly(settings.rules).filter(r => r.url);
   if (rules.length) {
     $.rules.value = JSON.stringify(rules, null, '  ');
     $.rules.rows = Math.min(20, rules.length * 5 + 3);
     $.rules.closest('details').open = true;
   }
-  const excludes = ensureArray(settings.excludes);
+  const excludes = arrayOnly(settings.excludes);
   $.excludes.value = excludes.join('\n');
   $.excludes.rows = Math.max(2, Math.min(20, excludes.length + 1));
   $.display_message_bar.checked = settings.display_message_bar !== false;
@@ -51,7 +50,7 @@ function renderSiteinfoStats(numRules, date) {
 
 function parseCustomRules(str) {
   try {
-    return ensureArray(JSON.parse(str));
+    return arrayOnly(JSON.parse(str));
   } catch (e) {
     alert(chrome.i18n.getMessage('custom_rules') + '\n\n' + e);
   }
@@ -62,11 +61,11 @@ async function save() {
   if (!rules)
     return;
 
-  const settings = ensureObject(await chromeSync.get('settings'));
+  const settings = await chromeSync.getObject('settings');
 
-  if ($.excludes.value.trim() !== ensureArray(settings.excludes).join('\n') ||
+  if ($.excludes.value.trim() !== arrayOnly(settings.excludes).join('\n') ||
       $.display_message_bar.checked !== settings.display_message_bar ||
-      !rulesEqual(rules, ensureArray(settings.rules))) {
+      !rulesEqual(rules, arrayOnly(settings.rules))) {
     settings.rules = rules;
     settings.excludes = $.excludes.value.trim().split(/\s+/);
     settings.display_message_bar = $.display_message_bar.checked;
@@ -146,4 +145,8 @@ function rulesEqual(arrayA, arrayB) {
     }
   }
   return true;
+}
+
+function arrayOnly(v) {
+  return Array.isArray(v) ? v : [];
 }

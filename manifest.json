@@ -7,7 +7,6 @@
   "default_locale": "en",
   "background": {
     "scripts": [
-      "utils.js",
       "storage-chrome.js",
       "storage-idb.js",
       "vendor/lz-string-unsafe.min.js",

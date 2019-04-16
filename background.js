@@ -6,7 +6,7 @@ global idb
 global chromeSync
 global LZStringUnsafe
 global ignoreLastError
-global ensureArray ensureObject
+global ensureArray
 */
 'use strict';
 
@@ -53,7 +53,7 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 async function maybeLaunch(tab) {
-  const settings = ensureObject(await chromeSync.get('settings'));
+  const settings = await chromeSync.getObject('settings');
   if (!isExcluded(tab.url, settings.excludes, EXCLUDES)) {
     const rules = await getMatchingRules(tab.url, settings);
     if (rules.length)
@@ -77,7 +77,7 @@ async function launch(tabId, settings, rules) {
 }
 
 function sanitizeRemoteData(data) {
-  return ensureArray(data)
+  return arrayOnly(data)
     .map(x => x && x.data && x.data.url && pickKnownKeys(x.data))
     .filter(Boolean)
     .sort((a, b) => b.url.length - a.url.length);
@@ -164,8 +164,8 @@ function wildcard2regexp(str) {
 function executeScript(tabId, options) {
   return new Promise(resolve => {
     chrome.tabs.executeScript(tabId, options, results => {
-      ignoreLastError();
-      resolve(ensureArray(results));
+      chrome.runtime.lastError; // eslint-disable-line
+      resolve(arrayOnly(results));
     });
   });
 }
@@ -218,11 +218,15 @@ function trimUrlCache(oldRules, newRules) {
       const cursor = /** IDBCursorWithValue */ op.result;
       if (!cursor) {
         resolve();
-      } else if (ensureArray(cursor.value).every(isSameRule)) {
+      } else if (arrayOnly(cursor.value).every(isSameRule)) {
         cursor.continue();
       } else {
         cursor.delete().onsuccess = () => cursor.continue();
       }
     };
   });
+}
+
+function arrayOnly(v) {
+  return Array.isArray(v) ? v : [];
 }
