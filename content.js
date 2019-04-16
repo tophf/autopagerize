@@ -134,23 +134,23 @@
       for (const el of doc.getElementsByTagName('script'))
         el.remove();
 
-      let page;
+      let pages;
       try {
-        page = utils.getElementsByXPath(this.info.pageElement, doc);
+        pages = utils.getElementsByXPath(this.info.pageElement, doc);
         url = AutoPager.getNextURL(this.info.nextLink, doc, this.requestURL);
       } catch (e) {
         this.error();
         return;
       }
 
-      if (!page || !page.length || this.loadedURLs[this.requestURL]) {
+      if (!pages || !pages.length || this.loadedURLs[this.requestURL]) {
         this.terminate();
         return;
       }
 
       this.loadedURLs[this.requestURL] = true;
       this.requestURL = url;
-      this.addPage(doc, page);
+      this.addPage(doc, pages);
       this.showLoading(false);
       this.onScroll();
 
