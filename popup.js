@@ -2,7 +2,6 @@
 global $
 global onDomLoaded
 global chromeSync
-global dispatchMessageAll
 global ensureObject
 */
 'use strict';
@@ -22,7 +21,6 @@ Promise.all([
 async function toggle() {
   const settings = ensureObject(await chromeSync.get('settings'));
   settings.disable = !$.status.checked;
-  chromeSync.set({settings});
-  dispatchMessageAll(settings.disable ? 'disableRequest' : 'enableRequest');
+  await chromeSync.set({settings});
   window.close();
 }

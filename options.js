@@ -4,7 +4,6 @@ global CACHE_DURATION
 global idb
 global chromeSync
 global onDomLoaded
-global dispatchMessageAll
 global ensureArray ensureObject
 */
 'use strict';
@@ -72,7 +71,6 @@ async function save() {
     settings.excludes = $.excludes.value.trim().split(/\s+/);
     settings.display_message_bar = $.display_message_bar.checked;
     chromeSync.set({settings});
-    dispatchMessageAll('updateSettings', settings);
   }
   discardDraft();
 }

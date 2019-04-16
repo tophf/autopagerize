@@ -1,7 +1,5 @@
 'use strict';
 
-window.loaded = true;
-
 // IIFE simplifies complete unregistering for garbage collection
 (() => {
 
@@ -218,14 +216,11 @@ class AutoPager {
   }
 
   terminate() {
+    delete window.run;
+    delete window.settings;
     window.removeEventListener('scroll', AutoPager.scroll);
-    setTimeout(() => {
-      if (this.frame)
-        this.frame.remove();
-      delete window.loaded;
-      delete window.settings;
-      chrome.runtime.onMessage.removeListener(onMessage);
-    }, 1500);
+    chrome.storage.onChanged.removeListener(onStorageChanged);
+    setTimeout(() => this.frame && this.frame.remove(), 1500);
   }
 
   error() {
@@ -353,26 +348,18 @@ function important(cssString) {
   return cssString.replace(/;/g, '!important;');
 }
 
-function onMessage(msg) {
-  switch (msg.name) {
-
-    case 'enableRequest':
-    case 'disableRequest':
-      if (ap)
-        ap.enabled = msg.name === 'enableRequest';
-      break;
-
-    case 'navigation':
-      if (!AutoPager.launch(msg.data))
-        setTimeout(AutoPager.launch, 2000, msg.data);
-      break;
-
-    case 'updateSettings':
-      window.settings = msg.data;
-      break;
+function onStorageChanged(changes, area) {
+  if (area === 'sync' && changes.settings && ap) {
+    window.settings = changes.settings.newValue;
+    ap.enabled = !window.settings.disable;
   }
 }
 
-chrome.runtime.onMessage.addListener(onMessage);
+chrome.storage.onChanged.addListener(onStorageChanged);
+
+window.run = rules => {
+  if (!AutoPager.launch(rules))
+    setTimeout(AutoPager.launch, 2000, rules);
+};
 
 })();

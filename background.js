@@ -54,31 +54,26 @@ chrome.runtime.onStartup.addListener(() => {
 
 async function maybeLaunch(tab) {
   const settings = ensureObject(await chromeSync.get('settings'));
-  if (isExcluded(tab.url, settings.excludes, EXCLUDES))
-    return;
-  const rules = await getMatchingRules(tab.url, settings);
-  if (rules.length) {
-    await initContentScript(tab.id, settings);
-    chrome.tabs.sendMessage(
-      tab.id,
-      {name: 'navigation', data: rules},
-      {frameId: 0},
-      ignoreLastError);
+  if (!isExcluded(tab.url, settings.excludes, EXCLUDES)) {
+    const rules = await getMatchingRules(tab.url, settings);
+    if (rules.length)
+      launch(tab.id, settings, rules);
   }
 }
 
-async function initContentScript(tabId, settings) {
-  const [loaded] = await executeScript(tabId, {
+async function launch(tabId, settings, rules) {
+  const [run] = await executeScript(tabId, {code: 'typeof window.run'});
+  if (run !== 'function')
+    await executeScript(tabId, {file: 'content.js'});
+  await executeScript(tabId, {
     code: `
       window.settings = {
         disable: ${settings.disable},
         display_message_bar: ${settings.display_message_bar},
       };
-      window.loaded;
+      run(${JSON.stringify(rules)});
     `,
   });
-  if (loaded !== true)
-    await executeScript(tabId, {file: 'content.js'});
 }
 
 function sanitizeRemoteData(data) {

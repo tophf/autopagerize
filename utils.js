@@ -14,16 +14,6 @@ function ignoreLastError() {
   return chrome.runtime.lastError;
 }
 
-function dispatchMessageAll(name, data) {
-  chrome.tabs.query({url: '*://*/*'}, tabs => {
-    const msg = {name, data};
-    for (const tab of tabs) {
-      if (!tab.discarded && tab.width)
-        chrome.tabs.sendMessage(tab.id, msg, {frameId: 0}, ignoreLastError);
-    }
-  });
-}
-
 function ensureArray(v) {
   return Array.isArray(v) ? v : [];
 }
