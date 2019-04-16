@@ -81,7 +81,7 @@ async function update() {
   const label = btn.textContent;
   btn.disabled = true;
 
-  const numRules = await (await import('/bg-update.js')).updateSiteinfo({
+  const numRules = await (await import('/bg/bg-update.js')).updateSiteinfo({
     force: true,
     onprogress(e) {
       btn.textContent = (e.loaded / 1024).toFixed(0) + ' kiB';

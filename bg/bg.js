@@ -34,7 +34,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
 
 chrome.storage.onChanged.addListener(async ({settings}) => {
   if (settings)
-    (await import('/bg-trim.js')).trimUrlCache(
+    (await import('/bg/bg-trim.js')).trimUrlCache(
       settings.oldValue.rules,
       settings.newValue.rules,
       {main: false});
@@ -43,7 +43,7 @@ chrome.storage.onChanged.addListener(async ({settings}) => {
 (async () => {
   const date = await chromeLocal.get('siteinfoDate') || 0;
   if (date + self.CACHE_DURATION < Date.now())
-    (await import('/bg-update.js')).updateSiteinfo({force: true});
+    (await import('/bg/bg-update.js')).updateSiteinfo({force: true});
 })();
 
 async function maybeLaunch(tab) {
@@ -51,7 +51,7 @@ async function maybeLaunch(tab) {
   if (!isExcluded(tab.url, settings.excludes, EXCLUDES)) {
     const rules = await getMatchingRules(tab.url, settings);
     if (rules.length)
-      (await import('/bg-launch.js')).launch(tab.id, settings, rules);
+      (await import('/bg/bg-launch.js')).launch(tab.id, settings, rules);
   }
 }
 
