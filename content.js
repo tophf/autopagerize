@@ -244,7 +244,7 @@ class AutoPager {
   static getNextURL(xpath, doc, url) {
     const next = getFirstElementByXPath(xpath, doc);
     if (next) {
-      if (!doc.querySelector('base[href]'))
+      if (doc !== document && !doc.querySelector('base[href]'))
         doc.head.appendChild(doc.createElement('base')).href = url;
       if (!next.getAttribute('href'))
         next.setAttribute('href', next.getAttribute('action') || next.value);
