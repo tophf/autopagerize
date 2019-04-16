@@ -115,11 +115,9 @@ class AutoPager {
     const xhr = new XMLHttpRequest();
     xhr.open('GET', this.requestURL);
     xhr.responseType = 'document';
-    xhr.onload = () => {
-      xhr.onloadend = null;
-      this.load(xhr.response, xhr.responseURL);
-    };
-    xhr.onloadend = () => this.error();
+    xhr.timeout = 60e3;
+    xhr.onload = () => this.load(xhr.response, xhr.responseURL);
+    xhr.onerror = xhr.ontimeout = () => this.error();
     xhr.send();
   }
 
