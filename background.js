@@ -217,6 +217,7 @@ function trimUrlCache(oldRules, newRules) {
     op.onsuccess = () => {
       const cursor = /** IDBCursorWithValue */ op.result;
       if (!cursor) {
+        op.transaction.db.close();
         resolve();
       } else if (arrayOnly(cursor.value).every(isSameRule)) {
         cursor.continue();
