@@ -23,7 +23,7 @@ self.onmessage = async ({data: [url, urlCacheKey, settings]}) => {
     let index = 0;
     for (const r of rules) {
       try {
-        if (r.url && url.match(r.url)) {
+        if (RegExp(r.url).test(url)) {
           toReturn.push(r);
           toWrite.push(index);
         }
