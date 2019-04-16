@@ -48,6 +48,11 @@ chrome.runtime.onMessage.addListener(function (msg) {
     return action.apply(null, arguments);
 });
 
+chrome.storage.onChanged.addListener(({settings}) => {
+  if (settings)
+    trimUrlCache(settings.oldValue.rules, settings.newValue.rules, {main: false});
+});
+
 chrome.runtime.onStartup.addListener(() => {
   setTimeout(refreshSiteinfo, 10e3);
 });
@@ -195,13 +200,23 @@ async function getMatchingRules(url, settings) {
   let urlCacheKey;
   if (url.length < MAX_CACHEABLE_URL_LENGTH) {
     urlCacheKey = URL_CACHE_PREFIX + LZStringUnsafe.compressToUTF16(url);
-    const urlRules = await idb.get(urlCacheKey);
-    if (urlRules) {
-      const cache = await idb.get('cache');
-      return urlRules.map(r => cache.rules[r]);
-    }
+    const rules = await idb.get(urlCacheKey);
+    if (rules && await resolveUrlRules(rules, settings))
+      return rules;
   }
   return runWorker(url, urlCacheKey, settings);
+}
+
+async function resolveUrlRules(rules, settings) {
+  const cache = await idb.get('cache');
+  const customRules = arrayOnly(settings.rules);
+  for (let i = 0; i < rules.length; i++) {
+    let r = rules[i];
+    r = rules[i] = r >= 0 ? cache.rules[r] : customRules[-r - 1];
+    if (!r)
+      return;
+  }
+  return true;
 }
 
 function runWorker(...args) {
@@ -216,10 +231,24 @@ function runWorker(...args) {
   });
 }
 
-function trimUrlCache(oldRules, newRules) {
-  if (!Array.isArray(oldRules) || !oldRules.length)
-    return idb.exec(true, 'clear');
+function trimUrlCache(oldRules, newRules, {main = true} = {}) {
+  oldRules = arrayOnly(oldRules);
+  newRules = arrayOnly(newRules);
+
+  const prefixedKeyRange = IDBKeyRange.bound(URL_CACHE_PREFIX, URL_CACHE_PREFIX + '\uFFFF');
+  const invalidateAll =
+    oldRules.length !== newRules.length ||
+    oldRules.some((r, i) => (r || {}).url !== (newRules[i] || {}).url);
+  if (invalidateAll)
+    return idb.exec(true, 'delete', prefixedKeyRange);
+
   const isSameRule = ruleIndex => {
+    if (ruleIndex < 0) {
+      if (main)
+        return true;
+      ruleIndex = -ruleIndex - 1;
+    } else if (!main)
+      return true;
     const a = oldRules[ruleIndex];
     const b = newRules[ruleIndex];
     if (!a || !b)
@@ -232,9 +261,9 @@ function trimUrlCache(oldRules, newRules) {
         return;
     return true;
   };
+
   return new Promise(async resolve => {
-    const ALL_PREFIX_KEYS = IDBKeyRange.bound(URL_CACHE_PREFIX, URL_CACHE_PREFIX + '\uFFFF');
-    const op = (await idb.exec(true)).openCursor(ALL_PREFIX_KEYS);
+    const op = (await idb.exec(true)).openCursor(prefixedKeyRange);
     op.onsuccess = () => {
       const cursor = /** IDBCursorWithValue */ op.result;
       if (!cursor) {

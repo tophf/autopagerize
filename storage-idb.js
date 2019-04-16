@@ -44,11 +44,19 @@ const idb = {
       }
     });
   },
-  _execRaw(readWrite, method, params, resolve, reject) {
+  async _execRaw(readWrite, method, params, resolve, reject) {
     idb.cancelClosing();
-    let op = idb._db
-      .transaction(idb.STORE_NAME, readWrite ? 'readwrite' : 'readonly')
-      .objectStore(idb.STORE_NAME);
+    let op;
+    for (let i = 0; i < 100; i++) {
+      try {
+        op = idb._db
+          .transaction(idb.STORE_NAME, readWrite ? 'readwrite' : 'readonly')
+          .objectStore(idb.STORE_NAME);
+        break;
+      } catch (e) {
+        await new Promise(setTimeout);
+      }
+    }
     if (method) {
       idb._dbCloseTimer = setTimeout(idb.close, idb.CLOSE_TIMEOUT);
       op = op[method](...params);

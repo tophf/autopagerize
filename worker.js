@@ -25,7 +25,7 @@ self.onmessage = async ({data: [url, urlCacheKey, settings]}) => {
       try {
         if (RegExp(r.url).test(url)) {
           toReturn.push(r);
-          toWrite.push(index);
+          toWrite.push(rules === cache.rules ? index : -index - 1);
         }
       } catch (e) {}
       index++;
