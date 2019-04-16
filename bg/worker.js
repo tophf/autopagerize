@@ -2,7 +2,7 @@
 /* global idb */
 'use strict';
 
-importScripts('storage-idb.js');
+importScripts('/util/storage-idb.js');
 
 self.onmessage = async ({data: [url, urlCacheKey, settings]}) => {
   let cache = await idb.get('cache') || [];

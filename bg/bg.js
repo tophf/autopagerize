@@ -110,7 +110,7 @@ async function resolveUrlRules(rules, settings) {
 
 function runWorker(...args) {
   return new Promise(resolve => {
-    const w = new Worker('worker.js');
+    const w = new Worker('/bg/worker.js');
     w.onmessage = ({data}) => {
       w.onmessage = null;
       w.terminate();
