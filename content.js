@@ -44,24 +44,23 @@ class AutoPager {
     window.addEventListener('scroll', AutoPager.scroll, {passive: true});
     chrome.runtime.sendMessage('launched');
 
-    const scrollHeight = getScrollHeight();
-    const closestElement = this.insertPoint.tagName
-      ? this.insertPoint
-      : this.insertPoint.parentNode;
-    const bottom = closestElement.getBoundingClientRect().top ||
-                   this.getPageElementsBottom() ||
-                   (Math.round(scrollHeight * 0.8));
+    const scrollHeight = document.scrollingElement.scrollHeight;
+    const ip = this.insertPoint;
+    let bottom = ip.tagName
+      ? ip.getBoundingClientRect().top
+      : (ip.previousElementSibling || ip.parentNode).getBoundingClientRect().bottom;
+    if (!bottom) {
+      try {
+        bottom = Math.max(
+          ...getElementsByXPath(this.info.pageElement)
+            .map(el => el.getBoundingClientRect().bottom));
+      } catch (e) {}
+    }
+    if (!bottom)
+      bottom = Math.round(scrollHeight * 0.8);
     this.remainHeight = scrollHeight - bottom + BASE_REMAIN_HEIGHT;
     this.reqTime = new Date();
     this.onScroll();
-  }
-
-  getPageElementsBottom() {
-    try {
-      return Math.max(
-        ...getElementsByXPath(this.info.pageElement)
-          .map(el => el.getBoundingClientRect().bottom));
-    } catch (e) {}
   }
 
   initMessageBar() {
@@ -95,9 +94,7 @@ class AutoPager {
   }
 
   onScroll() {
-    const scrollHeight = Math.max(
-      document.documentElement.scrollHeight,
-      document.scrollingElement.scrollHeight);
+    const scrollHeight = document.scrollingElement.scrollHeight;
     const remain = scrollHeight - window.innerHeight - window.scrollY;
     if (this.enabled && remain < this.remainHeight)
       this.request();
@@ -328,12 +325,6 @@ function addDefaultPrefix(xpath, prefix) {
     }
     return token;
   });
-}
-
-function getScrollHeight() {
-  return Math.max(
-    document.documentElement.scrollHeight,
-    document.scrollingElement.scrollHeight);
 }
 
 function isSameDomain(url) {
