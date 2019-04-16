@@ -1,3 +1,4 @@
+/* global utils */
 'use strict';
 
 // IIFE simplifies complete unregistering for garbage collection
@@ -5,12 +6,6 @@
 
 const BASE_REMAIN_HEIGHT = 400;
 const MIN_REQUEST_INTERVAL = 2000;
-const MICROFORMAT = {
-  url: '.*',
-  nextLink: '//a[@rel="next"] | //link[@rel="next"]',
-  insertBefore: '//*[contains(@class, "autopagerize_insert_before")]',
-  pageElement: '//*[contains(@class, "autopagerize_page_element")]',
-};
 
 /** @type AutoPager */
 let ap = null;
@@ -26,10 +21,10 @@ class AutoPager {
       return;
 
     if (info.insertBefore)
-      this.insertPoint = getFirstElementByXPath(info.insertBefore);
+      this.insertPoint = utils.getFirstElementByXPath(info.insertBefore);
 
     if (!this.insertPoint) {
-      const page = getElementsByXPath(info.pageElement).pop();
+      const page = utils.getElementsByXPath(info.pageElement).pop();
       if (!page)
         return;
       if (!page.nextSibling)
@@ -52,7 +47,7 @@ class AutoPager {
     if (!bottom) {
       try {
         bottom = Math.max(
-          ...getElementsByXPath(this.info.pageElement)
+          ...utils.getElementsByXPath(this.info.pageElement)
             .map(el => el.getBoundingClientRect().bottom));
       } catch (e) {}
     }
@@ -67,7 +62,7 @@ class AutoPager {
     if (this.frame && document.contains(this.frame))
       return;
     this.frame = Object.assign(document.createElement('iframe'), {
-      srcdoc: important(`
+      srcdoc: utils.important(`
         <body style="
           margin: 0;
           padding: 0;
@@ -78,7 +73,7 @@ class AutoPager {
         ">Loading...</body>
       `),
       id: 'autopagerize_message_bar',
-      style: important(`
+      style: utils.important(`
         display: none;
         position: fixed;
         left: 0;
@@ -132,7 +127,7 @@ class AutoPager {
   }
 
   load(doc, url) {
-    if (url && !isSameDomain(url)) {
+    if (url && !utils.isSameDomain(url)) {
       this.error();
       return;
     }
@@ -142,7 +137,7 @@ class AutoPager {
 
     let page;
     try {
-      page = getElementsByXPath(this.info.pageElement, doc);
+      page = utils.getElementsByXPath(this.info.pageElement, doc);
       url = AutoPager.getNextURL(this.info.nextLink, doc, this.requestURL);
     } catch (e) {
       this.error();
@@ -172,7 +167,7 @@ class AutoPager {
     p.className = 'autopagerize_page_info';
 
     if (this.insertPoint.ownerDocument !== document) {
-      const lastPage = getElementsByXPath(this.info.pageElement).pop();
+      const lastPage = utils.getElementsByXPath(this.info.pageElement).pop();
       if (lastPage) {
         this.insertPoint =
           lastPage.nextSibling ||
@@ -212,6 +207,7 @@ class AutoPager {
 
   terminate() {
     delete window.run;
+    delete window.utils;
     delete window.settings;
     window.removeEventListener('scroll', AutoPager.scroll);
     chrome.storage.onChanged.removeListener(onStorageChanged);
@@ -222,7 +218,7 @@ class AutoPager {
     window.removeEventListener('scroll', AutoPager.scroll);
     if (!this.frame)
       return;
-    this.frame.srcdoc = important(`
+    this.frame.srcdoc = utils.important(`
       <body style="
         margin: 0;
         padding: 0;
@@ -242,7 +238,7 @@ class AutoPager {
   }
 
   static getNextURL(xpath, doc, url) {
-    const next = getFirstElementByXPath(xpath, doc);
+    const next = utils.getFirstElementByXPath(xpath, doc);
     if (next) {
       if (doc !== document && !doc.querySelector('base[href]'))
         doc.head.appendChild(doc.createElement('base')).href = url;
@@ -252,89 +248,16 @@ class AutoPager {
     }
   }
 
-  static launch(rules) {
+  static launch(rules, matchedRule) {
     if (ap && ap.loadedURLs[location.href])
       return ap;
-    rules.push(MICROFORMAT);
-    for (const r of rules) {
-      if (getFirstElementByXPath(r.nextLink) &&
-          getFirstElementByXPath(r.pageElement)) {
-        ap = new AutoPager(r);
-        return ap;
-      }
+    if (!matchedRule)
+      matchedRule = utils.getMatchingRule(rules);
+    if (matchedRule) {
+      ap = new AutoPager(matchedRule);
+      return ap;
     }
   }
-}
-
-// utility functions.
-
-function getElementsByXPath(xpath, node) {
-  const x = getXPathResult(xpath, node, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
-  const nodes = [];
-  for (let node; (node = x.iterateNext());)
-    nodes.push(node);
-  return nodes;
-}
-
-function getFirstElementByXPath(xpath, node) {
-  return getXPathResult(xpath, node, XPathResult.FIRST_ORDERED_NODE_TYPE).singleNodeValue;
-}
-
-function getXPathResult(xpath, node = document, resultType) {
-  const doc = node.ownerDocument || node;
-  const defaultNS = node.lookupNamespaceURI(null);
-  let resolver = doc.createNSResolver(node.documentElement || node);
-
-  if (defaultNS) {
-    const defaultPrefix = '__default__';
-    const defaultResolver = resolver;
-    xpath = addDefaultPrefix(xpath, defaultPrefix);
-    resolver = prefix =>
-      prefix === defaultPrefix ?
-        defaultNS :
-        defaultResolver.lookupNamespaceURI(prefix);
-  }
-  return doc.evaluate(xpath, node, resolver, resultType, null);
-}
-
-function addDefaultPrefix(xpath, prefix) {
-  const tokenPattern = /([A-Za-z_\u00c0-\ufffd][\w\-.\u00b7-\ufffd]*|\*)\s*(::?|\()?|(".*?"|'.*?'|\d+(?:\.\d*)?|\.(?:\.|\d+)?|[)\]])|(\/\/?|!=|[<>]=?|[([|,=+-])|([@$])/g;
-  const TERM = 1;
-  const OPERATOR = 2;
-  const MODIFIER = 3;
-  let tokenType = OPERATOR;
-  prefix += ':';
-  return xpath.replace(tokenPattern, (token, id, suffix, term, operator) => {
-    if (suffix) {
-      tokenType =
-        suffix === ':' ||
-        suffix === '::' && (id === 'attribute' || id === 'namespace') ?
-          MODIFIER :
-          OPERATOR;
-    } else if (id) {
-      if (tokenType === OPERATOR && id !== '*')
-        token = prefix + token;
-      tokenType = tokenType === TERM ? OPERATOR : TERM;
-    } else {
-      tokenType =
-        term ? TERM :
-          operator ? OPERATOR :
-            MODIFIER;
-    }
-    return token;
-  });
-}
-
-function isSameDomain(url) {
-  if (url.match(/^\w+:/)) {
-    return location.host === url.split('/')[2];
-  } else {
-    return true;
-  }
-}
-
-function important(cssString) {
-  return cssString.replace(/;/g, '!important;');
 }
 
 function onStorageChanged(changes, area) {
@@ -346,8 +269,8 @@ function onStorageChanged(changes, area) {
 
 chrome.storage.onChanged.addListener(onStorageChanged);
 
-window.run = rules => {
-  if (!AutoPager.launch(rules))
+window.run = (rules, matchedRule) => {
+  if (!AutoPager.launch(rules, matchedRule))
     setTimeout(AutoPager.launch, 2000, rules);
 };
 
