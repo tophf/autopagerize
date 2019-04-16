@@ -10,6 +10,7 @@
       "utils.js",
       "storage-chrome.js",
       "storage-idb.js",
+      "vendor/lz-string-unsafe.min.js",
       "background.js"
     ],
     "persistent": false

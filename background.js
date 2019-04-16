@@ -1,8 +1,10 @@
 /*
 global CACHE_DURATION
 global URL_CACHE_PREFIX
+global MAX_CACHEABLE_URL_LENGTH
 global idb
 global chromeSync
+global LZStringUnsafe
 global ignoreLastError
 global ensureArray ensureObject
 */
@@ -173,7 +175,20 @@ function executeScript(tabId, options) {
   });
 }
 
-function getMatchingRules(...args) {
+async function getMatchingRules(url, settings) {
+  let urlCacheKey;
+  if (url.length < MAX_CACHEABLE_URL_LENGTH) {
+    urlCacheKey = URL_CACHE_PREFIX + LZStringUnsafe.compressToUTF16(url);
+    const urlRules = await idb.get(urlCacheKey);
+    if (urlRules) {
+      const cache = await idb.get('cache');
+      return urlRules.map(r => cache.rules[r]);
+    }
+  }
+  return runWorker(url, urlCacheKey, settings);
+}
+
+function runWorker(...args) {
   return new Promise(resolve => {
     const w = new Worker('worker.js');
     w.onmessage = ({data}) => {
