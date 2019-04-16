@@ -1,14 +1,14 @@
 /*
 global $
 global onDomLoaded
-global chromeStorage
+global chromeSync
 global dispatchMessageAll
 global ensureObject
 */
 'use strict';
 
 Promise.all([
-  chromeStorage.settings.then(ensureObject),
+  chromeSync.get('settings').then(ensureObject),
   onDomLoaded(),
 ]).then(([
   settings,
@@ -20,9 +20,9 @@ Promise.all([
 });
 
 async function toggle() {
-  const settings = ensureObject(await chromeStorage.settings);
+  const settings = ensureObject(await chromeSync.get('settings'));
   settings.disable = !$.status.checked;
-  chromeStorage.settings = settings;
+  chromeSync.set({settings});
   dispatchMessageAll(settings.disable ? 'disableRequest' : 'enableRequest');
   window.close();
 }

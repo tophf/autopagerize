@@ -1,8 +1,8 @@
 /*
 global CACHE_DURATION
 global URL_CACHE_PREFIX
-global idbStorage
-global chromeStorage
+global idb
+global chromeSync
 global ignoreLastError
 global ensureArray ensureObject
 */
@@ -51,7 +51,7 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 async function maybeLaunch(tab) {
-  const settings = ensureObject(await chromeStorage.settings);
+  const settings = ensureObject(await chromeSync.get('settings'));
   if (isExcluded(tab.url, settings.excludes, EXCLUDES))
     return;
   const rules = await getMatchingRules(tab.url, settings);
@@ -108,7 +108,7 @@ function pickKnownKeys(entry) {
  * @param {function(ProgressEvent)} _.onprogress
  */
 async function refreshSiteinfo({force, onprogress} = {}) {
-  const cache = await idbStorage.cache;
+  const cache = await idb.get('cache');
 
   if (force || !cache || cache.expires < Date.now()) {
     try {
@@ -128,7 +128,7 @@ async function refreshSiteinfo({force, onprogress} = {}) {
       const expires = Date.now() + CACHE_DURATION;
       if (rules.length) {
         await trimUrlCache(cache && cache.rules, rules);
-        idbStorage.cache = {rules, expires};
+        idb.set('cache', {rules, expires});
       }
       return rules.length;
     } catch (e) {
@@ -187,7 +187,7 @@ function getMatchingRules(...args) {
 
 function trimUrlCache(oldRules, newRules) {
   if (!Array.isArray(oldRules) || !oldRules.length)
-    return idbStorage(true, 'clear');
+    return idb.exec(true, 'clear');
   const isSameRule = ruleIndex => {
     const a = oldRules[ruleIndex];
     const b = newRules[ruleIndex];
@@ -203,7 +203,7 @@ function trimUrlCache(oldRules, newRules) {
   };
   return new Promise(async resolve => {
     const ALL_PREFIX_KEYS = IDBKeyRange.bound(URL_CACHE_PREFIX, URL_CACHE_PREFIX + '\uFFFF');
-    const op = (await idbStorage(true)).openCursor(ALL_PREFIX_KEYS);
+    const op = (await idb.exec(true)).openCursor(ALL_PREFIX_KEYS);
     op.onsuccess = () => {
       const cursor = /** IDBCursorWithValue */ op.result;
       if (!cursor) {

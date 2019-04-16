@@ -1,8 +1,8 @@
 /*
 global $
 global CACHE_DURATION
-global idbStorage
-global chromeStorage
+global idb
+global chromeSync
 global onDomLoaded
 global dispatchMessageAll
 global ensureArray ensureObject
@@ -10,8 +10,8 @@ global ensureArray ensureObject
 'use strict';
 
 Promise.all([
-  idbStorage.cache,
-  chromeStorage.settings,
+  idb.get('cache'),
+  chromeSync.get('settings').then(ensureObject),
   onDomLoaded(),
 ]).then(([
   cache = {rules: []},
@@ -22,9 +22,9 @@ Promise.all([
 
   $.btnSave.onclick = save;
   $.btnUpdate.onclick = update;
-  $.btnDiscard.onclick = () => {
+  $.btnDiscard.onclick = async () => {
     discardDraft();
-    chromeStorage.settings.then(renderSettings);
+    renderSettings(await chromeSync.get('settings'));
   };
 
   loadDraft();
@@ -33,7 +33,6 @@ Promise.all([
 });
 
 function renderSettings(settings) {
-  settings = ensureObject(settings);
   const rules = ensureArray(settings.rules).filter(r => r.url);
   if (rules.length) {
     $.rules.value = JSON.stringify(rules, null, '  ');
@@ -64,7 +63,7 @@ async function save() {
   if (!rules)
     return;
 
-  const settings = ensureObject(await chromeStorage.settings);
+  const settings = ensureObject(await chromeSync.get('settings'));
 
   if ($.excludes.value.trim() !== ensureArray(settings.excludes).join('\n') ||
       $.display_message_bar.checked !== settings.display_message_bar ||
@@ -72,7 +71,7 @@ async function save() {
     settings.rules = rules;
     settings.excludes = $.excludes.value.trim().split(/\s+/);
     settings.display_message_bar = $.display_message_bar.checked;
-    chromeStorage.settings = settings;
+    chromeSync.set({settings});
     dispatchMessageAll('updateSettings', settings);
   }
   discardDraft();
