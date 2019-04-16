@@ -198,10 +198,9 @@
       aplink.textContent = ++this.pageNum;
       p.append('page: ', aplink);
 
-      pages.forEach((p, i) => {
-        pages[i] = p = document.importNode(p, true);
-        this.insertPoint.parentNode.insertBefore(p, this.insertPoint);
-      });
+      const bin = document.createDocumentFragment();
+      pages.forEach(p => bin.appendChild(p));
+      this.insertPoint.parentNode.insertBefore(bin, this.insertPoint);
     }
 
     terminate() {
