@@ -1,3 +1,5 @@
+'use strict';
+
 class ChromeStorage {
   constructor(area) {
     /** @type chrome.storage.StorageArea */
