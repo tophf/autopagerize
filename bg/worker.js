@@ -75,7 +75,7 @@ function processCustomRules(settings) {
 }
 
 async function loadBuiltinSiteinfo() {
-  cache = await (await fetch('siteinfo.json')).json();
+  cache = await (await fetch('/siteinfo.json')).json();
   await idb.exec(true, 'clear');
   await idb.set('cache', cache);
 }
