@@ -1,4 +1,4 @@
-export async function launch(tabId, settings, rules) {
+export async function launch(tabId, rules) {
   if (!await executeScriptCode(tabId, csHasUtils))
     await executeScript(tabId, {file: 'content-utils.js'});
 
@@ -9,8 +9,8 @@ export async function launch(tabId, settings, rules) {
     await executeScript(tabId, {file: 'content.js'});
 
   await executeScriptCode(tabId, csRun, {
-    disable: settings.disable,
-    display_message_bar: settings.display_message_bar,
+    disable: self.settings.disable,
+    display_message_bar: self.settings.display_message_bar,
   });
 }
 

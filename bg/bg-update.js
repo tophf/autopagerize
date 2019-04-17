@@ -21,6 +21,8 @@ export async function updateSiteinfo({force, onprogress} = {}) {
       await (await import('/bg/bg-trim.js')).trimUrlCache(cache, newCache);
       await self.idb.set('cache', newCache);
       await self.chromeLocal.set('siteinfoDate', Date.now());
+      if (self.runWorker)
+        await self.runWorker({cacheUpdated: true});
     }
     return newCache.length;
   } catch (e) {
