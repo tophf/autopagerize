@@ -36,7 +36,8 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
 });
 
 chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
-  if (info.status === 'complete')
+  if (info.status === 'complete' &&
+      (info.url || tab.url).startsWith('http'))
     maybeLaunch(tab);
 });
 
