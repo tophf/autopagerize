@@ -77,14 +77,6 @@ window.utils = {
     });
   },
 
-  isSameDomain(url) {
-    if (url.match(/^\w+:/)) {
-      return location.host === url.split('/')[2];
-    } else {
-      return true;
-    }
-  },
-
   important(cssString) {
     return cssString.replace(/;/g, '!important;');
   },

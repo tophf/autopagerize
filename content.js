@@ -101,7 +101,7 @@
     const url = app.requestURL;
     if (!url || url === app.lastRequestURL || app.loadedURLs.has(url))
       return;
-    if (!utils.isSameDomain(url)) {
+    if (!url.startsWith(location.origin + '/')) {
       statusShowError();
       return;
     }
