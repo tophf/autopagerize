@@ -143,12 +143,6 @@
     app.loadedURLs.add(app.requestURL);
     app.requestURL = nextUrl;
 
-    const HTML_NS = 'http://www.w3.org/1999/xhtml';
-    const hr = document.createElementNS(HTML_NS, 'hr');
-    const p = document.createElementNS(HTML_NS, 'p');
-    hr.className = 'autopagerize_page_separator';
-    p.className = 'autopagerize_page_info';
-
     if (app.insertPoint.ownerDocument !== document) {
       const lastPage = utils.getElementsByXPath(app.rule.pageElement).pop();
       if (lastPage) {
@@ -159,32 +153,32 @@
     }
 
     const parent = app.insertPoint.parentNode;
+    const bin = document.createDocumentFragment();
+    const p = $create('p', {className: 'autopagerize_page_info'}, [
+      chrome.i18n.getMessage('page') + ' ',
+      $create('a', {
+        href: app.requestURL,
+        className: 'autopagerize_link',
+        textContent: ++app.pageNum,
+      }),
+    ]);
 
     if (!pages.length || pages[0].tagName !== 'TR') {
-      parent.insertBefore(hr, app.insertPoint);
-      parent.insertBefore(p, app.insertPoint);
+      bin.appendChild($create('hr', {className: 'autopagerize_page_separator'}));
+      bin.appendChild(p);
     } else {
       let cols = 0;
       for (const sibling of parent.children)
         if (sibling.tagName === 'TD' || sibling.tagName === 'TH')
           cols += sibling.colSpan || 1;
-      const td = document.createElement('td');
-      td.colSpan = cols;
-      td.appendChild(p);
-      const tr = document.createElement('tr');
-      tr.appendChild(td);
-      parent.insertBefore(tr, app.insertPoint);
+      bin.appendChild(
+        $create('tr', {},
+          $create('td', {colSpan: cols},
+            p)));
     }
 
-    const aplink = document.createElement('a');
-    aplink.className = 'autopagerize_link';
-    aplink.href = app.requestURL;
-    aplink.textContent = ++app.pageNum;
-    p.append('page: ', aplink);
-
-    const bin = document.createDocumentFragment();
     pages.forEach(p => bin.appendChild(p));
-    app.insertPoint.parentNode.insertBefore(bin, app.insertPoint);
+    parent.insertBefore(bin, app.insertPoint);
 
     statusShow({loading: false});
     onScroll();
@@ -291,6 +285,17 @@
       return;
 
     status.element.style.setProperty('display', show ? 'block' : 'none', 'important');
+  }
+
+  function $create(tag, props, children) {
+    const el = document.createElementNS('http://www.w3.org/1999/xhtml', tag);
+    if (props)
+      Object.assign(el, props);
+    if (children instanceof Node)
+      el.appendChild(children);
+    else if (Array.isArray(children))
+      el.append(...children);
+    return el;
   }
 
   function onStorageChanged(changes) {
