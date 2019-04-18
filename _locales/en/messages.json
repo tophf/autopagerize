@@ -17,6 +17,12 @@
   "error": {
     "message": "Error"
   },
+  "error_origin": {
+    "message": "next link URL is not within the page domain"
+  },
+  "error_extract_info": {
+    "message": "cannot extract the next page element or URL"
+  },
   "example": {
     "message": "Example"
   },

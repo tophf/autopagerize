@@ -102,7 +102,7 @@
     if (!url || url === app.lastRequestURL || app.loadedURLs.has(url))
       return;
     if (!url.startsWith(location.origin + '/')) {
-      statusShowError();
+      statusShow({error: chrome.i18n.getMessage('error_origin')});
       return;
     }
     const now = new Date();
@@ -112,14 +112,14 @@
     }
     app.requestTime = now;
     app.lastRequestURL = url;
-    statusShowLoading(true);
+    statusShow({loading: true});
 
     const xhr = new XMLHttpRequest();
     xhr.open('GET', url);
     xhr.responseType = 'document';
     xhr.timeout = 60e3;
     xhr.onload = addPage;
-    xhr.onerror = xhr.ontimeout = statusShowError;
+    xhr.onerror = xhr.ontimeout = e => statusShow({error: e.message || e});
     xhr.send();
   }
 
@@ -133,7 +133,7 @@
       pages = utils.getElementsByXPath(app.rule.pageElement, doc);
       nextUrl = getNextURL(app.rule.nextLink, doc, app.requestURL);
     } catch (e) {
-      statusShowError();
+      statusShow({error: chrome.i18n.getMessage('error_extract_info')});
       return;
     }
     if (!pages || !pages.length) {
@@ -187,7 +187,7 @@
     pages.forEach(p => bin.appendChild(p));
     app.insertPoint.parentNode.insertBefore(bin, app.insertPoint);
 
-    statusShowLoading(false);
+    statusShow({loading: false});
     onScroll();
 
     if (!nextUrl)
@@ -228,16 +228,15 @@
     if (status.element && document.contains(status.element))
       return;
     status.element = Object.assign(document.createElement('iframe'), {
-      srcdoc: utils.important(`
-        <body style="
+      srcdoc: `
+        <body style="${utils.important(`
           margin: 0;
           padding: 0;
           color: white;
           background: black;
           font: bold 12px/24px sans-serif;
           text-align: center;
-        ">Loading...</body>
-      `),
+        `)}">${chrome.i18n.getMessage('loading')}...</body>`,
       id: 'autopagerize_message_bar',
       style: utils.important(`
         display: none;
@@ -254,10 +253,6 @@
     document.body.appendChild(status.element);
   }
 
-  function statusShow(on) {
-    status.element.style.setProperty('display', on ? 'block' : 'none', 'important');
-  }
-
   function statusRemove(timeout) {
     clearTimeout(status.timer);
     if (timeout)
@@ -268,30 +263,35 @@
     }
   }
 
-  function statusShowLoading(show) {
-    show = show && status.enabled;
-    if (show)
-      statusCreate();
-    else if (!status.enabled)
-      return;
-    statusShow(show);
-  }
+  function statusShow({loading, error}) {
+    let show;
 
-  function statusShowError() {
-    window.removeEventListener('scroll', onScroll);
-    statusCreate();
-    status.element.srcdoc = utils.important(`
-      <body style="
-        margin: 0;
-        padding: 0;
-        color: white;
-        background: maroon;
-        font: bold 12px/24px sans-serif;
-        text-align: center;
-      ">Error!</body>
-    `);
-    statusShow(true);
-    statusRemove(3000);
+    if (loading !== undefined) {
+      show = loading && status.enabled;
+      if (show)
+        statusCreate();
+      else if (!status.enabled)
+        return;
+
+    } else if (error !== undefined) {
+      show = true;
+      statusCreate();
+      statusRemove(3000);
+      status.element.srcdoc = `
+        <body style="${utils.important(`
+          margin: 0;
+          padding: 0;
+          color: white;
+          background: maroon;
+          font: bold 12px/24px sans-serif;
+          text-align: center;
+        `)}">${chrome.i18n.getMessage('error')}: ${error}</body>`;
+      window.removeEventListener('scroll', onScroll);
+
+    } else
+      return;
+
+    status.element.style.setProperty('display', show ? 'block' : 'none', 'important');
   }
 
   function onStorageChanged(changes) {
