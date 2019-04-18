@@ -92,7 +92,7 @@
     if (!bottom)
       bottom = Math.round(scrollHeight * 0.8);
     app.remainHeight = scrollHeight - bottom + BASE_REMAIN_HEIGHT;
-    app.requestTime = new Date();
+    app.requestTime = Date.now();
 
     onScroll();
   }
@@ -105,12 +105,11 @@
       statusShow({error: chrome.i18n.getMessage('error_origin')});
       return;
     }
-    const now = new Date();
-    if (app.requestTime && now - app.requestTime < MIN_REQUEST_INTERVAL) {
+    if (Date.now() - app.requestTime < MIN_REQUEST_INTERVAL) {
       setTimeout(onScroll, MIN_REQUEST_INTERVAL);
       return;
     }
-    app.requestTime = now;
+    app.requestTime = Date.now();
     app.lastRequestURL = url;
     statusShow({loading: true});
 
