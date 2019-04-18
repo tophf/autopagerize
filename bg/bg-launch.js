@@ -1,3 +1,7 @@
+/*
+global settings
+*/
+
 export async function launch(tabId, rules) {
   if (!await executeScriptCode(tabId, csHasUtils))
     await executeScript(tabId, {file: 'content-utils.js'});
@@ -9,8 +13,8 @@ export async function launch(tabId, rules) {
     await executeScript(tabId, {file: 'content.js'});
 
   await executeScriptCode(tabId, csRun, {
-    disable: self.settings.disable,
-    display_message_bar: self.settings.display_message_bar,
+    disable: settings.disable,
+    display_message_bar: settings.display_message_bar,
   });
 }
 

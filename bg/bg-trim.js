@@ -1,4 +1,5 @@
 /*
+global URL_CACHE_PREFIX
 global arrayOrDummy
 global idb
 */
@@ -8,8 +9,8 @@ export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
   newRules = arrayOrDummy(newRules);
 
   const prefixedKeyRange = IDBKeyRange.bound(
-    self.URL_CACHE_PREFIX,
-    self.URL_CACHE_PREFIX + '\uFFFF');
+    URL_CACHE_PREFIX,
+    URL_CACHE_PREFIX + '\uFFFF');
   const invalidateAll =
     oldRules.length !== newRules.length ||
     oldRules.some((r, i) => (r || {}).url !== (newRules[i] || {}).url);
