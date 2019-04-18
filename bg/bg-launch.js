@@ -28,8 +28,7 @@ function csHasStuff(rules) {
 }
 
 function csRun(settings) {
-  window.settings = settings;
-  window.run(window.rules, window.matchedRule);
+  window.run(window.rules, window.matchedRule, settings);
   delete window.rules;
   delete window.matchedRule;
 }

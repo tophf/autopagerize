@@ -6,269 +6,299 @@
   const BASE_REMAIN_HEIGHT = 400;
   const MIN_REQUEST_INTERVAL = 2000;
 
-  /** @type AutoPager */
-  let ap = null;
+  const app = {
+    /** @type Boolean */
+    enabled: null,
+    /** @type Object */
+    rule: null,
+    /** @type Node */
+    insertPoint: null,
+    /** @type Number */
+    pageNum: 0,
+    /** @type Number */
+    remainHeight: 0,
+    /** @type Number */
+    requestTime: 0,
+    /** @type String */
+    requestURL: '',
+    /** @type String */
+    lastRequestURL: '',
+    /** @type Set<String> */
+    loadedURLs: new Set(),
+  };
 
-  class AutoPager {
-    constructor(info) {
-      this.pageNum = 1;
-      this.info = info;
-      this.enabled = !window.settings.disable;
-      const url = AutoPager.getNextURL(info.nextLink, document, location.href);
+  const status = {
+    /** @type Boolean */
+    enabled: null,
+    /** @type HTMLFrameElement */
+    element: null,
+    /** @type Number */
+    timer: 0,
+  };
 
-      if (!url)
+  chrome.storage.onChanged.addListener(onStorageChanged);
+
+  window.run = (rules, matchedRule, settings) => {
+    onStorageChanged({settings: {newValue: settings}});
+    if (!maybeInit(rules, matchedRule))
+      setTimeout(maybeInit, 2000, rules);
+  };
+
+  function maybeInit(rules, rule) {
+    if (app.loadedURLs.has(location.href))
+      return true;
+    if (!rule)
+      rule = utils.getMatchingRule(rules);
+    if (rule) {
+      init(rule);
+      return true;
+    }
+  }
+
+  function init(rule) {
+    app.pageNum = 1;
+    app.rule = rule;
+    app.requestURL = getNextURL(rule.nextLink, document, location.href);
+    if (!app.requestURL)
+      return;
+
+    if (rule.insertBefore)
+      app.insertPoint = utils.getFirstElementByXPath(rule.insertBefore);
+    if (!app.insertPoint) {
+      const page = utils.getElementsByXPath(rule.pageElement).pop();
+      if (!page)
         return;
 
-      if (info.insertBefore)
-        this.insertPoint = utils.getFirstElementByXPath(info.insertBefore);
-
-      if (!this.insertPoint) {
-        const page = utils.getElementsByXPath(info.pageElement).pop();
-        if (!page)
-          return;
-        if (!page.nextSibling)
-          page.parentNode.append(' ');
-        this.insertPoint = page.nextSibling;
-      }
-
-      this.requestURL = url;
-      this.loadedURLs = {};
-      this.loadedURLs[location.href] = true;
-
-      window.addEventListener('scroll', AutoPager.scroll, {passive: true});
-      chrome.runtime.sendMessage('launched');
-
-      const scrollHeight = document.scrollingElement.scrollHeight;
-      const ip = this.insertPoint;
-      let bottom = ip.tagName
-        ? ip.getBoundingClientRect().top
-        : (ip.previousElementSibling || ip.parentNode).getBoundingClientRect().bottom;
-      if (!bottom) {
-        try {
-          bottom = Math.max(
-            ...utils.getElementsByXPath(this.info.pageElement)
-              .map(el => el.getBoundingClientRect().bottom));
-        } catch (e) {}
-      }
-      if (!bottom)
-        bottom = Math.round(scrollHeight * 0.8);
-      this.remainHeight = scrollHeight - bottom + BASE_REMAIN_HEIGHT;
-      this.reqTime = new Date();
-      this.onScroll();
+      if (!page.nextSibling)
+        page.parentNode.append(' ');
+      app.insertPoint = page.nextSibling;
     }
 
-    initMessageBar() {
-      if (this.frame && document.contains(this.frame))
-        return;
-      this.frame = Object.assign(document.createElement('iframe'), {
-        srcdoc: utils.important(`
-          <body style="
-            margin: 0;
-            padding: 0;
-            color: white;
-            background: black;
-            font: bold 12px/24px sans-serif;
-            text-align: center;
-          ">Loading...</body>
-        `),
-        id: 'autopagerize_message_bar',
-        style: utils.important(`
-          display: none;
-          position: fixed;
-          left: 0;
-          bottom: 0;
-          width: 100%;
-          height: 24px;
-          border: none;
-          opacity: .7;
-          z-index: 1000;
-        `),
-      });
-      document.body.appendChild(this.frame);
-    }
+    app.loadedURLs.clear();
+    app.loadedURLs.add(location.href);
 
-    onScroll() {
-      const scrollHeight = document.scrollingElement.scrollHeight;
-      const remain = scrollHeight - window.innerHeight - window.scrollY;
-      if (this.enabled && remain < this.remainHeight)
-        this.request();
-    }
+    window.addEventListener('scroll', onScroll, {passive: true});
+    chrome.runtime.sendMessage('launched');
 
-    request() {
-      if (!this.requestURL || this.lastRequestURL === this.requestURL)
-        return;
-      const now = new Date();
-      if (this.reqTime && now - this.reqTime < MIN_REQUEST_INTERVAL) {
-        setTimeout(AutoPager.scroll, MIN_REQUEST_INTERVAL);
-        return;
-      }
-      this.reqTime = now;
-      this.lastRequestURL = this.requestURL;
-      this.showLoading(true);
-
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', this.requestURL);
-      xhr.responseType = 'document';
-      xhr.timeout = 60e3;
-      xhr.onload = () => this.load(xhr.response, xhr.responseURL);
-      xhr.onerror = xhr.ontimeout = () => this.error();
-      xhr.send();
-    }
-
-    showLoading(show) {
-      show = show && window.settings.display_message_bar;
-      if (show)
-        this.initMessageBar();
-      else if (!this.frame)
-        return;
-      const style = show ? 'block' : 'none';
-      this.frame.style.setProperty('display', style, 'important');
-    }
-
-    load(doc, url) {
-      if (url && !utils.isSameDomain(url)) {
-        this.error();
-        return;
-      }
-
-      for (const el of doc.getElementsByTagName('script'))
-        el.remove();
-
-      let pages;
+    const {scrollHeight} = document.scrollingElement;
+    let bottom = app.insertPoint.tagName
+      ? app.insertPoint.getBoundingClientRect().top
+      : getBottom(app.insertPoint.previousElementSibling || app.insertPoint.parentNode);
+    if (!bottom) {
       try {
-        pages = utils.getElementsByXPath(this.info.pageElement, doc);
-        url = AutoPager.getNextURL(this.info.nextLink, doc, this.requestURL);
-      } catch (e) {
-        this.error();
-        return;
-      }
+        bottom = Math.max(...utils.getElementsByXPath(rule.pageElement).map(getBottom));
+      } catch (e) {}
+    }
+    if (!bottom)
+      bottom = Math.round(scrollHeight * 0.8);
+    app.remainHeight = scrollHeight - bottom + BASE_REMAIN_HEIGHT;
+    app.requestTime = new Date();
 
-      if (!pages || !pages.length || this.loadedURLs[this.requestURL]) {
-        this.terminate();
-        return;
-      }
+    onScroll();
+  }
 
-      this.loadedURLs[this.requestURL] = true;
-      this.requestURL = url;
-      this.addPage(doc, pages);
-      this.showLoading(false);
-      this.onScroll();
+  function request() {
+    const url = app.requestURL;
+    if (!url || url === app.lastRequestURL || app.loadedURLs.has(url))
+      return;
+    if (!utils.isSameDomain(url)) {
+      statusShowError();
+      return;
+    }
+    const now = new Date();
+    if (app.requestTime && now - app.requestTime < MIN_REQUEST_INTERVAL) {
+      setTimeout(onScroll, MIN_REQUEST_INTERVAL);
+      return;
+    }
+    app.requestTime = now;
+    app.lastRequestURL = url;
+    statusShowLoading(true);
 
-      if (!url)
-        this.terminate();
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.responseType = 'document';
+    xhr.timeout = 60e3;
+    xhr.onload = addPage;
+    xhr.onerror = xhr.ontimeout = statusShowError;
+    xhr.send();
+  }
+
+  function addPage(event) {
+    const doc = event.target.response;
+    for (const el of doc.getElementsByTagName('script'))
+      el.remove();
+
+    let pages, nextUrl;
+    try {
+      pages = utils.getElementsByXPath(app.rule.pageElement, doc);
+      nextUrl = getNextURL(app.rule.nextLink, doc, app.requestURL);
+    } catch (e) {
+      statusShowError();
+      return;
+    }
+    if (!pages || !pages.length) {
+      terminate();
+      return;
     }
 
-    addPage(htmlDoc, pages) {
-      const HTML_NS = 'http://www.w3.org/1999/xhtml';
-      const hr = document.createElementNS(HTML_NS, 'hr');
-      const p = document.createElementNS(HTML_NS, 'p');
-      hr.className = 'autopagerize_page_separator';
-      p.className = 'autopagerize_page_info';
+    app.loadedURLs.add(app.requestURL);
+    app.requestURL = nextUrl;
 
-      if (this.insertPoint.ownerDocument !== document) {
-        const lastPage = utils.getElementsByXPath(this.info.pageElement).pop();
-        if (lastPage) {
-          this.insertPoint =
-            lastPage.nextSibling ||
-            lastPage.parentNode.appendChild(document.createTextNode(' '));
-        }
+    const HTML_NS = 'http://www.w3.org/1999/xhtml';
+    const hr = document.createElementNS(HTML_NS, 'hr');
+    const p = document.createElementNS(HTML_NS, 'p');
+    hr.className = 'autopagerize_page_separator';
+    p.className = 'autopagerize_page_info';
+
+    if (app.insertPoint.ownerDocument !== document) {
+      const lastPage = utils.getElementsByXPath(app.rule.pageElement).pop();
+      if (lastPage) {
+        app.insertPoint =
+          lastPage.nextSibling ||
+          lastPage.parentNode.appendChild(document.createTextNode(' '));
       }
-
-      const parent = this.insertPoint.parentNode;
-
-      if (!pages.length || pages[0].tagName !== 'TR') {
-        parent.insertBefore(hr, this.insertPoint);
-        parent.insertBefore(p, this.insertPoint);
-      } else {
-        let cols = 0;
-        for (const sibling of parent.children)
-          if (sibling.tagName === 'TD' || sibling.tagName === 'TH')
-            cols += sibling.colSpan || 1;
-        const td = document.createElement('td');
-        td.colSpan = cols;
-        td.appendChild(p);
-        const tr = document.createElement('tr');
-        tr.appendChild(td);
-        parent.insertBefore(tr, this.insertPoint);
-      }
-
-      const aplink = document.createElement('a');
-      aplink.className = 'autopagerize_link';
-      aplink.href = this.requestURL;
-      aplink.textContent = ++this.pageNum;
-      p.append('page: ', aplink);
-
-      const bin = document.createDocumentFragment();
-      pages.forEach(p => bin.appendChild(p));
-      this.insertPoint.parentNode.insertBefore(bin, this.insertPoint);
     }
 
-    terminate() {
-      delete window.run;
-      delete window.utils;
-      delete window.settings;
-      window.removeEventListener('scroll', AutoPager.scroll);
-      chrome.storage.onChanged.removeListener(onStorageChanged);
-      setTimeout(() => this.frame && this.frame.remove(), 1500);
+    const parent = app.insertPoint.parentNode;
+
+    if (!pages.length || pages[0].tagName !== 'TR') {
+      parent.insertBefore(hr, app.insertPoint);
+      parent.insertBefore(p, app.insertPoint);
+    } else {
+      let cols = 0;
+      for (const sibling of parent.children)
+        if (sibling.tagName === 'TD' || sibling.tagName === 'TH')
+          cols += sibling.colSpan || 1;
+      const td = document.createElement('td');
+      td.colSpan = cols;
+      td.appendChild(p);
+      const tr = document.createElement('tr');
+      tr.appendChild(td);
+      parent.insertBefore(tr, app.insertPoint);
     }
 
-    error() {
-      window.removeEventListener('scroll', AutoPager.scroll);
-      if (!this.frame)
-        return;
-      this.frame.srcdoc = utils.important(`
+    const aplink = document.createElement('a');
+    aplink.className = 'autopagerize_link';
+    aplink.href = app.requestURL;
+    aplink.textContent = ++app.pageNum;
+    p.append('page: ', aplink);
+
+    const bin = document.createDocumentFragment();
+    pages.forEach(p => bin.appendChild(p));
+    app.insertPoint.parentNode.insertBefore(bin, app.insertPoint);
+
+    statusShowLoading(false);
+    onScroll();
+
+    if (!nextUrl)
+      terminate();
+  }
+
+  function onScroll() {
+    const {scrollHeight} = document.scrollingElement;
+    const remain = scrollHeight - window.innerHeight - window.scrollY;
+    if (app.enabled && remain < app.remainHeight)
+      request();
+  }
+
+  function terminate() {
+    delete window.run;
+    delete window.utils;
+    window.removeEventListener('scroll', onScroll);
+    chrome.storage.onChanged.removeListener(onStorageChanged);
+    statusRemove(1500);
+  }
+
+  function getNextURL(xpath, doc, url) {
+    const next = utils.getFirstElementByXPath(xpath, doc);
+    if (next) {
+      if (doc !== document && !doc.querySelector('base[href]'))
+        doc.head.appendChild(doc.createElement('base')).href = url;
+      if (!next.getAttribute('href'))
+        next.setAttribute('href', next.getAttribute('action') || next.value);
+      return next.href;
+    }
+  }
+
+  function getBottom(el) {
+    return el.getBoundingClientRect().bottom;
+  }
+
+  function statusCreate() {
+    if (status.element && document.contains(status.element))
+      return;
+    status.element = Object.assign(document.createElement('iframe'), {
+      srcdoc: utils.important(`
         <body style="
           margin: 0;
           padding: 0;
           color: white;
-          background: maroon;
+          background: black;
           font: bold 12px/24px sans-serif;
           text-align: center;
-        ">Error!</body>
-      `);
-      this.frame.style.setProperty('display', 'block', 'important');
-      setTimeout(() => this.frame && this.frame.remove(), 3000);
-    }
+        ">Loading...</body>
+      `),
+      id: 'autopagerize_message_bar',
+      style: utils.important(`
+        display: none;
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 24px;
+        border: none;
+        opacity: .7;
+        z-index: 1000;
+      `),
+    });
+    document.body.appendChild(status.element);
+  }
 
-    static scroll() {
-      if (ap)
-        ap.onScroll();
-    }
+  function statusShow(on) {
+    status.element.style.setProperty('display', on ? 'block' : 'none', 'important');
+  }
 
-    static getNextURL(xpath, doc, url) {
-      const next = utils.getFirstElementByXPath(xpath, doc);
-      if (next) {
-        if (doc !== document && !doc.querySelector('base[href]'))
-          doc.head.appendChild(doc.createElement('base')).href = url;
-        if (!next.getAttribute('href'))
-          next.setAttribute('href', next.getAttribute('action') || next.value);
-        return next.href;
-      }
-    }
-
-    static launch(rules, matchedRule) {
-      if (ap && ap.loadedURLs[location.href])
-        return ap;
-      if (!matchedRule)
-        matchedRule = utils.getMatchingRule(rules);
-      if (matchedRule) {
-        ap = new AutoPager(matchedRule);
-        return ap;
-      }
+  function statusRemove(timeout) {
+    clearTimeout(status.timer);
+    if (timeout)
+      status.timer = setTimeout(statusRemove, timeout);
+    else if (status.element) {
+      status.element.remove();
+      status.element = null;
     }
   }
 
-  function onStorageChanged(changes, area) {
-    if (area === 'sync' && changes.settings && ap) {
-      window.settings = changes.settings.newValue;
-      ap.enabled = !window.settings.disable;
-    }
+  function statusShowLoading(show) {
+    show = show && status.enabled;
+    if (show)
+      statusCreate();
+    else if (!status.enabled)
+      return;
+    statusShow(show);
   }
 
-  chrome.storage.onChanged.addListener(onStorageChanged);
+  function statusShowError() {
+    window.removeEventListener('scroll', onScroll);
+    statusCreate();
+    status.element.srcdoc = utils.important(`
+      <body style="
+        margin: 0;
+        padding: 0;
+        color: white;
+        background: maroon;
+        font: bold 12px/24px sans-serif;
+        text-align: center;
+      ">Error!</body>
+    `);
+    statusShow(true);
+    statusRemove(3000);
+  }
 
-  window.run = (rules, matchedRule) => {
-    if (!AutoPager.launch(rules, matchedRule))
-      setTimeout(AutoPager.launch, 2000, rules);
-  };
+  function onStorageChanged(changes) {
+    if (changes.settings) {
+      const settings = changes.settings.newValue;
+      app.enabled = !settings.disable;
+      status.enabled = settings.display_message_bar;
+    }
+  }
 })();
