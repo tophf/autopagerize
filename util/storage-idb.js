@@ -1,11 +1,11 @@
 /* global idb */
 'use strict';
 
-self.CACHE_DURATION = 24 * 60 * 60 * 1000;
-self.URL_CACHE_PREFIX = 'cache:';
-self.MAX_CACHEABLE_URL_LENGTH = 1000;
+window.CACHE_DURATION = 24 * 60 * 60 * 1000;
+window.URL_CACHE_PREFIX = 'cache:';
+window.MAX_CACHEABLE_URL_LENGTH = 1000;
 
-self.idb = {
+window.idb = {
   DB_NAME: 'db',
   STORE_NAME: 'store',
   /** @type IDBDatabase */

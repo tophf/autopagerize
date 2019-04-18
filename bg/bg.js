@@ -8,6 +8,7 @@ global chromeLocal
 global LZStringUnsafe
 global settings
 global cache
+global str2rx
 */
 'use strict';
 
@@ -18,8 +19,16 @@ const EXCLUDES = [
   'http://api.tweetmeme.com/button.js*',
 ];
 
-let worker = null;
-const workerQueue = new Map();
+window.str2rx = new Map();
+window.settings = {};
+window.cache = null;
+window.cacheRegexpified = null;
+
+(async () => {
+  const date = await chromeLocal.get('cacheDate') || 0;
+  if (date + CACHE_DURATION < Date.now())
+    (await import('/bg/bg-update.js')).updateSiteinfo({force: true});
+})();
 
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg === 'launched') {
@@ -49,67 +58,62 @@ chrome.storage.onChanged.addListener(async ({settings: s}) => {
   }
 });
 
-(async () => {
-  const date = await chromeLocal.get('siteinfoDate') || 0;
-  if (date + CACHE_DURATION < Date.now())
-    (await import('/bg/bg-update.js')).updateSiteinfo({force: true});
-})();
-
 async function maybeLaunch(tab) {
-  if (!self.settings)
+  if (!settings)
     self.settings = await chromeSync.getObject('settings');
-  if (!isExcluded(tab.url, settings.excludes, EXCLUDES)) {
+  if (!isExcluded(tab.url)) {
     const rules = await getMatchingRules(tab.url);
     if (rules.length)
       (await import('/bg/bg-launch.js')).launch(tab.id, rules);
   }
 }
 
-function isExcluded(url, ...sets) {
-  for (const set of sets) {
+function isExcluded(url) {
+  for (const set of [settings.excludes, EXCLUDES]) {
     if (!Array.isArray(set))
       continue;
     for (const entry of set) {
       if (!entry)
         continue;
-      let rx;
-      if (entry.startsWith('/') && entry.endsWith('/')) {
-        rx = entry.slice(1, -1);
-      } else {
-        rx = wildcard2regexp(entry);
+      let rx = str2rx.get(entry);
+      if (rx === false)
+        continue;
+      if (!rx) {
+        try {
+          const rxStr = entry.startsWith('/') && entry.endsWith('/')
+            ? entry.slice(1, -1)
+            : '^' +
+              entry.replace(/([-()[\]{}+?.$^|\\])/g, '\\$1')
+                .replace(/\x08/g, '\\x08')
+                .replace(/\*/g, '.*');
+          rx = RegExp(rxStr);
+        } catch (e) {
+          str2rx.set(entry, false);
+          continue;
+        }
+        str2rx.set(entry, rx);
       }
-      if (url.match(rx))
+      if (rx.test(url))
         return true;
     }
   }
-  return false;
-}
-
-function wildcard2regexp(str) {
-  return '^' +
-         str.replace(/([-()[\]{}+?.$^|\\])/g, '\\$1')
-            .replace(/\x08/g, '\\x08')
-            .replace(/\*/g, '.*');
 }
 
 async function getMatchingRules(url) {
-  let urlCacheKey;
+  let key;
   if (url.length < MAX_CACHEABLE_URL_LENGTH) {
-    urlCacheKey = URL_CACHE_PREFIX + LZStringUnsafe.compressToUTF16(url);
-    const rules = await idb.get(urlCacheKey);
-    if (rules && await resolveUrlRules(rules))
+    key = URL_CACHE_PREFIX + LZStringUnsafe.compressToUTF16(url);
+    const rules = await idb.get(key);
+    if (rules && await dereference(rules))
       return rules;
   }
-  const {rules, cacheReset} = await runWorker({url, urlCacheKey});
-  if (cacheReset)
-    chromeLocal.set('siteinfoDate', Date.now());
-  return rules;
+  return (await import('/bg/bg-filter.js')).filterCache(url, key);
 }
 
-async function resolveUrlRules(rules) {
-  if (!self.cache)
+async function dereference(rules) {
+  if (!cache)
     self.cache = await idb.get('cache');
-  const customRules = settings.rules || [];
+  const customRules = arrayOrDummy(settings.rules);
   for (let i = 0; i < rules.length; i++) {
     let r = rules[i];
     r = rules[i] = r >= 0 ? cache[r] : customRules[-r - 1];
@@ -117,23 +121,6 @@ async function resolveUrlRules(rules) {
       return;
   }
   return true;
-}
-
-function runWorker(args) {
-  if (!worker) {
-    worker = new Worker('/bg/worker.js');
-    worker.onmessage = onWorkerMessage;
-  }
-  args.id = performance.now();
-  args.settings = settings;
-  worker.postMessage(args);
-  return new Promise(r => workerQueue.set(args.id, r));
-}
-
-function onWorkerMessage({data}) {
-  const resolve = workerQueue.get(data.id);
-  workerQueue.delete(data.id);
-  resolve(data);
 }
 
 function arrayOrDummy(v) {

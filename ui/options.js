@@ -10,15 +10,15 @@ global onDomLoaded
 Promise.all([
   idb.get('cache').then(arrayOrDummy),
   chromeSync.getObject('settings'),
-  chromeLocal.get('siteinfoDate'),
+  chromeLocal.get('cacheDate'),
   onDomLoaded(),
 ]).then(([
   cache,
   settings,
-  siteinfoDate,
+  cacheDate,
 ]) => {
   renderSettings(settings);
-  renderSiteinfoStats(cache.length, siteinfoDate);
+  renderSiteinfoStats(cache.length, cacheDate);
 
   $.btnSave.onclick = save;
   $.btnUpdate.onclick = update;

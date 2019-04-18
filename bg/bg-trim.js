@@ -1,6 +1,11 @@
+/*
+global arrayOrDummy
+global idb
+*/
+
 export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
-  oldRules = self.arrayOrDummy(oldRules);
-  newRules = self.arrayOrDummy(newRules);
+  oldRules = arrayOrDummy(oldRules);
+  newRules = arrayOrDummy(newRules);
 
   const prefixedKeyRange = IDBKeyRange.bound(
     self.URL_CACHE_PREFIX,
@@ -9,7 +14,7 @@ export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
     oldRules.length !== newRules.length ||
     oldRules.some((r, i) => (r || {}).url !== (newRules[i] || {}).url);
   if (invalidateAll)
-    return self.idb.exec(true, 'delete', prefixedKeyRange);
+    return idb.exec(true, 'delete', prefixedKeyRange);
 
   const isSameRule = ruleIndex => {
     if (ruleIndex < 0) {
@@ -31,7 +36,7 @@ export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
     return true;
   };
 
-  const op = (await self.idb.exec(true)).openCursor(prefixedKeyRange);
+  const op = (await idb.exec(true)).openCursor(prefixedKeyRange);
 
   return new Promise(resolve => {
     op.onsuccess = () => {
@@ -39,7 +44,7 @@ export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
       if (!cursor) {
         op.transaction.db.close();
         resolve();
-      } else if (self.arrayOrDummy(cursor.value).every(isSameRule)) {
+      } else if (arrayOrDummy(cursor.value).every(isSameRule)) {
         cursor.continue();
       } else {
         cursor.delete().onsuccess = () => cursor.continue();

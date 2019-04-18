@@ -1,3 +1,9 @@
+/*
+global idb
+global chromeLocal
+global arrayOrDummy
+*/
+
 const DATA_URL = 'http://wedata.net/databases/AutoPagerize/items_all.json';
 const KNOWN_KEYS = [
   'url',
@@ -12,17 +18,17 @@ const KNOWN_KEYS = [
  * @param {function(ProgressEvent)} [_.onprogress]
  */
 export async function updateSiteinfo({force, onprogress} = {}) {
-  if (!force && await self.idb.exec(false, 'getKey', 'cache'))
+  if (!force && await idb.exec(false, 'getKey', 'cache'))
     return;
   try {
-    const cache = await self.idb.get('cache');
+    const cache = self.cache || await idb.get('cache');
     const newCache = sanitize(await download(onprogress));
     if (newCache.length) {
       await (await import('/bg/bg-trim.js')).trimUrlCache(cache, newCache);
-      await self.idb.set('cache', newCache);
-      await self.chromeLocal.set('siteinfoDate', Date.now());
-      if (self.runWorker)
-        await self.runWorker({cacheUpdated: true});
+      await idb.set('cache', newCache);
+      await chromeLocal.set('cacheDate', Date.now());
+      self.cache = newCache;
+      self.cacheRegexpified = false;
     }
     return newCache.length;
   } catch (e) {
@@ -46,7 +52,7 @@ function download(onprogress) {
 }
 
 function sanitize(data) {
-  return self.arrayOrDummy(data)
+  return arrayOrDummy(data)
     .map(x => x && x.data && x.data.url && pickKnownKeys(x.data))
     .filter(Boolean)
     .sort((a, b) => b.url.length - a.url.length);
