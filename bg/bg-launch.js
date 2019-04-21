@@ -1,52 +1,72 @@
 /*
 global settings
+global ignoreLastError
 */
 
-export async function launch(tabId, rules) {
-  if (!await executeScriptCode(tabId, csHasUtils))
-    await executeScript(tabId, {file: 'content-utils.js'});
+export async function launch(tabId, rules, key) {
+  if (!await poke(tabId).checkDeps())
+    await poke(tabId, {file: '/content/xpather.js'});
 
-  const [hasRule, hasRun] = await executeScriptCode(tabId, csHasStuff, rules) || [];
-  if (!hasRule)
+  const rr = await poke(tabId).checkRule(rules, key) || {};
+  if (!rr.hasRule)
     return;
-  if (!hasRun)
-    await executeScript(tabId, {file: 'content.js'});
 
-  await executeScriptCode(tabId, csRun, {
-    disable: settings.disable,
+  if (!rr.hasRun)
+    await poke(tabId, {file: '/content/pager.js'});
+
+  await poke(tabId).doRun({
+    enabled: settings.enabled,
     display_message_bar: settings.display_message_bar,
   });
 }
 
-function csHasUtils() {
-  return typeof (window.utils || {}).getMatchingRule === 'function';
-}
+const CONTENT_SCRIPT_CODE = {
+  checkDeps() {
+    return typeof (window.xpather || {}).getMatchingRule === 'function';
+  },
+  checkRule(rules, urlCacheKey) {
+    const r = window.xpather.getMatchingRule(rules);
+    if (r.rule) {
+      window.rules = rules;
+      window.matchedRule = r.rule;
+      return {
+        hasRule: true,
+        hasRun: typeof run === 'function',
+      };
+    } else if (!r.pageElementFound) {
+      // assuming it's a non-pagerizable URL
+      delete window.xpather;
+      chrome.storage.local.set({[urlCacheKey]: ''});
+    }
+  },
+  doRun(settings) {
+    window.run(window.rules, window.matchedRule, settings);
+    delete window.rules;
+    delete window.matchedRule;
+  },
+};
 
-function csHasStuff(rules) {
-  const matchedRule = window.utils.getMatchingRule(rules);
-  if (!matchedRule)
-    return [];
-  window.rules = rules;
-  window.matchedRule = matchedRule;
-  return [true, typeof window.run === 'function'];
-}
-
-function csRun(settings) {
-  window.run(window.rules, window.matchedRule, settings);
-  delete window.rules;
-  delete window.matchedRule;
+function poke(tabId, exec) {
+  if (exec)
+    return executeScript(tabId, exec);
+  else
+    return new Proxy({}, {
+      get(_, name) {
+        return (...params) => {
+          const paramsStr = JSON.stringify(params).slice(1, -1);
+          return executeScript(tabId, {
+            code: `(function ${CONTENT_SCRIPT_CODE[name]})(${paramsStr})`,
+          });
+        };
+      },
+    });
 }
 
 function executeScript(tabId, options) {
   return new Promise(resolve => {
-    chrome.tabs.executeScript(tabId, options, ([result] = []) => {
-      chrome.runtime.lastError; // eslint-disable-line
-      resolve(result);
+    chrome.tabs.executeScript(tabId, options, results => {
+      ignoreLastError();
+      resolve(results && results[0]);
     });
   });
-}
-
-function executeScriptCode(tabId, fn, ...params) {
-  const paramsStr = JSON.stringify(params).slice(1, -1);
-  return executeScript(tabId, {code: `(${fn})(${paramsStr})`});
 }

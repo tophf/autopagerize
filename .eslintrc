@@ -14,6 +14,7 @@ env:
 overrides:
   - files:
     - "bg-*.js"
+    - "storage-idb.js"
     parserOptions:
       sourceType: module
 
@@ -180,7 +181,12 @@ rules:
   no-unsafe-negation: [2]
   no-unused-expressions: [1, {allowShortCircuit: true, allowTernary: true}]
   no-unused-labels: [0]
-  no-unused-vars: [1, {args: after-used, vars: local, argsIgnorePattern: ^_|^e$}]
+  no-unused-vars: [1, {
+    args: after-used,
+    vars: local,
+    ignoreRestSiblings: true,
+    argsIgnorePattern: ^_|^e$
+  }]
   no-use-before-define: [2, {functions: false, classes: false}]
   no-useless-call: [2]
   no-useless-computed-key: [2]

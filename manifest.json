@@ -8,8 +8,6 @@
   "background": {
     "scripts": [
       "util/storage-chrome.js",
-      "util/storage-idb.js",
-      "vendor/lz-string-unsafe.min.js",
       "bg/bg.js"
     ],
     "persistent": false
@@ -33,6 +31,7 @@
   "permissions": [
     "*://wedata.net/",
     "<all_urls>",
+    "webNavigation",
     "storage",
     "tabs"
   ]

@@ -1,4 +1,4 @@
-/* global utils */
+/* global xpather */
 'use strict';
 
 // IIFE simplifies complete unregistering for garbage collection
@@ -36,10 +36,8 @@
     timer: 0,
   };
 
-  chrome.storage.onChanged.addListener(onStorageChanged);
-
   window.run = (rules, matchedRule, settings) => {
-    onStorageChanged({settings: {newValue: settings}});
+    loadSettings(settings);
     if (!maybeInit(rules, matchedRule))
       setTimeout(maybeInit, 2000, rules);
   };
@@ -48,7 +46,7 @@
     if (app.loadedURLs.has(location.href))
       return true;
     if (!rule)
-      rule = utils.getMatchingRule(rules);
+      rule = xpather.getMatchingRule(rules).rule;
     if (rule) {
       init(rule);
       return true;
@@ -63,9 +61,9 @@
       return;
 
     if (rule.insertBefore)
-      app.insertPoint = utils.getFirstElementByXPath(rule.insertBefore);
+      app.insertPoint = xpather.getFirstElement(rule.insertBefore);
     if (!app.insertPoint) {
-      const page = utils.getElementsByXPath(rule.pageElement).pop();
+      const page = xpather.getElements(rule.pageElement).pop();
       if (!page)
         return;
 
@@ -78,7 +76,7 @@
     app.loadedURLs.add(location.href);
 
     window.addEventListener('scroll', onScroll, {passive: true});
-    chrome.runtime.sendMessage('launched');
+    chrome.runtime.sendMessage({action: 'launched'});
 
     const {scrollHeight} = document.scrollingElement;
     let bottom = app.insertPoint.tagName
@@ -86,7 +84,7 @@
       : getBottom(app.insertPoint.previousElementSibling || app.insertPoint.parentNode);
     if (!bottom) {
       try {
-        bottom = Math.max(...utils.getElementsByXPath(rule.pageElement).map(getBottom));
+        bottom = Math.max(...xpather.getElements(rule.pageElement).map(getBottom));
       } catch (e) {}
     }
     if (!bottom)
@@ -129,7 +127,7 @@
 
     let pages, nextUrl;
     try {
-      pages = utils.getElementsByXPath(app.rule.pageElement, doc);
+      pages = xpather.getElements(app.rule.pageElement, doc);
       nextUrl = getNextURL(app.rule.nextLink, doc, app.requestURL);
     } catch (e) {
       statusShow({error: chrome.i18n.getMessage('error_extract_info')});
@@ -144,7 +142,7 @@
     app.requestURL = nextUrl;
 
     if (app.insertPoint.ownerDocument !== document) {
-      const lastPage = utils.getElementsByXPath(app.rule.pageElement).pop();
+      const lastPage = xpather.getElements(app.rule.pageElement).pop();
       if (lastPage) {
         app.insertPoint =
           lastPage.nextSibling ||
@@ -196,14 +194,13 @@
 
   function terminate() {
     delete window.run;
-    delete window.utils;
+    delete window.xpather;
     window.removeEventListener('scroll', onScroll);
-    chrome.storage.onChanged.removeListener(onStorageChanged);
     statusRemove(1500);
   }
 
   function getNextURL(xpath, doc, url) {
-    const next = utils.getFirstElementByXPath(xpath, doc);
+    const next = xpather.getFirstElement(xpath, doc);
     if (next) {
       if (doc !== document && !doc.querySelector('base[href]'))
         doc.head.appendChild(doc.createElement('base')).href = url;
@@ -222,7 +219,7 @@
       return;
     status.element = Object.assign(document.createElement('iframe'), {
       srcdoc: `
-        <body style="${utils.important(`
+        <body style="${important(`
           margin: 0;
           padding: 0;
           color: white;
@@ -231,7 +228,7 @@
           text-align: center;
         `)}">${chrome.i18n.getMessage('loading')}...</body>`,
       id: 'autopagerize_message_bar',
-      style: utils.important(`
+      style: important(`
         display: none;
         position: fixed;
         left: 0;
@@ -271,7 +268,7 @@
       statusCreate();
       statusRemove(3000);
       status.element.srcdoc = `
-        <body style="${utils.important(`
+        <body style="${important(`
           margin: 0;
           padding: 0;
           color: white;
@@ -298,11 +295,16 @@
     return el;
   }
 
-  function onStorageChanged(changes) {
-    if (changes.settings) {
-      const settings = changes.settings.newValue;
-      app.enabled = !settings.disable;
-      status.enabled = settings.display_message_bar;
-    }
+  function loadSettings(ss) {
+    app.enabled = notFalse(ss.enabled);
+    status.enabled = notFalse(ss.display_message_bar);
+  }
+
+  function important(cssString) {
+    return cssString.replace(/;/g, '!important;');
+  }
+
+  function notFalse(val) {
+    return val !== false;
   }
 })();

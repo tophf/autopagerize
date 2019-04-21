@@ -1,7 +1,7 @@
-/* global utils */
+/* global xpather */
 'use strict';
 
-window.utils = {
+window.xpather = {
 
   MICROFORMAT: {
     url: '.*',
@@ -11,28 +11,31 @@ window.utils = {
   },
 
   getMatchingRule(rules) {
-    rules.push(utils.MICROFORMAT);
+    rules.push(xpather.MICROFORMAT);
+    let pageElementFound = false;
     for (const r of rules) {
-      if (utils.getFirstElementByXPath(r.nextLink) &&
-          utils.getFirstElementByXPath(r.pageElement)) {
-        return r;
+      if (xpather.getFirstElement(r.pageElement)) {
+        pageElementFound = true;
+        if (xpather.getFirstElement(r.nextLink))
+          return {rule: r};
       }
     }
+    return {pageElementFound};
   },
 
-  getElementsByXPath(xpath, node) {
-    const x = utils.getXPathResult(xpath, node, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
+  getElements(expr, node) {
+    const x = xpather.evaluate(expr, node, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
     const nodes = [];
     for (let node; (node = x.iterateNext());)
       nodes.push(node);
     return nodes;
   },
 
-  getFirstElementByXPath(xpath, node) {
-    return utils.getXPathResult(xpath, node, XPathResult.FIRST_ORDERED_NODE_TYPE).singleNodeValue;
+  getFirstElement(expr, node) {
+    return xpather.evaluate(expr, node, XPathResult.FIRST_ORDERED_NODE_TYPE).singleNodeValue;
   },
 
-  getXPathResult(xpath, node = document, resultType) {
+  evaluate(expr, node = document, resultType) {
     const doc = node.ownerDocument || node;
     const defaultNS = node.lookupNamespaceURI(null);
     let resolver = doc.createNSResolver(node.documentElement || node);
@@ -40,23 +43,32 @@ window.utils = {
     if (defaultNS) {
       const defaultPrefix = '__default__';
       const defaultResolver = resolver;
-      xpath = utils.addDefaultPrefix(xpath, defaultPrefix);
+      expr = xpather.addDefaultPrefix(expr, defaultPrefix);
       resolver = prefix =>
         prefix === defaultPrefix ?
           defaultNS :
           defaultResolver.lookupNamespaceURI(prefix);
     }
-    return doc.evaluate(xpath, node, resolver, resultType, null);
+    return doc.evaluate(expr, node, resolver, resultType, null);
   },
 
-  addDefaultPrefix(xpath, prefix) {
-    const tokenPattern = /([A-Za-z_\u00c0-\ufffd][\w\-.\u00b7-\ufffd]*|\*)\s*(::?|\()?|(".*?"|'.*?'|\d+(?:\.\d*)?|\.(?:\.|\d+)?|[)\]])|(\/\/?|!=|[<>]=?|[([|,=+-])|([@$])/g;
+  TOKEN_PATTERN: RegExp(
+    [
+      /([A-Za-z_\u00c0-\ufffd][\w\-.\u00b7-\ufffd]*|\*)\s*(::?|\()?/,
+      /(".*?"|'.*?'|\d+(?:\.\d*)?|\.(?:\.|\d+)?|[)\]])/,
+      /(\/\/?|!=|[<>]=?|[([|,=+-])/,
+      /([@$])/,
+    ].map(rx => rx.source).join('|'),
+    'g'
+  ),
+
+  addDefaultPrefix(expr, prefix) {
     const TERM = 1;
     const OPERATOR = 2;
     const MODIFIER = 3;
     let tokenType = OPERATOR;
     prefix += ':';
-    return xpath.replace(tokenPattern, (token, id, suffix, term, operator) => {
+    return expr.replace(xpather.TOKEN_PATTERN, (token, id, suffix, term, operator) => {
       if (suffix) {
         tokenType =
           suffix === ':' ||
@@ -75,9 +87,5 @@ window.utils = {
       }
       return token;
     });
-  },
-
-  important(cssString) {
-    return cssString.replace(/;/g, '!important;');
   },
 };

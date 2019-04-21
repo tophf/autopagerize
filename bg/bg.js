@@ -1,28 +1,22 @@
 /*
 global CACHE_DURATION
-global MAX_CACHEABLE_URL_LENGTH
-global URL_CACHE_PREFIX
 global idb
 global chromeSync
 global chromeLocal
-global LZStringUnsafe
 global settings
-global cache
 global str2rx
 */
 'use strict';
 
-const EXCLUDES = [
-  'https://mail.google.com/*',
-  'http://b.hatena.ne.jp/*',
-  'https://www.facebook.com/plugins/like.php*',
-  'http://api.tweetmeme.com/button.js*',
-];
+window.CACHE_DURATION = 24 * 60 * 60 * 1000;
 
+window.settings = null;
+window.cache = new Map();
+window.cacheUrls = null;
+window.cacheUrlsRE = [];
 window.str2rx = new Map();
-window.settings = {};
-window.cache = null;
-window.cacheRegexpified = null;
+/** @type module:storage-idb */
+window.idb = null;
 
 (async () => {
   const date = await chromeLocal.get('cacheDate') || 0;
@@ -30,99 +24,97 @@ window.cacheRegexpified = null;
     (await import('/bg/bg-update.js')).updateSiteinfo({force: true});
 })();
 
-chrome.runtime.onMessage.addListener((msg, sender) => {
-  if (msg === 'launched') {
-    chrome.pageAction.show(sender.tab.id);
-    chrome.pageAction.setIcon({
-      tabId: sender.tab.id,
-      path: {
-        16: 'icons/icon16.png',
-        32: 'icons/icon32.png',
-        48: 'icons/icon48.png',
-      },
-    });
+const processing = new Set();
+const webNavigationFilter = {url: [{schemes: ['http', 'https']}]};
+chrome.webNavigation.onCompleted.addListener(maybeProcess, webNavigationFilter);
+chrome.webNavigation.onHistoryStateUpdated.addListener(maybeProcess, webNavigationFilter);
+chrome.webNavigation.onReferenceFragmentUpdated.addListener(maybeProcess, webNavigationFilter);
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  switch (msg.action) {
+
+    case 'launched':
+      chrome.pageAction.show(sender.tab.id);
+      chrome.pageAction.setIcon({
+        tabId: sender.tab.id,
+        path: {
+          16: 'icons/icon16.png',
+          32: 'icons/icon32.png',
+          48: 'icons/icon48.png',
+        },
+      });
+      break;
+
+    case 'writeSettings':
+      import('/bg/bg-settings.js').then(m => m.writeSettings(msg.settings));
+      sendResponse();
+      break;
   }
 });
 
-chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
-  if (info.status === 'complete' &&
-      (info.url || tab.url).startsWith('http'))
-    maybeLaunch(tab);
-});
-
-chrome.storage.onChanged.addListener(async ({settings: s}) => {
-  if (s) {
-    self.settings = s.newValue;
-    (await import('/bg/bg-trim.js'))
-      .trimUrlCache(s.oldValue.rules, s.newValue.rules, {main: false});
+async function maybeProcess({tabId, frameId, url}) {
+  if (!frameId && !processing.has(tabId)) {
+    processing.add(tabId);
+    if (!settings)
+      self.settings = await chromeSync.getObject('settings');
+    if (!isExcluded(url))
+      await maybeLaunch(tabId, url);
+    processing.delete(tabId);
   }
-});
+}
 
-async function maybeLaunch(tab) {
-  if (!settings)
-    self.settings = await chromeSync.getObject('settings');
-  if (!isExcluded(tab.url)) {
-    const rules = await getMatchingRules(tab.url);
-    if (rules.length)
-      (await import('/bg/bg-launch.js')).launch(tab.id, rules);
-  }
+async function maybeLaunch(tabId, url) {
+  if (!self.idb)
+    self.idb = await import('/util/storage-idb.js');
+  const key = await calcUrlCacheKey(url);
+  const packedRules = await idb.exec({store: 'urlCache'}).get(key);
+  const rules =
+    packedRules && await (await import('/bg/bg-unpack.js')).unpackRules(packedRules) ||
+    await (await import('/bg/bg-filter.js')).filterCache(url, key, packedRules);
+  if (rules.length)
+    (await import('/bg/bg-launch.js')).launch(tabId, rules, key);
 }
 
 function isExcluded(url) {
-  for (const set of [settings.excludes, EXCLUDES]) {
-    if (!Array.isArray(set))
+  if (url.startsWith('https://mail.google.com/') ||
+      url.startsWith('http://b.hatena.ne.jp/') ||
+      url.startsWith('https://www.facebook.com/plugins/like.php') ||
+      url.startsWith('http://api.tweetmeme.com/button.js'))
+    return true;
+  for (const entry of arrayOrDummy(settings.excludes)) {
+    let rx = str2rx.get(entry);
+    if (rx === false)
       continue;
-    for (const entry of set) {
-      if (!entry)
-        continue;
-      let rx = str2rx.get(entry);
-      if (rx === false)
-        continue;
-      if (!rx) {
-        try {
-          const rxStr = entry.startsWith('/') && entry.endsWith('/')
-            ? entry.slice(1, -1)
-            : '^' +
-              entry.replace(/([-()[\]{}+?.$^|\\])/g, '\\$1')
-                .replace(/\x08/g, '\\x08')
-                .replace(/\*/g, '.*');
-          rx = RegExp(rxStr);
-        } catch (e) {
-          str2rx.set(entry, false);
-          continue;
-        }
+    if (!rx) {
+      try {
+        const rxStr = entry.startsWith('/') && entry.endsWith('/')
+          ? entry.slice(1, -1)
+          : '^' +
+            entry.replace(/([-()[\]{}+?.$^|\\])/g, '\\$1')
+              .replace(/\x08/g, '\\x08')
+              .replace(/\*/g, '.*');
+        rx = RegExp(rxStr);
         str2rx.set(entry, rx);
+      } catch (e) {
+        str2rx.set(entry, false);
+        continue;
       }
-      if (rx.test(url))
-        return true;
     }
+    if (rx.test(url))
+      return true;
   }
 }
 
-async function getMatchingRules(url) {
-  let key;
-  if (url.length < MAX_CACHEABLE_URL_LENGTH) {
-    key = URL_CACHE_PREFIX + LZStringUnsafe.compressToUTF16(url);
-    const rules = await idb.get(key);
-    if (rules && await dereference(rules))
-      return rules;
-  }
-  return (await import('/bg/bg-filter.js')).filterCache(url, key);
-}
-
-async function dereference(rules) {
-  if (!cache)
-    self.cache = await idb.get('cache');
-  const customRules = arrayOrDummy(settings.rules);
-  for (let i = 0; i < rules.length; i++) {
-    let r = rules[i];
-    r = rules[i] = r >= 0 ? cache[r] : customRules[-r - 1];
-    if (!r)
-      return;
-  }
-  return true;
+async function calcUrlCacheKey(url) {
+  const bytes = new TextEncoder().encode(url);
+  const hash = await crypto.subtle.digest('SHA-256', bytes);
+  return new Uint8Array(hash).slice(0, 16);
 }
 
 function arrayOrDummy(v) {
   return Array.isArray(v) ? v : [];
+}
+
+function ignoreLastError() {
+  return chrome.runtime.lastError;
 }

@@ -1,45 +1,81 @@
-/* global idb */
-'use strict';
+/** @module storage-idb */
 
-window.CACHE_DURATION = 24 * 60 * 60 * 1000;
-window.URL_CACHE_PREFIX = 'cache:';
-window.MAX_CACHEABLE_URL_LENGTH = 1000;
+export const DB_NAME = 'db';
+export const DEFAULT_STORE_NAME = 'cache';
 
-window.idb = {
-  DB_NAME: 'db',
-  STORE_NAME: 'store',
-  /** @type IDBDatabase */
-  _db: null,
-  get(key) {
-    return idb.exec(false, 'get', key);
-  },
-  set(key, value) {
-    return idb.exec(true, 'put', value, key);
-  },
-  exec(readWrite, method, ...params) {
-    return new Promise((resolve, reject) => {
-      if (idb._db) {
-        idb._execRaw(readWrite, method, params, resolve, reject);
-      } else {
-        const op = indexedDB.open(idb.DB_NAME);
-        op.onupgradeneeded = () => op.result.createObjectStore(idb.STORE_NAME);
-        op.onsuccess = () => {
-          idb._db = op.result;
-          idb._execRaw(readWrite, method, params, resolve, reject);
-        };
-      }
-    });
-  },
-  async _execRaw(readWrite, method, params, resolve, reject) {
-    let op = idb._db
-      .transaction(idb.STORE_NAME, readWrite ? 'readwrite' : 'readonly')
-      .objectStore(idb.STORE_NAME);
-    if (method) {
-      op = op[method](...params);
-      op.onsuccess = () => resolve(op.result);
-      op.onerror = reject;
-    } else {
-      resolve(op);
-    }
+/** @type IDBDatabase */
+let db = null;
+
+/**
+ * @typedef ExecConfig
+ * @prop {String} [store=cache]
+ * @prop {Boolean} [write]
+ * @prop {String} [index]
+ */
+
+const ARGS_KEY = Symbol('idb');
+
+const EXEC_HANDLER = {
+  get(cfg, method) {
+    return method === 'RAW'
+      ? new Promise((ok, err) => doExec(cfg, null, null, ok, err))
+      : (...args) => new Promise((ok, err) => doExec(cfg, method, args, ok, err));
   },
 };
+
+/**
+ * @param {ExecConfig} [cfg]
+ * @return {IDBObjectStore|IDBIndex}
+ */
+export function exec(cfg = {}) {
+  return new Proxy(cfg, EXEC_HANDLER);
+}
+
+/**
+ * @param {ExecConfig} [cfg]
+ * @return {IDBObjectStore|IDBIndex}
+ */
+export function execRW(cfg = {}) {
+  return exec({...cfg, write: true});
+}
+
+function doExec(/** ExecConfig */cfg, method, args, resolve, reject) {
+  if (!db) {
+    doOpen(cfg, method, args, resolve, reject);
+    return;
+  }
+  const storeName = cfg.store || DEFAULT_STORE_NAME;
+  let op = db
+    .transaction(storeName, cfg.write ? 'readwrite' : 'readonly')
+    .objectStore(storeName);
+  if (cfg.index)
+    op = op.index(cfg.index);
+  if (method) {
+    op = op[method](...args);
+    op.onsuccess = () => resolve(op.result);
+    op.onerror = reject;
+  } else {
+    resolve(op);
+  }
+}
+
+function doOpen(...args) {
+  const op = indexedDB.open(DB_NAME);
+  op[ARGS_KEY] = args;
+  op.onsuccess = onDbOpened;
+  op.onupgradeneeded = onDbUpgraded;
+
+}
+
+function onDbOpened(e) {
+  db = e.target.result;
+  doExec(...e.target[ARGS_KEY]);
+}
+
+function onDbUpgraded(e) {
+  // ordered by created_at that doesn't change for a given rule
+  // thus only the changed/added rules will be rewritten on update
+  e.target.result.createObjectStore(DEFAULT_STORE_NAME, {keyPath: 'url'})
+    .createIndex('index', 'index', {unique: true});
+  e.target.result.createObjectStore('urlCache');
+}

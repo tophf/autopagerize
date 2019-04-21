@@ -11,15 +11,19 @@ Promise.all([
 ]).then(([
   settings,
 ]) => {
-  $.status.checked = !settings.disable;
-  $.statusText.textContent = chrome.i18n.getMessage(settings.disable ? 'off' : 'on');
-  $.statusText.closest('label').style.color = settings.disable ? 'darkred' : 'darkgreen';
+  $.status.checked = settings.enabled !== false;
   $.status.onchange = toggle;
+  renderStatus();
 });
+
+function renderStatus() {
+  const enabled = $.status.checked;
+  $.statusText.textContent = chrome.i18n.getMessage(enabled ? 'on' : 'off');
+  $.statusText.closest('label').style.opacity = enabled ? 1 : .5;
+}
 
 async function toggle() {
   const settings = await chromeSync.getObject('settings');
-  settings.disable = !$.status.checked;
-  await chromeSync.set({settings});
-  window.close();
+  settings.enabled = $.status.checked;
+  chrome.runtime.sendMessage({action: 'writeSettings', settings}, renderStatus);
 }

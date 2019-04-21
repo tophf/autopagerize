@@ -1,6 +1,5 @@
 /*
 global $
-global idb
 global chromeSync
 global chromeLocal
 global onDomLoaded
@@ -8,17 +7,17 @@ global onDomLoaded
 'use strict';
 
 Promise.all([
-  idb.get('cache').then(arrayOrDummy),
-  chromeSync.getObject('settings'),
+  import('/util/storage-idb.js').then(idb => idb.exec().count()),
   chromeLocal.get('cacheDate'),
+  chromeSync.getObject('settings'),
   onDomLoaded(),
 ]).then(([
-  cache,
-  settings,
+  cacheCount,
   cacheDate,
+  settings,
 ]) => {
   renderSettings(settings);
-  renderSiteinfoStats(cache.length, cacheDate);
+  renderSiteinfoStats(cacheCount, cacheDate);
 
   $.btnSave.onclick = save;
   $.btnUpdate.onclick = update;
@@ -71,7 +70,7 @@ async function save() {
     settings.rules = rules;
     settings.excludes = $.excludes.value.trim().split(/\s+/);
     settings.display_message_bar = $.display_message_bar.checked;
-    chromeSync.set({settings});
+    chrome.runtime.sendMessage({action: 'writeSettings', settings});
   }
   discardDraft();
 }

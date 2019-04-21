@@ -1,5 +1,8 @@
 /*
 global idb
+global cache
+global cacheUrls
+global cacheUrlsRE
 global chromeLocal
 global arrayOrDummy
 */
@@ -18,21 +21,62 @@ const KNOWN_KEYS = [
  * @param {function(ProgressEvent)} [_.onprogress]
  */
 export async function updateSiteinfo({force, onprogress} = {}) {
-  if (!force && await idb.exec(false, 'getKey', 'cache'))
+  if (!self.idb)
+    self.idb = await import('/util/storage-idb.js');
+  if (!self.cacheUrls)
+    self.cacheUrls = [];
+  if (!force && await idb.exec().count())
     return;
   try {
-    const cache = self.cache || await idb.get('cache');
-    const newCache = sanitize(await download(onprogress));
-    if (newCache.length) {
-      await (await import('/bg/bg-trim.js')).trimUrlCache(cache, newCache);
-      await idb.set('cache', newCache);
-      await chromeLocal.set('cacheDate', Date.now());
-      self.cache = newCache;
-      self.cacheRegexpified = false;
-    }
-    return newCache.length;
+    const [current, fresh] = await Promise.all([
+      getCurrentSortedByCreatedAt(),
+      // `fresh` is sorted using the primary method used by filtering - by url length
+      sanitize(await download(onprogress)),
+    ]);
+    if (!fresh.length)
+      return 0;
+    await (await import('/bg/bg-trim.js')).trimUrlCache(current, fresh);
+    await chromeLocal.set('cacheDate', Date.now());
+    cache.clear();
+    cacheUrls.length = 0;
+    cacheUrlsRE.length = 0;
+    await new Promise(async (resolve, reject) => {
+      const utf8 = new TextEncoder();
+      let /** @type IDBObjectStore */ store, op;
+      for (let i = 0; i < fresh.length; i++) {
+        const rule = fresh[i];
+        cacheUrls.push(rule.url);
+        cache.set(i, rule);
+        if (shallowEqual(rule, current[rule.createdAt]))
+          continue;
+        if (!store)
+          store = await idb.execRW().RAW;
+        const {createdAt, ...toWrite} = rule;
+        toWrite.url = utf8.encode(String.fromCharCode(createdAt + 32) + rule.url);
+        toWrite.index = i;
+        op = store.put(toWrite);
+      }
+      op.onsuccess = resolve;
+      op.onerror = reject;
+    });
+    return fresh.length;
   } catch (e) {
     return e;
+  }
+}
+
+async function getCurrentSortedByCreatedAt() {
+  if (cache.size && cache.size === cacheUrls.length) {
+    return [...cache.values()].sort((a, b) => a.createdAt - b.createdAt);
+  } else {
+    const all = await idb.exec().getAll();
+    const ucs2 = new TextDecoder();
+    for (const r of all) {
+      const key = ucs2.decode(r.url);
+      r.url = key.slice(1);
+      r.createdAt = key.charCodeAt(0) - 32;
+    }
+    return all;
   }
 }
 
@@ -53,23 +97,40 @@ function download(onprogress) {
 
 function sanitize(data) {
   return arrayOrDummy(data)
-    .map(x => x && x.data && x.data.url && pickKnownKeys(x.data))
+    .map(x => x && x.data && x.data.url && pickKnownKeys(x.data, x.created_at))
     .filter(Boolean)
-    .sort((a, b) => b.url.length - a.url.length);
+    .sort((a, b) => a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0)
+    .map((x, i) => (((x.createdAt = i), x)))
+    // N.B. the same sequence (createdAt then length) must be used everywhere
+    .sort((a, b) => b.url.length - a.url.length)
+    .map((x, i) => (((x.index = i), x)));
 }
 
-function pickKnownKeys(entry) {
-  for (const k in entry) {
-    if (Object.hasOwnProperty.call(entry, k) &&
-        !KNOWN_KEYS.includes(k)) {
-      const newItem = {};
-      for (const kk of KNOWN_KEYS) {
-        const v = entry[kk];
+function pickKnownKeys(entry, createdAt) {
+  for (const key of Object.keys(entry)) {
+    if (!KNOWN_KEYS.includes(key)) {
+      const newEntry = {};
+      for (const k of KNOWN_KEYS) {
+        const v = entry[k];
         if (v !== undefined)
-          newItem[kk] = v;
+          newEntry[k] = v;
       }
-      return newItem;
+      entry = newEntry;
+      break;
     }
   }
+  entry.createdAt = createdAt;
   return entry;
+}
+
+function shallowEqual(a, b) {
+  if (!a !== !b)
+    return;
+  for (const k in a)
+    if (k !== 'index' && a[k] !== b[k])
+      return;
+  for (const k in b)
+    if (!a.hasOwnProperty(k))
+      return;
+  return true;
 }
