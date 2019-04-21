@@ -1,4 +1,5 @@
 /*
+global idb
 global settings
 global ignoreLastError
 */
@@ -7,7 +8,9 @@ export async function launch(tabId, rules, key) {
   if (!await poke(tabId).checkDeps())
     await poke(tabId, {file: '/content/xpather.js'});
 
-  const rr = await poke(tabId).checkRule(rules, key) || {};
+  const rr = await poke(tabId).checkRules(rules) || {};
+  if (rr.pageElementFound === false)
+    await idb.execRW({store: 'urlCache'}).put(false, key);
   if (!rr.hasRule)
     return;
 
@@ -24,7 +27,7 @@ const CONTENT_SCRIPT_CODE = {
   checkDeps() {
     return typeof (window.xpather || {}).getMatchingRule === 'function';
   },
-  checkRule(rules, urlCacheKey) {
+  checkRules(rules) {
     const r = window.xpather.getMatchingRule(rules);
     if (r.rule) {
       window.rules = rules;
@@ -34,9 +37,8 @@ const CONTENT_SCRIPT_CODE = {
         hasRun: typeof run === 'function',
       };
     } else if (!r.pageElementFound) {
-      // assuming it's a non-pagerizable URL
       delete window.xpather;
-      chrome.storage.local.set({[urlCacheKey]: ''});
+      return r;
     }
   },
   doRun(settings) {

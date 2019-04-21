@@ -68,6 +68,8 @@ async function maybeLaunch(tabId, url) {
     self.idb = await import('/util/storage-idb.js');
   const key = await calcUrlCacheKey(url);
   const packedRules = await idb.exec({store: 'urlCache'}).get(key);
+  if (packedRules === false)
+    return;
   const rules =
     packedRules && await (await import('/bg/bg-unpack.js')).unpackRules(packedRules) ||
     await (await import('/bg/bg-filter.js')).filterCache(url, key, packedRules);
