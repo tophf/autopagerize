@@ -6,21 +6,29 @@ global cacheUrlsRE
 global setCacheDate
 */
 
-export async function loadBuiltinSiteinfo() {
-  const siteinfo = await (await fetch('/siteinfo.json')).json();
-  await idb.execRW().clear();
-  await idb.execRW({store: 'urlCache'}).clear();
+export function loadBuiltinSiteinfo() {
+  return Promise.all([
+    fetch('/siteinfo.json').then(r => r.json()),
+    idb.execRW().clear().then(() =>
+      idb.execRW({store: 'urlCache'}).clear()),
+  ]).then(([si]) => loadSiteinfo(si));
+}
+
+export function loadSiteinfo(si, fnCanWrite) {
   cache.clear();
   cacheUrls.length = 0;
   cacheUrlsRE.length = 0;
-  const utf8 = new TextEncoder();
-  const store = /** @type IDBObjectStore */ await idb.execRW().RAW;
-  await new Promise((resolve, reject) => {
-    let op;
-    for (let i = 0; i < siteinfo.length; i++) {
-      const rule = siteinfo[i];
+  return new Promise(async (resolve, reject) => {
+    const utf8 = new TextEncoder();
+    let /** @type IDBObjectStore */ store, op;
+    for (let i = 0; i < si.length; i++) {
+      const rule = si[i];
       cacheUrls.push(rule.url);
       cache.set(i, rule);
+      if (fnCanWrite && !fnCanWrite(rule))
+        continue;
+      if (!store)
+        store = await idb.execRW().RAW;
       const {createdAt, ...toWrite} = rule;
       toWrite.url = utf8.encode(String.fromCharCode(createdAt + 32) + rule.url);
       toWrite.index = i;
@@ -28,6 +36,6 @@ export async function loadBuiltinSiteinfo() {
     }
     op.onsuccess = resolve;
     op.onerror = reject;
+    setCacheDate();
   });
-  setCacheDate();
 }

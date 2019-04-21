@@ -2,8 +2,6 @@
 global idb
 global cache
 global cacheUrls
-global cacheUrlsRE
-global setCacheDate
 global arrayOrDummy
 */
 
@@ -36,29 +34,8 @@ export async function updateSiteinfo({force, onprogress} = {}) {
     if (!fresh.length)
       return 0;
     await (await import('/bg/bg-trim.js')).trimUrlCache(current, fresh);
-    setCacheDate();
-    cache.clear();
-    cacheUrls.length = 0;
-    cacheUrlsRE.length = 0;
-    await new Promise(async (resolve, reject) => {
-      const utf8 = new TextEncoder();
-      let /** @type IDBObjectStore */ store, op;
-      for (let i = 0; i < fresh.length; i++) {
-        const rule = fresh[i];
-        cacheUrls.push(rule.url);
-        cache.set(i, rule);
-        if (shallowEqual(rule, current[rule.createdAt]))
-          continue;
-        if (!store)
-          store = await idb.execRW().RAW;
-        const {createdAt, ...toWrite} = rule;
-        toWrite.url = utf8.encode(String.fromCharCode(createdAt + 32) + rule.url);
-        toWrite.index = i;
-        op = store.put(toWrite);
-      }
-      op.onsuccess = resolve;
-      op.onerror = reject;
-    });
+    await (await import('/bg/bg-load-siteinfo.js')).loadSiteinfo(fresh,
+      rule => !shallowEqual(rule, current[rule.createdAt]));
     return fresh.length;
   } catch (e) {
     return e;
