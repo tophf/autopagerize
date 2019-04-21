@@ -3,7 +3,12 @@ global arrayOrDummy
 global idb
 */
 
+let busy;
+
 export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
+  if (busy)
+    return;
+  busy = true;
   oldRules = arrayOrDummy(oldRules);
   newRules = arrayOrDummy(newRules);
 
@@ -13,8 +18,11 @@ export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
   const invalidateAll =
     oldRules.length !== newRules.length ||
     oldRules.some((r, i) => (r || {}).url !== (newRules[i] || {}).url);
-  if (invalidateAll)
-    return idb.execRW({store: 'urlCache'}).clear();
+  if (invalidateAll) {
+    await idb.execRW({store: 'urlCache'}).clear();
+    busy = false;
+    return;
+  }
 
   const rulesChanged = packedRules => {
     for (let i = 0; i < packedRules.length; i++) {
@@ -40,7 +48,7 @@ export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
 
   const op = (await idb.execRW({store: 'urlCache'})).openCursor();
 
-  return new Promise((resolve, reject) => {
+  await new Promise((resolve, reject) => {
     op.onsuccess = () => {
       const cursor = /** IDBCursorWithValue */ op.result;
       if (!cursor) {
@@ -53,4 +61,6 @@ export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
     };
     op.onerror = reject;
   });
+
+  busy = false;
 }
