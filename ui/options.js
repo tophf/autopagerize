@@ -1,15 +1,15 @@
 /*
 global $
-global chromeSync
-global chromeLocal
+global getSettings
+global getCacheDate
 global onDomLoaded
 */
 'use strict';
 
 Promise.all([
   import('/util/storage-idb.js').then(idb => idb.exec().count()),
-  chromeLocal.get('cacheDate'),
-  chromeSync.getObject('settings'),
+  getCacheDate(),
+  getSettings(),
   onDomLoaded(),
 ]).then(([
   cacheCount,
@@ -23,7 +23,7 @@ Promise.all([
   $.btnUpdate.onclick = update;
   $.btnDiscard.onclick = async () => {
     discardDraft();
-    renderSettings(await chromeSync.getObject('settings'));
+    renderSettings(await getSettings());
   };
 
   loadDraft();
@@ -62,7 +62,7 @@ async function save() {
   if (!rules)
     return;
 
-  const settings = await chromeSync.getObject('settings');
+  const settings = await getSettings();
 
   if ($.excludes.value.trim() !== arrayOrDummy(settings.excludes).join('\n') ||
       $.display_message_bar.checked !== settings.display_message_bar ||

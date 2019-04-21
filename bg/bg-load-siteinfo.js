@@ -1,9 +1,9 @@
 /*
 global idb
-global chromeLocal
 global cache
 global cacheUrls
 global cacheUrlsRE
+global setCacheDate
 */
 
 export async function loadBuiltinSiteinfo() {
@@ -29,5 +29,5 @@ export async function loadBuiltinSiteinfo() {
     op.onsuccess = resolve;
     op.onerror = reject;
   });
-  await chromeLocal.set({cacheDate: Date.now()});
+  setCacheDate();
 }

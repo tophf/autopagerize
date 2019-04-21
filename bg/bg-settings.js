@@ -1,6 +1,7 @@
 /*
 global chromeSync
 global settings
+global getSettings
 global ignoreLastError
 */
 
@@ -19,7 +20,7 @@ export async function writeSettings(ss) {
 
 async function analyze(ss) {
   if (!settings)
-    self.settings = await chromeSync.getObject('settings');
+    self.settings = await getSettings();
   (await import('/bg/bg-trim.js')).trimUrlCache(settings.rules, ss.rules, {main: false});
   return PROPS_TO_NOTIFY.some(k => notFalse(settings[k]) !== notFalse(ss[k]));
 }

@@ -1,6 +1,5 @@
 /*
 global idb
-global chromeLocal
 global settings
 global str2rx
 global cache

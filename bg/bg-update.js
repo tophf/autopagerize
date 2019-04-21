@@ -3,7 +3,7 @@ global idb
 global cache
 global cacheUrls
 global cacheUrlsRE
-global chromeLocal
+global setCacheDate
 global arrayOrDummy
 */
 
@@ -36,7 +36,7 @@ export async function updateSiteinfo({force, onprogress} = {}) {
     if (!fresh.length)
       return 0;
     await (await import('/bg/bg-trim.js')).trimUrlCache(current, fresh);
-    await chromeLocal.set('cacheDate', Date.now());
+    setCacheDate();
     cache.clear();
     cacheUrls.length = 0;
     cacheUrlsRE.length = 0;

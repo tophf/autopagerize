@@ -1,8 +1,8 @@
 /*
 global CACHE_DURATION
 global idb
-global chromeSync
-global chromeLocal
+global getSettings
+global getCacheDate
 global settings
 global str2rx
 */
@@ -18,11 +18,9 @@ window.str2rx = new Map();
 /** @type module:storage-idb */
 window.idb = null;
 
-(async () => {
-  const date = await chromeLocal.get('cacheDate') || 0;
-  if (date + CACHE_DURATION < Date.now())
-    (await import('/bg/bg-update.js')).updateSiteinfo({force: true});
-})();
+if (getCacheDate() + CACHE_DURATION < Date.now())
+  import('/bg/bg-update.js').then(m =>
+    m.updateSiteinfo({force: true}));
 
 const processing = new Map();
 const webNavigationFilter = {url: [{schemes: ['http', 'https']}]};
@@ -56,7 +54,7 @@ async function maybeProcess({tabId, frameId, url}) {
   if (!frameId && processing.get(tabId) !== url) {
     processing.set(tabId, url);
     if (!settings)
-      self.settings = await chromeSync.getObject('settings');
+      self.settings = await getSettings();
     if (!isExcluded(url))
       await maybeLaunch(tabId, url, this); // eslint-disable-line no-invalid-this
     processing.delete(tabId);

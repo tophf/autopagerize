@@ -1,12 +1,12 @@
 /*
 global $
 global onDomLoaded
-global chromeSync
+global getSettings
 */
 'use strict';
 
 Promise.all([
-  chromeSync.getObject('settings'),
+  getSettings(),
   onDomLoaded(),
 ]).then(([
   settings,
@@ -23,7 +23,7 @@ function renderStatus() {
 }
 
 async function toggle() {
-  const settings = await chromeSync.getObject('settings');
+  const settings = await getSettings();
   settings.enabled = $.status.checked;
   chrome.runtime.sendMessage({action: 'writeSettings', settings}, renderStatus);
 }
