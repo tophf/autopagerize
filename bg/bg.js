@@ -24,9 +24,9 @@ window.idb = null;
     (await import('/bg/bg-update.js')).updateSiteinfo({force: true});
 })();
 
-const processing = new Set();
+const processing = new Map();
 const webNavigationFilter = {url: [{schemes: ['http', 'https']}]};
-chrome.webNavigation.onCompleted.addListener(maybeProcess, webNavigationFilter);
+chrome.webNavigation.onCompleted.addListener(maybeProcess.bind(true), webNavigationFilter);
 chrome.webNavigation.onHistoryStateUpdated.addListener(maybeProcess, webNavigationFilter);
 chrome.webNavigation.onReferenceFragmentUpdated.addListener(maybeProcess, webNavigationFilter);
 
@@ -53,17 +53,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 async function maybeProcess({tabId, frameId, url}) {
-  if (!frameId && !processing.has(tabId)) {
-    processing.add(tabId);
+  if (!frameId && processing.get(tabId) !== url) {
+    processing.set(tabId, url);
     if (!settings)
       self.settings = await chromeSync.getObject('settings');
     if (!isExcluded(url))
-      await maybeLaunch(tabId, url);
+      await maybeLaunch(tabId, url, this); // eslint-disable-line no-invalid-this
     processing.delete(tabId);
   }
 }
 
-async function maybeLaunch(tabId, url) {
+async function maybeLaunch(tabId, url, lastTry) {
   if (!self.idb)
     self.idb = await import('/util/storage-idb.js');
   const key = await calcUrlCacheKey(url);
@@ -74,7 +74,7 @@ async function maybeLaunch(tabId, url) {
     packedRules && await (await import('/bg/bg-unpack.js')).unpackRules(packedRules) ||
     await (await import('/bg/bg-filter.js')).filterCache(url, key, packedRules);
   if (rules.length)
-    (await import('/bg/bg-launch.js')).launch(tabId, rules, key);
+    await (await import('/bg/bg-launch.js')).launch(tabId, rules, key, {lastTry});
 }
 
 function isExcluded(url) {

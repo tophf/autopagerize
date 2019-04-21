@@ -4,12 +4,19 @@ global settings
 global ignoreLastError
 */
 
-export async function launch(tabId, rules, key) {
-  if (!await poke(tabId).checkDeps())
+export async function launch(tabId, rules, key, {lastTry} = {}) {
+  if (!await poke(tabId).checkDeps()) {
+    // no deps while retrying means the tab got navigated away
+    // and already being handled in another event
+    if (lastTry === 'setTimeout')
+      return;
     await poke(tabId, {file: '/content/xpather.js'});
+  }
 
   const rr = await poke(tabId).checkRules(rules) || {};
-  if (rr.pageElementFound === false)
+  if (!rr.hasRule && !lastTry)
+    await new Promise(r => setTimeout(retry, 2000, r, [...arguments]));
+  if (rr.pageElementFound === false && lastTry)
     await idb.execRW({store: 'urlCache'}).put(false, key);
   if (!rr.hasRule)
     return;
@@ -21,6 +28,11 @@ export async function launch(tabId, rules, key) {
     enabled: settings.enabled,
     display_message_bar: settings.display_message_bar,
   });
+}
+
+function retry(resolve, args) {
+  args[args.length - 1] = {lastTry: 'setTimeout'};
+  launch(...args).then(resolve);
 }
 
 const CONTENT_SCRIPT_CODE = {
