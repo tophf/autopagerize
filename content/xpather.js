@@ -12,15 +12,11 @@ window.xpather = {
 
   getMatchingRule(rules) {
     rules.push(xpather.MICROFORMAT);
-    let pageElementFound = false;
     for (const r of rules) {
-      if (xpather.getFirstElement(r.pageElement)) {
-        pageElementFound = true;
-        if (xpather.getFirstElement(r.nextLink))
-          return {rule: r};
-      }
+      if (xpather.getFirstElement(r.pageElement) &&
+          xpather.getFirstElement(r.nextLink))
+        return r;
     }
-    return {pageElementFound};
   },
 
   getElements(expr, node) {

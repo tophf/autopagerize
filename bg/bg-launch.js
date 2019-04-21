@@ -16,8 +16,6 @@ export async function launch(tabId, rules, key, {lastTry} = {}) {
   const rr = await poke(tabId).checkRules(rules) || {};
   if (!rr.hasRule && !lastTry)
     await new Promise(r => setTimeout(retry, 2000, r, [...arguments]));
-  if (rr.pageElementFound === false && lastTry)
-    await idb.execRW({store: 'urlCache'}).put(false, key);
   if (!rr.hasRule)
     return;
 
@@ -41,16 +39,15 @@ const CONTENT_SCRIPT_CODE = {
   },
   checkRules(rules) {
     const r = window.xpather.getMatchingRule(rules);
-    if (r.rule) {
+    if (r) {
       window.rules = rules;
-      window.matchedRule = r.rule;
+      window.matchedRule = r;
       return {
         hasRule: true,
         hasRun: typeof run === 'function',
       };
-    } else if (!r.pageElementFound) {
+    } else {
       delete window.xpather;
-      return r;
     }
   },
   doRun(settings) {

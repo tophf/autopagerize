@@ -46,7 +46,7 @@
     if (app.loadedURLs.has(location.href))
       return true;
     if (!rule)
-      rule = xpather.getMatchingRule(rules).rule;
+      rule = xpather.getMatchingRule(rules);
     if (rule) {
       init(rule);
       return true;
