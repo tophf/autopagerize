@@ -2,28 +2,35 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <link href="popup.css" rel="stylesheet"/>
   <script src="/util/locale.js"></script>
   <script src="/util/dom.js"></script>
   <script src="/util/storage.js"></script>
   <script src="popup.js"></script>
-  <style>
-    body {
-      font: normal 100%/1.25 sans-serif;
-      padding: 1em 1em 0;
-      margin: 0;
-    }
-    input {
-      vertical-align: bottom;
-    }
-    label,
-    input {
-      cursor: pointer;
-    }
-  </style>
 </head>
 
 <body>
-  <label>AutoPagerize: <b id="statusText"></b> <input id="status" type="checkbox"></label>
-  <p><a href="options.html" tl>options</a></p>
+  <section data-status>
+    <label>AutoPagerize: <b id="statusText"></b> <input id="status" type="checkbox"></label>
+  </section>
+  <section>
+    <a href="options.html" tl>options</a>
+  </section>
+  <section>
+    <label>
+      <span tl nowrap>load_more</span>
+      <select id="loadNum">
+        <option>1
+        <option>2
+        <option>5
+        <option>10
+        <option>20
+        <option>50
+        <option>100
+      </select>
+      <button tl id="loadGo">ok</button>
+      <span id="loadRemain"></span>
+    </label>
+  </section>
 </body>
 </html>

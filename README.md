@@ -6,3 +6,9 @@ A fork of [Autopagerize for Chrome](https://github.com/swdyh/autopagerize_for_ch
 * the URL matching regexps are cached upon each run of the background page so subsequent checks during the run are almost 100 times faster and take just a few milliseconds (the background page unloads after approximately five seconds of no navigation activity)
 * IndexedDB is used to store the data objects directly whereas the previously used localStorage serialized them into a string 
 * Simple one-time messaging and in-place code execution is used when needed instead of the persistent communication ports that were created for all the browser tabs
+
+New features:
+
+* Load 1-100 more pages:
+
+  ![pic](https://i.imgur.com/TeDhlny.png)

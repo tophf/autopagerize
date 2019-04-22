@@ -51,7 +51,8 @@ const CONTENT_SCRIPT_CODE = {
     }
   },
   doRun(settings) {
-    window.run(window.rules, window.matchedRule, settings);
+    // eslint-disable-next-line no-undef
+    window.run({rules, matchedRule, settings});
     delete window.rules;
     delete window.matchedRule;
   },

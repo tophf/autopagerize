@@ -8,6 +8,9 @@
   "display_message_bar": {
     "message": "Display Message Bar"
   },
+  "done": {
+    "message": "Done"
+  },
   "draft_discard": {
     "message": "Discard changes"
   },
@@ -32,11 +35,17 @@
   "go_to_web": {
     "message": "Go to website"
   },
+  "load_more": {
+    "message": "Load more pages"
+  },
   "loading": {
     "message": "Loading"
   },
   "off": {
     "message": "Off"
+  },
+  "ok": {
+    "message": "OK"
   },
   "on": {
     "message": "On"

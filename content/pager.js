@@ -25,6 +25,8 @@
     lastRequestURL: '',
     /** @type Set<String> */
     loadedURLs: new Set(),
+    /** @type function(status) */
+    onPageProcessed: null,
   };
 
   const status = {
@@ -36,10 +38,13 @@
     timer: 0,
   };
 
-  window.run = (rules, matchedRule, settings) => {
-    loadSettings(settings);
-    if (!maybeInit(rules, matchedRule))
+  window.run = ({rules, matchedRule, settings, loadMore}) => {
+    if (settings)
+      loadSettings(settings);
+    if (rules && !maybeInit(rules, matchedRule))
       setTimeout(maybeInit, 2000, rules);
+    if (loadMore)
+      doLoadMore(loadMore);
   };
 
   function maybeInit(rules, rule) {
@@ -95,7 +100,7 @@
     onScroll();
   }
 
-  function request() {
+  function request({force} = {}) {
     const url = app.requestURL;
     if (!url || url === app.lastRequestURL || app.loadedURLs.has(url))
       return;
@@ -103,7 +108,7 @@
       statusShow({error: chrome.i18n.getMessage('error_origin')});
       return;
     }
-    if (Date.now() - app.requestTime < MIN_REQUEST_INTERVAL) {
+    if (!force && Date.now() - app.requestTime < MIN_REQUEST_INTERVAL) {
       setTimeout(onScroll, MIN_REQUEST_INTERVAL);
       return;
     }
@@ -115,11 +120,23 @@
     xhr.open('GET', url);
     xhr.responseType = 'document';
     xhr.timeout = 60e3;
-    xhr.onload = addPage;
-    xhr.onerror = xhr.ontimeout = e => statusShow({error: e.message || e});
+    xhr.onload = e => {
+      const ok = addPage(e);
+      if (app.onPageProcessed)
+        app.onPageProcessed(ok);
+    };
+    xhr.onerror = xhr.ontimeout = e => {
+      statusShow({error: e.message || e});
+      if (app.onPageProcessed)
+        app.onPageProcessed(false);
+    };
     xhr.send();
+    return true;
   }
 
+  /**
+   * @return boolean - true if there are more pages
+   */
   function addPage(event) {
     const doc = event.target.response;
     for (const el of doc.getElementsByTagName('script'))
@@ -181,8 +198,10 @@
     statusShow({loading: false});
     onScroll();
 
-    if (!nextUrl)
-      terminate();
+    if (nextUrl)
+      return true;
+
+    terminate();
   }
 
   function onScroll() {
@@ -197,6 +216,16 @@
     delete window.xpather;
     window.removeEventListener('scroll', onScroll);
     statusRemove(1500);
+  }
+
+  function doLoadMore(num) {
+    app.onPageProcessed =
+      --num >= 0 &&
+      request({force: true}) && (
+        ok => {
+          ok && setTimeout(doLoadMore, MIN_REQUEST_INTERVAL, num);
+          chrome.runtime.sendMessage({action: 'pagesRemain', num});
+        });
   }
 
   function getNextURL(xpath, doc, url) {

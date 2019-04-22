@@ -1,0 +1,47 @@
+body {
+  font: normal 100%/1.25 sans-serif;
+  margin: 0;
+}
+
+section {
+  padding: .5rem 1rem .75rem;
+}
+
+section:nth-child(even) {
+  background-color: #8882;
+}
+
+section[data-status] {
+  transition: background-color .25s;
+}
+
+section[data-status="true"] {
+  background-color: darkseagreen;
+}
+
+section[data-status="false"] {
+  background-color: lightgray;
+}
+
+section[data-status="false"] label {
+  opacity: .5;
+}
+
+input {
+  vertical-align: bottom;
+}
+
+label,
+input {
+  cursor: pointer;
+}
+
+[nowrap] {
+  white-space: nowrap;
+}
+
+.disabled {
+  opacity: .5;
+  pointer-events: none;
+  user-select: none;
+}

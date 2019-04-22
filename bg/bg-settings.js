@@ -33,8 +33,8 @@ function notify() {
 }
 
 function passSettingsToContentScript(settings) {
-  if (typeof window.run === 'function')
-    window.run([], null, settings);
+  if (typeof run === 'function')
+    window.run({settings});
 }
 
 function notFalse(val) {
