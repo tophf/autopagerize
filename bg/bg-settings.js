@@ -1,7 +1,5 @@
 /*
 global settings
-global getSettings
-global ignoreLastError
 */
 
 const PROPS_TO_NOTIFY = [

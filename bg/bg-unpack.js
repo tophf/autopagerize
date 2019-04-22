@@ -1,5 +1,4 @@
 /*
-global arrayOrDummy
 global idb
 global cache
 global cacheUrls

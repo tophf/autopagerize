@@ -1,7 +1,6 @@
 /*
 global idb
 global settings
-global ignoreLastError
 */
 
 export async function launch(tabId, rules, key, {lastTry} = {}) {

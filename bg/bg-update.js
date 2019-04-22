@@ -2,7 +2,6 @@
 global idb
 global cache
 global cacheUrls
-global arrayOrDummy
 */
 
 const DATA_URL = 'http://wedata.net/databases/AutoPagerize/items_all.json';

@@ -1,5 +1,4 @@
 /*
-global arrayOrDummy
 global idb
 */
 

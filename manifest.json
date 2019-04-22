@@ -7,7 +7,7 @@
   "default_locale": "en",
   "background": {
     "scripts": [
-      "util/storage.js",
+      "util/common.js",
       "bg/bg.js"
     ],
     "persistent": false

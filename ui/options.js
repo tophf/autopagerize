@@ -1,9 +1,3 @@
-/*
-global $
-global getSettings
-global getCacheDate
-global onDomLoaded
-*/
 'use strict';
 
 Promise.all([
@@ -144,8 +138,4 @@ function rulesEqual(arrayA, arrayB) {
     }
   }
   return true;
-}
-
-function arrayOrDummy(v) {
-  return Array.isArray(v) ? v : [];
 }

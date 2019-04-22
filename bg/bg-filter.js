@@ -5,7 +5,6 @@ global str2rx
 global cache
 global cacheUrls
 global cacheUrlsRE
-global arrayOrDummy
 */
 
 export async function filterCache(url, urlCacheKey, packedRules) {
@@ -23,7 +22,10 @@ export async function filterCache(url, urlCacheKey, packedRules) {
   const toRead = [];
   for (const rules of [customRules, cacheUrlsRE]) {
     const inMainRules = rules === cacheUrlsRE;
-    for (let i = 0; i < rules.length; i++) {
+    for (let i = 0, len = rules.length; i < len; i++) {
+      if (inMainRules && i > len - 10 &&
+          isGlobalUrl(cacheUrls[i]))
+        continue;
       let r = rules[i];
       const rx = r.rx || r;
       if (!rx || !rx.test(url))

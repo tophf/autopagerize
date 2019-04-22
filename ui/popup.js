@@ -1,8 +1,3 @@
-/*
-global $
-global onDomLoaded
-global getSettings
-*/
 'use strict';
 
 Promise.all([

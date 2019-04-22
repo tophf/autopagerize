@@ -1,9 +1,8 @@
 /*
 global CACHE_DURATION
 global idb
-global getSettings
-global getCacheDate
 global settings
+global globalRules
 global str2rx
 */
 'use strict';
@@ -14,6 +13,7 @@ window.settings = null;
 window.cache = new Map();
 window.cacheUrls = null;
 window.cacheUrlsRE = [];
+window.globalRules = null;
 window.str2rx = new Map();
 /** @type module:storage-idb */
 window.idb = null;
@@ -69,6 +69,7 @@ async function maybeLaunch(tabId, url, lastTry) {
   const rules =
     packedRules && await (await import('/bg/bg-unpack.js')).unpackRules(packedRules) ||
     await (await import('/bg/bg-filter.js')).filterCache(url, key, packedRules);
+  await addGlobalRules(rules);
   if (rules.length)
     await (await import('/bg/bg-launch.js')).launch(tabId, rules, key, {lastTry});
 }
@@ -103,16 +104,17 @@ function isExcluded(url) {
   }
 }
 
+async function addGlobalRules(rules) {
+  try {
+    window.globalRules = JSON.parse(localStorage.globalRules);
+  } catch (e) {}
+  if (!globalRules)
+    await (await import('/bg/bg-global-rules.js')).buildGlobalRules();
+  rules.push(...Object.values(globalRules));
+}
+
 async function calcUrlCacheKey(url) {
   const bytes = new TextEncoder().encode(url);
   const hash = await crypto.subtle.digest('SHA-256', bytes);
   return new Uint8Array(hash).slice(0, 16);
-}
-
-function arrayOrDummy(v) {
-  return Array.isArray(v) ? v : [];
-}
-
-function ignoreLastError() {
-  return chrome.runtime.lastError;
 }

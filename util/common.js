@@ -16,3 +16,16 @@ function getCacheDate() {
 function setCacheDate(d = Date.now()) {
   localStorage.cacheDate = d;
 }
+
+function isGlobalUrl(url) {
+  return url === '^https?://.' ||
+         url === '^https?://.+';
+}
+
+function ignoreLastError() {
+  return chrome.runtime.lastError;
+}
+
+function arrayOrDummy(v) {
+  return Array.isArray(v) ? v : [];
+}

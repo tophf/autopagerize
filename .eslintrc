@@ -11,12 +11,26 @@ env:
   es6: true
   webextensions: true
 
+globals:
+  getSettings: false
+  getCacheDate: false
+  setCacheDate: false
+  isGlobalUrl: false
+  ignoreLastError: false
+  arrayOrDummy: false
+
 overrides:
   - files:
-    - "bg-*.js"
-    - "storage-idb.js"
+    - bg-*.js
+    - storage-idb.js
     parserOptions:
       sourceType: module
+
+  - files:
+    - ui/*.js
+    globals:
+      $: false
+      onDomLoaded: false
 
 rules:
   accessor-pairs: [2]
