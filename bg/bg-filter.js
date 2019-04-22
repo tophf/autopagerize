@@ -1,12 +1,3 @@
-/*
-global idb
-global settings
-global str2rx
-global cache
-global cacheUrls
-global cacheUrlsRE
-*/
-
 export async function filterCache(url, urlCacheKey, packedRules) {
   if (!cacheUrls)
     await loadCacheUrls();
@@ -49,13 +40,13 @@ export async function filterCache(url, urlCacheKey, packedRules) {
 export async function loadCacheUrls() {
   const ucs2 = new TextDecoder();
   // N.B. the same sequence (createdAt then length) must be used everywhere
-  self.cacheUrls = (await idb.exec().getAllKeys() || [])
+  cacheUrls = (await idb.exec().getAllKeys() || [])
     .map(k => ucs2.decode(k).slice(1))
     .sort((a, b) => b.length - a.length);
 }
 
 function regexpifyCache() {
-  self.cacheUrlsRE = Array(cacheUrls.length);
+  cacheUrlsRE = Array(cacheUrls.length);
   for (let i = 0, rx; i < cacheUrls.length; i++) {
     try {
       rx = RegExp(cacheUrls[i]);

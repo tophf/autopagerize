@@ -1,11 +1,3 @@
-/*
-global idb
-global cache
-global cacheUrls
-global cacheUrlsRE
-global globalRules
-*/
-
 export function loadBuiltinSiteinfo() {
   return Promise.all([
     fetch('/siteinfo.json').then(r => r.json()),
@@ -18,7 +10,7 @@ export function loadSiteinfo(si, fnCanWrite) {
   cache.clear();
   cacheUrls.length = 0;
   cacheUrlsRE.length = 0;
-  window.globalRules = {};
+  globalRules = {};
   return new Promise(async (resolve, reject) => {
     const utf8 = new TextEncoder();
     let /** @type IDBObjectStore */ store, op;

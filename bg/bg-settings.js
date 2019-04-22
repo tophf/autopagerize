@@ -1,7 +1,3 @@
-/*
-global settings
-*/
-
 const PROPS_TO_NOTIFY = [
   'enabled',
   'display_message_bar',
@@ -10,14 +6,14 @@ const PROPS_TO_NOTIFY = [
 export async function writeSettings(ss) {
   const shouldNotify = await analyze(ss);
   chrome.storage.sync.set({settings: ss});
-  self.settings = ss;
+  settings = ss;
   if (shouldNotify)
     notify();
 }
 
 async function analyze(ss) {
   if (!settings)
-    self.settings = await getSettings();
+    settings = await getSettings();
   (await import('/bg/bg-trim.js')).trimUrlCache(settings.rules, ss.rules, {main: false});
   return PROPS_TO_NOTIFY.some(k => notFalse(settings[k]) !== notFalse(ss[k]));
 }

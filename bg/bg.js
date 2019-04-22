@@ -1,22 +1,16 @@
-/*
-global CACHE_DURATION
-global idb
-global settings
-global globalRules
-global str2rx
-*/
 'use strict';
 
-window.CACHE_DURATION = 24 * 60 * 60 * 1000;
+// using var to share via `window` or `self` with modules
+var CACHE_DURATION = 24 * 60 * 60 * 1000;
 
-window.settings = null;
-window.cache = new Map();
-window.cacheUrls = null;
-window.cacheUrlsRE = [];
-window.globalRules = null;
-window.str2rx = new Map();
+var settings = null;
+var cache = new Map();
+var cacheUrls = null;
+var cacheUrlsRE = [];
+var globalRules = null;
+var str2rx = new Map();
 /** @type module:storage-idb */
-window.idb = null;
+var idb = null;
 
 if (getCacheDate() + CACHE_DURATION < Date.now())
   import('/bg/bg-update.js').then(m =>
@@ -54,7 +48,7 @@ async function maybeProcess({tabId, frameId, url}) {
   if (!frameId && processing.get(tabId) !== url) {
     processing.set(tabId, url);
     if (!settings)
-      self.settings = await getSettings();
+      settings = await getSettings();
     if (!isExcluded(url))
       await maybeLaunch(tabId, url, this); // eslint-disable-line no-invalid-this
     processing.delete(tabId);
@@ -62,8 +56,8 @@ async function maybeProcess({tabId, frameId, url}) {
 }
 
 async function maybeLaunch(tabId, url, lastTry) {
-  if (!self.idb)
-    self.idb = await import('/util/storage-idb.js');
+  if (!idb)
+    idb = await import('/util/storage-idb.js');
   const key = await calcUrlCacheKey(url);
   const packedRules = await idb.exec({store: 'urlCache'}).get(key);
   const rules =
@@ -106,7 +100,7 @@ function isExcluded(url) {
 
 async function addGlobalRules(rules) {
   try {
-    window.globalRules = JSON.parse(localStorage.globalRules);
+    globalRules = JSON.parse(localStorage.globalRules);
   } catch (e) {}
   if (!globalRules)
     await (await import('/bg/bg-global-rules.js')).buildGlobalRules();

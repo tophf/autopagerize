@@ -1,9 +1,3 @@
-/*
-global idb
-global cache
-global cacheUrls
-*/
-
 const DATA_URL = 'http://wedata.net/databases/AutoPagerize/items_all.json';
 const KNOWN_KEYS = [
   'url',
@@ -18,10 +12,10 @@ const KNOWN_KEYS = [
  * @param {function(ProgressEvent)} [_.onprogress]
  */
 export async function updateSiteinfo({force, onprogress} = {}) {
-  if (!self.idb)
-    self.idb = await import('/util/storage-idb.js');
-  if (!self.cacheUrls)
-    self.cacheUrls = [];
+  if (!idb)
+    idb = await import('/util/storage-idb.js');
+  if (!cacheUrls)
+    cacheUrls = [];
   if (!force && await idb.exec().count())
     return;
   try {

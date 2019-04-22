@@ -1,7 +1,3 @@
-/*
-global idb
-*/
-
 let busy;
 
 export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
@@ -11,8 +7,8 @@ export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
   oldRules = arrayOrDummy(oldRules);
   newRules = arrayOrDummy(newRules);
 
-  if (!self.idb)
-    self.idb = await import('/util/storage-idb.js');
+  if (!idb)
+    idb = await import('/util/storage-idb.js');
 
   const invalidateAll =
     oldRules.length !== newRules.length ||

@@ -1,8 +1,3 @@
-/*
-global idb
-global settings
-*/
-
 export async function launch(tabId, rules, key, {lastTry} = {}) {
   if (!await poke(tabId).checkDeps()) {
     // no deps while retrying means the tab got navigated away

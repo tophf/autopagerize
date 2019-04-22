@@ -32,6 +32,17 @@ overrides:
       $: false
       onDomLoaded: false
 
+  - files:
+    - bg/*.js
+    globals:
+      settings: false
+      cache: false
+      cacheUrls: false
+      cacheUrlsRE: false
+      globalRules: false
+      str2rx: false
+      idb: false
+
 rules:
   accessor-pairs: [2]
   array-bracket-spacing: [2, never]

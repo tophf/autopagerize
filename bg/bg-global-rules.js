@@ -1,10 +1,5 @@
-/*
-global idb
-global globalRules
-*/
-
 export async function buildGlobalRules() {
-  window.globalRules = {};
+  globalRules = {};
   const index = /** @type IDBIndex */ await idb.exec({index: 'index'}).RAW;
   await new Promise((resolve, reject) => {
     const op = index.openCursor(null, 'prev');

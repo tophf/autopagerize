@@ -1,10 +1,3 @@
-/*
-global idb
-global cache
-global cacheUrls
-global settings
-*/
-
 export async function unpackRules(rules) {
   const customRules = arrayOrDummy(settings.rules);
   const unpackedRules = [];
@@ -31,7 +24,8 @@ export async function unpackRules(rules) {
 export async function readMissingRules(unpackedRules, toRead) {
   const index = /** @type IDBIndex */ await idb.exec({index: 'index'}).RAW;
   await new Promise((resolve, reject) => {
-    const cacheUrls = self.cacheUrls || [];
+    if (!cacheUrls)
+      cacheUrls = [];
     const ucs2 = new TextDecoder();
     let op;
     let success = true;
