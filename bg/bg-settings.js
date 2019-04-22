@@ -1,5 +1,4 @@
 /*
-global chromeSync
 global settings
 global getSettings
 global ignoreLastError
@@ -12,7 +11,7 @@ const PROPS_TO_NOTIFY = [
 
 export async function writeSettings(ss) {
   const shouldNotify = await analyze(ss);
-  chromeSync.set({settings: ss});
+  chrome.storage.sync.set({settings: ss});
   self.settings = ss;
   if (shouldNotify)
     notify();
