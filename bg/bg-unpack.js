@@ -24,28 +24,38 @@ export async function unpackRules(rules) {
     if (!r)
       return;
   }
-  if (toRead.length)
-    await readMissingRules(unpackedRules, toRead);
-  return unpackedRules;
+  return toRead.length
+    ? readMissingRules(unpackedRules, toRead)
+    : unpackedRules;
 }
 
 export async function readMissingRules(unpackedRules, toRead) {
   const index = /** @type IDBIndex */ await idb.exec({index: 'index'}).RAW;
   await new Promise((resolve, reject) => {
+    const cacheUrls = self.cacheUrls || [];
     const ucs2 = new TextDecoder();
     let op;
+    let success = true;
     for (let i = 0; i < toRead.length; i++) {
       const [arrayPos, ruleIndex] = toRead[i];
+      let url = cacheUrls[ruleIndex];
+      if (!url)
+        index.getKey(ruleIndex).onsuccess = ({target: {result: key}}) => {
+          if (key)
+            url = ucs2.decode(key).slice(1);
+        };
       op = index.get(ruleIndex);
-      op.onsuccess = e => {
-        const rule = e.target.result;
-        const key = ucs2.decode(rule.url);
-        rule.url = key.slice(1);
-        rule.createdAt = key.charCodeAt(0) - 32;
-        cache.set(ruleIndex, rule);
-        unpackedRules[arrayPos] = rule;
+      // eslint-disable-next-line no-loop-func
+      op.onsuccess = ({target: {result: rule}}) => {
+        if (success && url && rule) {
+          rule.url = url;
+          cache.set(ruleIndex, rule);
+          unpackedRules[arrayPos] = rule;
+        } else {
+          success = false;
+        }
         if (i === toRead.length - 1)
-          resolve();
+          resolve(success && unpackedRules);
       };
     }
     op.onerror = reject;
