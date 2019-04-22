@@ -23,8 +23,8 @@ http.get(DATA_URL, r => {
     process.stdout.write('\r' + Math.round(size / 1024) + ' kiB');
   });
   r.on('end', () => {
-    const json = JSON.parse(data.join(''));
-    fs.writeFileSync(FILE, JSON.stringify(sanitize(json)));
+    const json = sanitize(JSON.parse(data.join('')));
+    fs.writeFileSync(FILE, JSON.stringify(json, null, '  '));
     console.log();
     console.log('Done');
   });
