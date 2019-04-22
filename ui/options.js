@@ -64,7 +64,7 @@ async function save() {
     settings.rules = rules;
     settings.excludes = $.excludes.value.trim().split(/\s+/);
     settings.display_message_bar = $.display_message_bar.checked;
-    chrome.runtime.sendMessage({action: 'writeSettings', settings});
+    inBG.writeSettings(settings);
   }
   discardDraft();
 }
@@ -74,12 +74,14 @@ async function update() {
   const label = btn.textContent;
   btn.disabled = true;
 
-  const numRules = await (await import('/bg/bg-update.js')).updateSiteinfo({
-    force: true,
-    onprogress(e) {
-      btn.textContent = (e.loaded / 1024).toFixed(0) + ' kiB';
-    },
+  const portName = performance.now() + '.' + Math.random();
+  chrome.runtime.onConnect.addListener(port => {
+    if (port.name === portName)
+      port.onMessage.addListener(loaded => {
+        btn.textContent = (loaded / 1024).toFixed(0) + ' kiB';
+      });
   });
+  const numRules = await inBG.updateSiteinfo(portName);
 
   renderSiteinfoStats(numRules, numRules > 0 ? new Date() : null);
   btn.textContent = label;

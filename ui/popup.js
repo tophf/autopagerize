@@ -19,9 +19,11 @@ function renderStatus() {
 }
 
 async function toggle() {
-  const settings = await getSettings();
-  settings.enabled = $.status.checked;
-  chrome.runtime.sendMessage({action: 'writeSettings', settings}, renderStatus);
+  inBG.writeSettings({
+    ...await getSettings(),
+    enabled: $.status.checked,
+  });
+  renderStatus();
 }
 
 async function loadMore() {
@@ -39,10 +41,9 @@ async function loadMore() {
   async function onMessage(msg, sender) {
     if (msg.action === 'pagesRemain' &&
         sender.tab && sender.tab.id === tabId) {
-      $.loadRemain.textContent = msg.num
-        ? msg.num + '...'
-        : chrome.i18n.getMessage('done');
-      if (!msg.num) {
+      const num = msg.data;
+      $.loadRemain.textContent = num ? num + '...' : chrome.i18n.getMessage('done');
+      if (!num) {
         sectionClass.remove('disabled');
         chrome.runtime.onMessage.removeListener(onMessage);
       }

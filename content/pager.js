@@ -224,7 +224,7 @@
       request({force: true}) && (
         ok => {
           ok && setTimeout(doLoadMore, MIN_REQUEST_INTERVAL, num);
-          chrome.runtime.sendMessage({action: 'pagesRemain', num});
+          chrome.runtime.sendMessage({action: 'pagesRemain', data: num});
         });
   }
 

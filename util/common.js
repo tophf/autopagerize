@@ -1,5 +1,12 @@
 'use strict';
 
+const inBG = new Proxy({}, {
+  get(_, action) {
+    return data =>
+      new Promise(r => chrome.runtime.sendMessage({action, data}, r));
+  },
+});
+
 function getSettings() {
   return new Promise(resolve => {
     chrome.storage.sync.get('settings', data => {

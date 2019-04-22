@@ -18,6 +18,7 @@ globals:
   isGlobalUrl: false
   ignoreLastError: false
   arrayOrDummy: false
+  inBG: false
 
 overrides:
   - files:

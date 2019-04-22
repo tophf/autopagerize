@@ -38,9 +38,23 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       break;
 
     case 'writeSettings':
-      import('/bg/bg-settings.js').then(m => m.writeSettings(msg.settings));
+      import('/bg/bg-settings.js').then(m => m.writeSettings(msg.data));
       sendResponse();
       break;
+
+    case 'updateSiteinfo': {
+      const port = chrome.runtime.connect({name: msg.data});
+      import('/bg/bg-update.js')
+        .then(m => m.updateSiteinfo({
+          force: true,
+          onprogress: e => port.postMessage(e.loaded),
+        }))
+        .then(res => {
+          port.disconnect();
+          sendResponse(res >= 0 ? res : String(res));
+        });
+      return true;
+    }
   }
 });
 
