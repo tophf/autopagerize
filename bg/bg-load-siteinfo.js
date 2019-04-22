@@ -30,8 +30,12 @@ export function loadSiteinfo(si, fnCanWrite) {
       toWrite.index = i;
       op = store.put(toWrite);
     }
-    op.onsuccess = resolve;
-    op.onerror = reject;
+    if (op) {
+      op.onsuccess = resolve;
+      op.onerror = reject;
+    } else {
+      resolve();
+    }
     setCacheDate();
     localStorage.globalRules = JSON.stringify(globalRules);
   });
