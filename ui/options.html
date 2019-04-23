@@ -12,12 +12,12 @@
 <body>
   <div>
     <label>
-      <input type="checkbox" id="display_message_bar"/><span tl>display_message_bar</span>
+      <input type="checkbox" id="showStatus"/><span tl>showStatus</span>
     </label>
   </div>
 
   <details>
-    <summary tl>custom_rules</summary>
+    <summary tl>customRules</summary>
     <textarea id="rules" rows="6" spellcheck="false">
 [{
   "url": "",
@@ -45,7 +45,7 @@
   </details>
 
   <details open>
-    <summary tl>exclude_patterns</summary>
+    <summary tl>excludePatterns</summary>
     <textarea id="excludes" rows="7" spellcheck="false"></textarea>
     <div class="desc">
       <span tl>example</span> (<span tl>wildcard</span>):
@@ -57,15 +57,15 @@
   </details>
 
   <button tl id="btnSave">save</button>
-  <button tl id="btnDiscard" hidden>draft_discard</button>
+  <button tl id="btnDiscard" hidden>draftDiscard</button>
 
   <details open>
     <summary tl>siteinfo</summary>
 
     <div><span tl>size</span>: <code id="size"></code></div>
-    <div><span tl>updated_at</span>: <code id="updated_at"></code></div>
+    <div><span tl>updatedAt</span>: <code id="updatedAt"></code></div>
 
-    <button tl id="btnUpdate">update_siteinfo</button>
+    <button tl id="btnUpdate">updateSiteinfo</button>
   </details>
 </body>
 </html>

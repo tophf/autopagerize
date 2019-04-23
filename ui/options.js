@@ -35,19 +35,19 @@ function renderSettings(settings) {
   const excludes = arrayOrDummy(settings.excludes);
   $.excludes.value = excludes.join('\n');
   $.excludes.rows = Math.max(2, Math.min(20, excludes.length + 1));
-  $.display_message_bar.checked = settings.display_message_bar !== false;
+  $.showStatus.checked = settings.showStatus !== false;
 }
 
 function renderSiteinfoStats(numRules, date) {
   $.size.textContent = numRules;
-  $.updated_at.textContent = date > 0 ? new Date(date).toLocaleString() : 'N/A';
+  $.updatedAt.textContent = date > 0 ? new Date(date).toLocaleString() : 'N/A';
 }
 
 function parseCustomRules(str) {
   try {
     return arrayOrDummy(JSON.parse(str));
   } catch (e) {
-    alert(chrome.i18n.getMessage('custom_rules') + '\n\n' + e);
+    alert(chrome.i18n.getMessage('customRules') + '\n\n' + e);
   }
 }
 
@@ -59,11 +59,11 @@ async function save() {
   const settings = await getSettings();
 
   if ($.excludes.value.trim() !== arrayOrDummy(settings.excludes).join('\n') ||
-      $.display_message_bar.checked !== settings.display_message_bar ||
+      $.showStatus.checked !== settings.showStatus ||
       !rulesEqual(rules, arrayOrDummy(settings.rules))) {
     settings.rules = rules;
     settings.excludes = $.excludes.value.trim().split(/\s+/);
-    settings.display_message_bar = $.display_message_bar.checked;
+    settings.showStatus = $.showStatus.checked;
     inBG.writeSettings(settings);
   }
   discardDraft();

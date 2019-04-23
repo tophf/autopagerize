@@ -9,7 +9,7 @@ body {
 }
 
 .draft::before {
-  content: "__MSG_draft_restored__";
+  content: "__MSG_draftRestored__";
   background: gold;
   position: absolute;
   top: 0;

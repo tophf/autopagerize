@@ -1,6 +1,6 @@
 const PROPS_TO_NOTIFY = [
   'enabled',
-  'display_message_bar',
+  'showStatus',
 ];
 
 export async function writeSettings(ss) {

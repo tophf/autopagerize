@@ -105,7 +105,7 @@
     if (!url || url === app.lastRequestURL || app.loadedURLs.has(url))
       return;
     if (!url.startsWith(location.origin + '/')) {
-      statusShow({error: chrome.i18n.getMessage('error_origin')});
+      statusShow({error: chrome.i18n.getMessage('errorOrigin')});
       return;
     }
     if (!force && Date.now() - app.requestTime < MIN_REQUEST_INTERVAL) {
@@ -147,7 +147,7 @@
       pages = xpather.getElements(app.rule.pageElement, doc);
       nextUrl = getNextURL(app.rule.nextLink, doc, app.requestURL);
     } catch (e) {
-      statusShow({error: chrome.i18n.getMessage('error_extract_info')});
+      statusShow({error: chrome.i18n.getMessage('errorExtractInfo')});
       return;
     }
     if (!pages || !pages.length) {
@@ -337,7 +337,7 @@
 
   function loadSettings(ss) {
     app.enabled = notFalse(ss.enabled);
-    status.enabled = notFalse(ss.display_message_bar);
+    status.enabled = notFalse(ss.showStatus);
   }
 
   function important(cssString) {

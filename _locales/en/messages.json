@@ -1,41 +1,38 @@
 {
-  "custom_rules": {
+  "customRules": {
     "message": "Custom rules"
   },
   "description": {
     "message": "Infiniscroll on web pages using a large database of rules"
   },
-  "display_message_bar": {
-    "message": "Display Message Bar"
+  "showStatus": {
+    "message": "Show status while loading"
   },
   "done": {
     "message": "Done"
   },
-  "draft_discard": {
+  "draftDiscard": {
     "message": "Discard changes"
   },
-  "draft_restored": {
+  "draftRestored": {
     "message": "Unsaved changes restored"
   },
   "error": {
     "message": "Error"
   },
-  "error_origin": {
+  "errorOrigin": {
     "message": "next link URL is not within the page domain"
   },
-  "error_extract_info": {
+  "errorExtractInfo": {
     "message": "cannot extract the next page element or URL"
   },
   "example": {
     "message": "Example"
   },
-  "exclude_patterns": {
-    "message": "Exclude Patterns"
+  "excludePatterns": {
+    "message": "Exclude patterns"
   },
-  "go_to_web": {
-    "message": "Go to website"
-  },
-  "load_more": {
+  "loadMore": {
     "message": "Load more pages"
   },
   "loading": {
@@ -50,9 +47,6 @@
   "on": {
     "message": "On"
   },
-  "on_off": {
-    "message": "On/Off"
-  },
   "options": {
     "message": "Options"
   },
@@ -60,7 +54,7 @@
     "message": "Page:"
   },
   "regexp": {
-    "message": "Regexp"
+    "message": "regexp"
   },
   "save": {
     "message": "Save"
@@ -74,19 +68,13 @@
   "status": {
     "message": "Status"
   },
-  "terminated": {
-    "message": "All page loaded"
+  "updateSiteinfo": {
+    "message": "Update siteinfo"
   },
-  "update_siteinfo": {
-    "message": "Update Siteinfo"
-  },
-  "update_siteinfo_complete": {
-    "message": "Updated."
-  },
-  "updated_at": {
+  "updatedAt": {
     "message": "Updated at"
   },
   "wildcard": {
-    "message": "Wildcard"
+    "message": "wildcard"
   }
 }
