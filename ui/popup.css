@@ -40,8 +40,16 @@ input {
   white-space: nowrap;
 }
 
-.disabled {
+.disabled #loadGo {
+  display: none;
+}
+
+.disabled #loadStop {
+  display: initial;
+}
+
+.disabled > :not(#loadStop) {
   opacity: .5;
-  pointer-events: none;
-  user-select: none;
+  /* pointer-events: none; */
+  /* user-select: none; */
 }

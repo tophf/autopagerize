@@ -222,11 +222,13 @@
     if (--num >= 0 && request({force: true})) {
       removeScrollListener();
       app.onPageProcessed = ok => {
-        ok && setTimeout(doLoadMore, MIN_REQUEST_INTERVAL, num);
+        if (ok)
+          doLoadMore.timer = setTimeout(doLoadMore, MIN_REQUEST_INTERVAL, num);
         chrome.runtime.sendMessage({action: 'pagesRemain', data: num});
       };
     } else {
       addScrollListener();
+      clearTimeout(doLoadMore.timer);
       app.onPageProcessed = null;
     }
   }

@@ -68,6 +68,9 @@
   "status": {
     "message": "Status"
   },
+  "stop": {
+    "message": "Stop"
+  },
   "updateSiteinfo": {
     "message": "Update siteinfo"
   },
