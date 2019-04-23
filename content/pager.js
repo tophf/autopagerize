@@ -80,7 +80,7 @@
     app.loadedURLs.clear();
     app.loadedURLs.add(location.href);
 
-    window.addEventListener('scroll', onScroll, {passive: true});
+    addScrollListener();
     chrome.runtime.sendMessage({action: 'launched'});
 
     const {scrollHeight} = document.scrollingElement;
@@ -214,18 +214,21 @@
   function terminate() {
     delete window.run;
     delete window.xpather;
-    window.removeEventListener('scroll', onScroll);
+    removeScrollListener();
     statusRemove(1500);
   }
 
   function doLoadMore(num) {
-    app.onPageProcessed =
-      --num >= 0 &&
-      request({force: true}) && (
-        ok => {
-          ok && setTimeout(doLoadMore, MIN_REQUEST_INTERVAL, num);
-          chrome.runtime.sendMessage({action: 'pagesRemain', data: num});
-        });
+    if (--num >= 0 && request({force: true})) {
+      removeScrollListener();
+      app.onPageProcessed = ok => {
+        ok && setTimeout(doLoadMore, MIN_REQUEST_INTERVAL, num);
+        chrome.runtime.sendMessage({action: 'pagesRemain', data: num});
+      };
+    } else {
+      addScrollListener();
+      app.onPageProcessed = null;
+    }
   }
 
   function getNextURL(xpath, doc, url) {
@@ -305,7 +308,7 @@
           font: bold 12px/24px sans-serif;
           text-align: center;
         `)}">${chrome.i18n.getMessage('error')}: ${error}</body>`;
-      window.removeEventListener('scroll', onScroll);
+      removeScrollListener();
 
     } else
       return;
@@ -322,6 +325,14 @@
     else if (Array.isArray(children))
       el.append(...children);
     return el;
+  }
+
+  function addScrollListener() {
+    window.addEventListener('scroll', onScroll, {passive: true});
+  }
+
+  function removeScrollListener() {
+    window.removeEventListener('scroll', onScroll);
   }
 
   function loadSettings(ss) {
