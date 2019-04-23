@@ -1,56 +1,53 @@
 'use strict';
 
-let tabId;
+(() => {
+  let tabId;
 
-const loadMore = {
+  chrome.tabs.query({active: true, currentWindow: true}, ([tab]) => {
+    tabId = tab.id;
+  });
 
-  init() {
-    chrome.tabs.query({active: true, currentWindow: true}, ([tab]) => {
-      tabId = tab.id;
-    });
+  Promise.all([
+    query(),
+    onDomLoaded(),
+  ]).then(([
+    remaining,
+  ]) => {
+    $.loadGo.onclick = run;
+    $.loadStop.onclick = stop;
+    if (remaining > 0) {
+      renderState(true);
+      chrome.runtime.onMessage.addListener(onMessage);
+    }
+  });
 
-    Promise.all([
-      loadMore.query(),
-      onDomLoaded(),
-    ]).then(([
-      remaining,
-    ]) => {
-      $.loadGo.onclick = loadMore.run;
-      $.loadStop.onclick = loadMore.stop;
-      if (remaining > 0) {
-        loadMore.renderState(true);
-        chrome.runtime.onMessage.addListener(loadMore.onMessage);
-      }
-    });
-  },
-
-  run() {
+  function run() {
     $.loadRemain.textContent = '';
-    loadMore.renderState(true);
-    loadMore.inTab($.loadNum.value);
-    chrome.runtime.onMessage.addListener(loadMore.onMessage);
-  },
+    renderState(true);
+    inTab($.loadNum.value);
+    chrome.runtime.onMessage.addListener(onMessage);
+  }
 
   /**
    * @param {Event} [event] - omit it to skip executeScript when calling explicitly
    */
-  stop(event) {
-    loadMore.renderState(false);
-    chrome.runtime.onMessage.removeListener(loadMore.onMessage);
+  function stop(event) {
+    renderState(false);
+    chrome.runtime.onMessage.removeListener(onMessage);
     if (event)
-      loadMore.inTab('stop');
-  },
+      inTab('stop');
+  }
 
-  inTab(data) {
+  function inTab(data) {
     chrome.tabs.executeScript(tabId, {
       code: `
         typeof run === 'function' &&
         run({loadMore: ${data}})
       `,
     }, ignoreLastError);
-  },
+  }
 
-  query() {
+  function query() {
     return new Promise(resolve =>
       chrome.tabs.executeScript({
         code: `
@@ -60,21 +57,19 @@ const loadMore = {
       }, r => {
         resolve(chrome.runtime.lastError ? 0 : r[0]);
       }));
-  },
+  }
 
-  onMessage(msg, sender) {
+  function onMessage(msg, sender) {
     if (msg.action === 'pagesRemaining' &&
         sender.tab && sender.tab.id === tabId) {
       const num = msg.data;
       $.loadRemain.textContent = num ? num + '...' : chrome.i18n.getMessage('done');
       if (!num)
-        loadMore.stop();
+        stop();
     }
-  },
+  }
 
-  renderState(running) {
+  function renderState(running) {
     $.loadGo.closest('section').classList.toggle('disabled', running);
-  },
-};
-
-loadMore.init();
+  }
+})();
