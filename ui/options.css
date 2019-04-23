@@ -1,15 +1,10 @@
 body {
   font: normal 100%/1.25 sans-serif;
-  padding: 12px;
+  padding: 0 1em 1em;
   min-width: 500px;
 }
 
-.draft {
-  padding-top: 4em;
-}
-
-.draft::before {
-  content: "__MSG_draftRestored__";
+#warning {
   background: gold;
   position: absolute;
   top: 0;
@@ -18,6 +13,14 @@ body {
   padding: 1em;
   font-weight: bold;
   box-shadow: 0 0 20px black;
+}
+
+.draft {
+  padding-top: 4em;
+}
+
+.draft #warning {
+  display: initial;
 }
 
 .draft .restored {

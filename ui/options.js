@@ -44,29 +44,36 @@ function renderSiteinfoStats(numRules, date) {
 }
 
 function parseCustomRules(str) {
+  let json;
   try {
-    return arrayOrDummy(JSON.parse(str));
+    json = str.trim() ? arrayOrDummy(JSON.parse(str)) : null;
+    $.warning.hidden = true;
   } catch (e) {
-    alert(chrome.i18n.getMessage('customRules') + '\n\n' + e);
+    $.warning.hidden = false;
+    $.warning.textContent = String(e);
+    $.warning.scrollIntoView({behavior: 'smooth', block: 'start'})
   }
+  return json;
 }
 
 async function save() {
   const rules = parseCustomRules($.rules.value);
-  if (!rules)
+  if (rules === undefined)
     return;
 
   const settings = await getSettings();
 
   if ($.excludes.value.trim() !== arrayOrDummy(settings.excludes).join('\n') ||
       $.showStatus.checked !== settings.showStatus ||
-      !rulesEqual(rules, arrayOrDummy(settings.rules))) {
+      !rulesEqual(rules, settings.rules)) {
+    $.rules.value = rules ? JSON.stringify(rules, null, '  ') : '';
     settings.rules = rules;
     settings.excludes = $.excludes.value.trim().split(/\s+/);
     settings.showStatus = $.showStatus.checked;
     inBG.writeSettings(settings);
   }
   discardDraft();
+  clearTimeout(saveDraft.timer);
 }
 
 async function update() {
@@ -100,9 +107,10 @@ function loadDraft() {
         someRestored = true;
       }
     }
-    if (someRestored)
+    if (someRestored) {
       document.body.classList.add('draft');
-    else
+      $.warning.textContent = chrome.i18n.getMessage('draftRestored');
+    } else
       delete localStorage.draft;
   } catch (e) {}
 }
@@ -127,6 +135,8 @@ function discardDraft() {
 }
 
 function rulesEqual(arrayA, arrayB) {
+  arrayA = arrayOrDummy(arrayA);
+  arrayB = arrayOrDummy(arrayB);
   if (arrayA.length !== arrayB.length)
     return;
   for (let i = 0; i < arrayA.length; i++) {
