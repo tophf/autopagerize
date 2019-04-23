@@ -1,6 +1,7 @@
 'use strict';
 
 // using var to share via `window` or `self` with modules
+/* eslint-disable no-var */
 var CACHE_DURATION = 24 * 60 * 60 * 1000;
 
 var settings = null;
@@ -11,6 +12,7 @@ var globalRules = null;
 var str2rx = new Map();
 /** @type module:storage-idb */
 var idb = null;
+/* eslint-enable no-var */
 
 if (getCacheDate() + CACHE_DURATION < Date.now())
   import('/bg/bg-update.js').then(m =>

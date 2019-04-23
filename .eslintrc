@@ -20,30 +20,6 @@ globals:
   arrayOrDummy: false
   inBG: false
 
-overrides:
-  - files:
-    - bg-*.js
-    - storage-idb.js
-    parserOptions:
-      sourceType: module
-
-  - files:
-    - ui/*.js
-    globals:
-      $: false
-      onDomLoaded: false
-
-  - files:
-    - bg/*.js
-    globals:
-      settings: false
-      cache: false
-      cacheUrls: false
-      cacheUrlsRE: false
-      globalRules: false
-      str2rx: false
-      idb: false
-
 rules:
   accessor-pairs: [2]
   array-bracket-spacing: [2, never]
@@ -259,3 +235,27 @@ rules:
   wrap-iife: [2, inside]
   yield-star-spacing: [2, {before: true, after: false}]
   yoda: [2, never]
+
+overrides:
+  - files:
+    - "bg-*.js"
+    - "storage-idb.js"
+    parserOptions:
+      sourceType: module
+
+  - files:
+    - "bg/*.js"
+    globals:
+      settings: true
+      cache: false
+      cacheUrls: true
+      cacheUrlsRE: true
+      globalRules: true
+      str2rx: false
+      idb: true
+
+  - files:
+    - "ui/*.js"
+    globals:
+      $: false
+      onDomLoaded: false

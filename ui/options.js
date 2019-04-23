@@ -51,7 +51,7 @@ function parseCustomRules(str) {
   } catch (e) {
     $.warning.hidden = false;
     $.warning.textContent = String(e);
-    $.warning.scrollIntoView({behavior: 'smooth', block: 'start'})
+    $.warning.scrollIntoView({behavior: 'smooth', block: 'start'});
   }
   return json;
 }
