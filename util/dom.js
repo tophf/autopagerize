@@ -7,5 +7,5 @@ const $ = new Proxy({}, {
 function onDomLoaded() {
   return document.readyState !== 'loading'
     ? Promise.resolve()
-    : new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, {once: true}));
+    : new Promise(r => document.addEventListener('DOMContentLoaded', r, {once: true}));
 }
