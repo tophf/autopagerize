@@ -27,6 +27,8 @@
     loadedURLs: new Set(),
     /** @type function(status) */
     onPageProcessed: null,
+    /** @type Number */
+    pagesRemaining: 0,
   };
 
   const status = {
@@ -44,7 +46,7 @@
     if (rules && !maybeInit(rules, matchedRule))
       setTimeout(maybeInit, 2000, rules);
     if (loadMore)
-      doLoadMore(loadMore);
+      return doLoadMore(loadMore);
   };
 
   function maybeInit(rules, rule) {
@@ -219,12 +221,15 @@
   }
 
   function doLoadMore(num) {
-    if (--num >= 0 && request({force: true})) {
+    if (num === 'query')
+      return app.pagesRemaining;
+    app.pagesRemaining = --num || 0;
+    if (num >= 0 && request({force: true})) {
       removeScrollListener();
       app.onPageProcessed = ok => {
         if (ok)
           doLoadMore.timer = setTimeout(doLoadMore, MIN_REQUEST_INTERVAL, num);
-        chrome.runtime.sendMessage({action: 'pagesRemain', data: num});
+        chrome.runtime.sendMessage({action: 'pagesRemaining', data: num});
       };
     } else {
       addScrollListener();
