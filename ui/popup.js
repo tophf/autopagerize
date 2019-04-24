@@ -5,16 +5,20 @@ let tab;
 
 Promise.all([
   getSettings(),
+  getLocal('draft'),
   getActiveTab(),
   onDomLoaded(),
 ]).then(([
   settings,
+  draft,
   tab_,
 ]) => {
   tab = tab_;
   $.status.checked = settings.enabled !== false;
   $.status.onchange = toggle;
   renderStatus();
+  if (draft)
+    document.querySelector('a[href*="options"]').textContent += ' *';
 });
 
 function renderStatus() {
