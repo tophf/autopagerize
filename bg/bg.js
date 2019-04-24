@@ -14,6 +14,8 @@ var str2rx = new Map();
 var idb = null;
 /* eslint-enable no-var */
 
+let endpoints;
+
 if (getCacheDate() + CACHE_DURATION < Date.now())
   import('/bg/bg-update.js').then(m =>
     m.updateSiteinfo({force: true}));
@@ -25,40 +27,44 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(maybeProcess, webNavigati
 chrome.webNavigation.onReferenceFragmentUpdated.addListener(maybeProcess, webNavigationFilter);
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  switch (msg.action) {
+  if (!endpoints)
+    initMessaging();
+  const result = endpoints[msg.action](msg.data, sender);
+  if (result && typeof result.then === 'function') {
+    result.then(sendResponse);
+    return true;
+  } else if (result !== undefined) {
+    sendResponse(result);
+  }
+});
 
-    case 'launched':
-      chrome.pageAction.show(sender.tab.id);
+function initMessaging() {
+  endpoints = {
+    launched: (_, {tab: {id}}) => {
+      chrome.pageAction.show(id);
       chrome.pageAction.setIcon({
-        tabId: sender.tab.id,
+        tabId: id,
         path: {
           16: 'icons/icon16.png',
           32: 'icons/icon32.png',
           48: 'icons/icon48.png',
         },
       });
-      break;
-
-    case 'writeSettings':
-      import('/bg/bg-settings.js').then(m => m.writeSettings(msg.data));
-      sendResponse();
-      break;
-
-    case 'updateSiteinfo': {
-      const port = chrome.runtime.connect({name: msg.data});
-      import('/bg/bg-update.js')
-        .then(m => m.updateSiteinfo({
-          force: true,
-          onprogress: e => port.postMessage(e.loaded),
-        }))
-        .then(res => {
-          port.disconnect();
-          sendResponse(res >= 0 ? res : String(res));
-        });
-      return true;
-    }
-  }
-});
+    },
+    writeSettings: async ss => {
+      await (await import('/bg/bg-settings.js')).writeSettings(ss);
+    },
+    updateSiteinfo: async portName => {
+      const port = chrome.runtime.connect({name: portName});
+      const result = await (await import('/bg/bg-update.js')).updateSiteinfo({
+        force: true,
+        onprogress: e => port.postMessage(e.loaded),
+      });
+      port.disconnect();
+      return result >= 0 ? result : String(result);
+    },
+  };
+}
 
 async function maybeProcess({tabId, frameId, url}) {
   if (!frameId && processing.get(tabId) !== url) {
