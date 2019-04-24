@@ -4,25 +4,21 @@ Promise.all([
   import('/util/storage-idb.js').then(idb => idb.exec().count()),
   getCacheDate(),
   getSettings(),
+  getLocal('draft'),
   onDomLoaded(),
 ]).then(([
   cacheCount,
   cacheDate,
   settings,
+  draft,
 ]) => {
   renderSettings(settings);
   renderSiteinfoStats(cacheCount, cacheDate);
+  dispatchEvent(new CustomEvent('draftLoaded', {detail: draft}));
 
   $.btnSave.onclick = save;
   $.btnUpdate.onclick = update;
-  $.btnDiscard.onclick = async () => {
-    discardDraft();
-    renderSettings(await getSettings());
-  };
-
-  loadDraft();
-  addEventListener('input', saveDraft);
-  addEventListener('change', saveDraft);
+  $.btnDiscard.addEventListener('click', () => getSettings().then(renderSettings));
 });
 
 function renderSettings(settings) {
@@ -72,8 +68,7 @@ async function save() {
     settings.showStatus = $.showStatus.checked;
     inBG.writeSettings(settings);
   }
-  discardDraft();
-  clearTimeout(saveDraft.timer);
+  dispatchEvent(new Event('optionsSaved'));
 }
 
 async function update() {
@@ -93,45 +88,6 @@ async function update() {
   renderSiteinfoStats(numRules, numRules > 0 ? new Date() : null);
   btn.textContent = label;
   btn.disabled = false;
-}
-
-function loadDraft() {
-  try {
-    let someRestored;
-    for (const {id, value} of JSON.parse(localStorage.draft)) {
-      const el = $[id];
-      const key = el.type === 'checkbox' ? 'checked' : 'value';
-      if (el[key] !== value) {
-        el.classList.add('restored');
-        el[key] = value;
-        someRestored = true;
-      }
-    }
-    if (someRestored) {
-      document.body.classList.add('draft');
-      $.warning.textContent = chrome.i18n.getMessage('draftRestored');
-    } else
-      delete localStorage.draft;
-  } catch (e) {}
-}
-
-function saveDraft(debounced) {
-  if (debounced === true) {
-    const elements = [...document.querySelectorAll('input, textarea')];
-    localStorage.draft = JSON.stringify(
-      elements.map(el => ({
-        id: el.id,
-        value: el.type === 'checkbox' ? el.checked : el.value,
-      })));
-  } else {
-    clearTimeout(saveDraft.timer);
-    saveDraft.timer = setTimeout(saveDraft, 200, true);
-  }
-}
-
-function discardDraft() {
-  delete localStorage.draft;
-  document.body.classList.remove('draft');
 }
 
 function rulesEqual(arrayA, arrayB) {
