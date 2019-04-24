@@ -6,8 +6,10 @@ $.excludeGo.onclick = async () => {
   $.excludeGo.textContent = chrome.i18n.getMessage('done');
   const ss = await getSettings();
   ss.excludes = arrayOrDummy(ss.excludes);
-  ss.excludes.push($.excludeGo.title);
-  inBG.writeSettings(ss);
+  if (!ss.excludes.includes($.excludeGo.title)) {
+    ss.excludes.push($.excludeGo.title);
+    inBG.writeSettings(ss);
+  }
 };
 
 $.excludeSelector.onchange = async function () {
