@@ -21,17 +21,17 @@ Promise.all([
   $.btnDiscard.addEventListener('click', () => getSettings().then(renderSettings));
 });
 
-function renderSettings(settings) {
-  const rules = arrayOrDummy(settings.rules).filter(r => r.url);
+function renderSettings({rules, excludes, showStatus}) {
+  rules = arrayOrDummy(rules).filter(r => r.url);
   if (rules.length) {
     $.rules.value = JSON.stringify(rules, null, '  ');
     $.rules.rows = Math.min(20, rules.length * 5 + 3);
     $.rules.closest('details').open = true;
   }
-  const excludes = arrayOrDummy(settings.excludes);
+  excludes = arrayOrDummy(excludes);
   $.excludes.value = excludes.join('\n');
   $.excludes.rows = Math.max(2, Math.min(20, excludes.length + 1));
-  $.showStatus.checked = settings.showStatus !== false;
+  $.showStatus.checked = showStatus !== false;
 }
 
 function renderSiteinfoStats(numRules, date) {
