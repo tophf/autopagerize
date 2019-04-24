@@ -31,7 +31,7 @@ body {
   display: inline;
 }
 
-body > :nth-child(n + 2) {
+section:nth-child(n + 2) {
   margin-top: 1em;
 }
 

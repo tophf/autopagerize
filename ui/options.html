@@ -10,63 +10,71 @@
 </head>
 
 <body>
-  <div>
+  <section>
     <label>
       <input type="checkbox" id="showStatus"/><span tl>showStatus</span>
     </label>
-  </div>
+  </section>
 
-  <details>
-    <summary tl>customRules</summary>
-    <textarea id="rules" rows="6" spellcheck="false">
-[{
-  "url": "",
-  "nextLink": "",
-  "pageElement": ""
-}]
-    </textarea>
+  <section>
+    <details>
+      <summary tl>customRules</summary>
+      <textarea id="rules" rows="6" spellcheck="false">
+  [{
+    "url": "",
+    "nextLink": "",
+    "pageElement": ""
+  }]
+      </textarea>
 
-    <details class="desc">
-      <summary tl>example</summary>
-      <pre>
-[{
-  "url": "^http://some\\.site/path/",
-  "nextLink": "//a[@rel='next']",
-  "pageElement": "id('main')"
-},
-{
-  "url": "^http://some\\.site/path/",
-  "nextLink": "//span[contains(@class,'someclass')]/following-sibling::a[1]",
-  "pageElement": "id('main')",
-  "insertBefore": "id(\"xcolumn1\")//div[@class=\"prevnext\"]"
-}]
-      </pre>
+      <details class="desc">
+        <summary tl>example</summary>
+        <pre>
+  [{
+    "url": "^http://some\\.site/path/",
+    "nextLink": "//a[@rel='next']",
+    "pageElement": "id('main')"
+  },
+  {
+    "url": "^http://some\\.site/path/",
+    "nextLink": "//span[contains(@class,'someclass')]/following-sibling::a[1]",
+    "pageElement": "id('main')",
+    "insertBefore": "id(\"xcolumn1\")//div[@class=\"prevnext\"]"
+  }]
+        </pre>
+      </details>
     </details>
-  </details>
+  </section>
 
-  <details open>
-    <summary tl>excludePatterns</summary>
-    <textarea id="excludes" rows="7" spellcheck="false"></textarea>
-    <div class="desc">
-      <span tl>example</span> (<span tl>wildcard</span>):
-      <code>http://www.example.com/search?*</code>
-      <br/>
-      <span tl>example</span> (<span tl>regexp</span>):
-      <code>/[^.]+\.example\.com\//</code>
-    </div>
-  </details>
+  <section>
+    <details open>
+      <summary tl>excludePatterns</summary>
+      <textarea id="excludes" rows="7" spellcheck="false"></textarea>
+      <div class="desc">
+        <span tl>example</span> (<span tl>wildcard</span>):
+        <code>http://www.example.com/search?*</code>
+        <br/>
+        <span tl>example</span> (<span tl>regexp</span>):
+        <code>/[^.]+\.example\.com\//</code>
+      </div>
+    </details>
+  </section>
 
-  <button tl id="btnSave">save</button>
-  <button tl id="btnDiscard" hidden>draftDiscard</button>
+  <section>
+    <button tl id="btnSave">save</button>
+    <button tl id="btnDiscard" hidden>draftDiscard</button>
+  </section>
 
-  <details open>
-    <summary tl>siteinfo</summary>
+  <section>
+    <details open>
+      <summary tl>siteinfo</summary>
 
-    <div><span tl>size</span>: <code id="size"></code></div>
-    <div><span tl>updatedAt</span>: <code id="updatedAt"></code></div>
+      <div><span tl>size</span>: <code id="size"></code></div>
+      <div><span tl>updatedAt</span>: <code id="updatedAt"></code></div>
 
-    <button tl id="btnUpdate">updateSiteinfo</button>
-  </details>
+      <button tl id="btnUpdate">updateSiteinfo</button>
+    </details>
+  </section>
 
   <div id="warning" hidden></div>
 </body>
