@@ -6,7 +6,7 @@
       for (const node of m.addedNodes) {
         if (node.tagName && node.hasAttribute('tl')) {
           const textNode = node.firstChild;
-          textNode.nodeValue = chrome.i18n.getMessage(textNode.nodeValue);
+          textNode.nodeValue = chrome.i18n.getMessage(textNode.nodeValue.trim());
         }
       }
     }
