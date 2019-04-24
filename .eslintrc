@@ -13,6 +13,7 @@ env:
 
 globals:
   getSettings: false
+  getLocal: false
   getCacheDate: false
   setCacheDate: false
   isGlobalUrl: false

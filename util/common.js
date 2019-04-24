@@ -16,6 +16,12 @@ function getSettings() {
   });
 }
 
+function getLocal(key) {
+  return new Promise(resolve =>
+    chrome.storage.local.get(key, data =>
+      resolve(data[key])));
+}
+
 function getCacheDate() {
   return Number(localStorage.cacheDate) || 0;
 }
