@@ -8,7 +8,7 @@ export async function buildGlobalRules() {
     op.onsuccess = processCursor;
     op.onerror = reject;
   });
-  localStorage.globalRules = JSON.stringify(globalRules);
+  chrome.storage.local.set({globalRules});
 }
 
 function processCursor({target: op}) {

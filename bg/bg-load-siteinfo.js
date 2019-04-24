@@ -30,7 +30,7 @@ export async function loadSiteinfo(si, fnCanWrite) {
     op = store.put(toWrite);
   }
   setCacheDate();
-  localStorage.globalRules = JSON.stringify(globalRules);
+  chrome.storage.local.set({globalRules});
   if (op) {
     return new Promise((resolve, reject) => {
       op.onsuccess = resolve;

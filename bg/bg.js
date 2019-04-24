@@ -121,9 +121,7 @@ function isExcluded(url) {
 }
 
 async function addGlobalRules(rules) {
-  try {
-    globalRules = JSON.parse(localStorage.globalRules);
-  } catch (e) {}
+  ({globalRules} = await new Promise(r => chrome.storage.local.get('globalRules', r)) || {});
   if (!globalRules)
     await (await import('/bg/bg-global-rules.js')).buildGlobalRules();
   rules.push(...Object.values(globalRules));
