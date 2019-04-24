@@ -7,15 +7,29 @@
   <script src="/util/dom.js"></script>
   <script src="/util/common.js"></script>
   <script src="popup.js"></script>
-  <script src="popup-load-more.js"></script>
+  <script src="popup-load-more.js" async></script>
+  <script src="popup-exclude.js" async></script>
 </head>
 
 <body>
   <section data-status>
-    <label>AutoPagerize: <b id="statusText"></b> <input id="status" type="checkbox"></label>
+    <label>AutoPagerize:
+      <span nowrap>
+        <b id="statusText"></b> <input id="status" type="checkbox">
+      </span>
+    </label>
   </section>
   <section>
     <a href="options.html" tl>options</a>
+  </section>
+  <section id="excludeSection">
+    <select id="excludeSelector">
+      <option tl value="url">excludeUrl
+      <option tl value="prefix">excludeUrlPrefix
+      <option tl value="domain">excludeDomain
+    </select>
+    &nbsp;
+    <button tl id="excludeGo">ok</button>
   </section>
   <section>
     <span tl nowrap>loadMore</span>

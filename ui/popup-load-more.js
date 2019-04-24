@@ -1,25 +1,13 @@
+/* global tab */
 'use strict';
 
-(() => {
-  let tabId;
-
-  chrome.tabs.query({active: true, currentWindow: true}, ([tab]) => {
-    tabId = tab.id;
-  });
-
-  Promise.all([
-    query(),
-    onDomLoaded(),
-  ]).then(([
-    remaining,
-  ]) => {
-    $.loadGo.onclick = run;
-    $.loadStop.onclick = stop;
-    if (remaining > 0) {
-      renderState(true);
-      chrome.runtime.onMessage.addListener(onMessage);
-    }
-  });
+(async () => {
+  $.loadGo.onclick = run;
+  $.loadStop.onclick = stop;
+  if (await query() > 0) {
+    renderState(true);
+    chrome.runtime.onMessage.addListener(onMessage);
+  }
 
   function run() {
     $.loadRemain.textContent = '';
@@ -39,7 +27,7 @@
   }
 
   function inTab(data) {
-    chrome.tabs.executeScript(tabId, {
+    chrome.tabs.executeScript(tab.id, {
       code: `
         typeof run === 'function' &&
         run({loadMore: ${data}})
@@ -61,7 +49,7 @@
 
   function onMessage(msg, sender) {
     if (msg.action === 'pagesRemaining' &&
-        sender.tab && sender.tab.id === tabId) {
+        sender.tab && sender.tab.id === tab.id) {
       const num = msg.data;
       $.loadRemain.textContent = num ? num + '...' : chrome.i18n.getMessage('done');
       if (!num)

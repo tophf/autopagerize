@@ -29,6 +29,15 @@
   "example": {
     "message": "Example"
   },
+  "excludeUrl": {
+    "message": "Exclude page address"
+  },
+  "excludeUrlPrefix": {
+    "message": "Exclude page address/and/deeper"
+  },
+  "excludeDomain": {
+    "message": "Exclude entire domain"
+  },
   "excludePatterns": {
     "message": "Exclude patterns"
   },

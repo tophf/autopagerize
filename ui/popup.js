@@ -1,11 +1,17 @@
 'use strict';
 
+/** @type chrome.tabs.Tab */
+let tab;
+
 Promise.all([
   getSettings(),
+  getActiveTab(),
   onDomLoaded(),
 ]).then(([
   settings,
+  tab_,
 ]) => {
+  tab = tab_;
   $.status.checked = settings.enabled !== false;
   $.status.onchange = toggle;
   renderStatus();
@@ -23,4 +29,10 @@ async function toggle() {
     enabled: $.status.checked,
   });
   renderStatus();
+}
+
+function getActiveTab() {
+  return new Promise(resolve =>
+    chrome.tabs.query({active: true, currentWindow: true}, tabs =>
+      resolve(tabs[0])));
 }

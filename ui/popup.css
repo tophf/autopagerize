@@ -4,7 +4,7 @@ body {
 }
 
 section {
-  padding: .5rem 1rem .75rem;
+  padding: .5rem 1rem .65rem;
 }
 
 section:nth-child(even) {
@@ -52,4 +52,12 @@ input {
   opacity: .5;
   pointer-events: none;
   user-select: none;
+}
+
+#excludeSection {
+  display: flex;
+}
+
+#excludeSelector {
+  max-width: 8em;
 }
