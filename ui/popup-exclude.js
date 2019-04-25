@@ -3,7 +3,7 @@
 
 $.excludeGo.onclick = async () => {
   $.excludeSection.classList.add('disabled');
-  $.excludeGo.textContent = chrome.i18n.getMessage('done');
+  $.excludeGo.textContent = i18n('done');
   const ss = await getSettings();
   ss.excludes = arrayOrDummy(ss.excludes);
   if (!ss.excludes.includes($.excludeGo.title)) {

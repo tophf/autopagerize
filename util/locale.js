@@ -6,11 +6,15 @@
       for (const node of m.addedNodes) {
         if (node.tagName && node.hasAttribute('tl')) {
           const textNode = node.firstChild;
-          textNode.nodeValue = chrome.i18n.getMessage(textNode.nodeValue.trim());
+          textNode.nodeValue = i18n(textNode.nodeValue.trim());
         }
       }
     }
   });
   mo.observe(document, {subtree: true, childList: true});
   document.addEventListener('DOMContentLoaded', () => mo.disconnect(), {once: true});
+}
+
+function i18n(...args) {
+  return chrome.i18n.getMessage(...args);
 }

@@ -87,7 +87,7 @@ function loadRules(rules) {
       base.remove();
     else
       base.querySelector('[data-action="delete"]').textContent =
-        chrome.i18n.getMessage(base.value ? 'restore' : 'delete');
+        i18n(base.value ? 'restore' : 'delete');
   }
 
   function onClick({target: el}) {

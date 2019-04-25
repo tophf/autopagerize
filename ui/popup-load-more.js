@@ -51,7 +51,7 @@
     if (msg.action === 'pagesRemaining' &&
         sender.tab && sender.tab.id === tab.id) {
       const num = msg.data;
-      $.loadRemain.textContent = num ? num + '...' : chrome.i18n.getMessage('done');
+      $.loadRemain.textContent = num ? num + '...' : i18n('done');
       if (!num)
         stop();
     }

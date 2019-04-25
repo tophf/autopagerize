@@ -24,7 +24,7 @@ Promise.all([
 function renderStatus() {
   const enabled = $.status.checked;
   $.status.closest('[data-status]').dataset.status = enabled;
-  $.statusText.textContent = chrome.i18n.getMessage(enabled ? 'on' : 'off');
+  $.statusText.textContent = i18n(enabled ? 'on' : 'off');
 }
 
 async function toggle() {
