@@ -91,7 +91,8 @@ function onChange({target: el}) {
     changedElements.delete(el);
   if (changed !== el.classList.contains('changed'))
     el.classList.toggle('changed', changed);
+  const unsalvageable = !changedElements.size || !el.checkValidity();
   const btn = $.btnSaveWrapper;
-  if (btn.hidden !== !changedElements.size)
-    btn.hidden = !btn.hidden;
+  if (btn.hidden !== unsalvageable)
+    btn.hidden = unsalvageable;
 }

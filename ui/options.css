@@ -53,10 +53,6 @@ textarea {
   background-color: #8882;
 }
 
-textarea:invalid {
-  opacity: .35;
-}
-
 #rules {
   counter-reset: rule;
 }

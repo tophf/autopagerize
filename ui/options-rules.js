@@ -8,7 +8,7 @@ function loadRules(rules) {
   const rulesContainer = $.rules;
   rulesContainer.addEventListener('focusin', expandArea);
   rulesContainer.addEventListener('focusout', shrinkArea);
-  rulesContainer.addEventListener('input', autosizeArea);
+  rulesContainer.addEventListener('input', onInput);
   rulesContainer.addEventListener('click', onClick);
 
   const bin = addRules(rules);
@@ -34,6 +34,7 @@ function loadRules(rules) {
           clone = tplMember.cloneNode(true);
           const area = clone.getElementsByTagName('textarea')[0];
           area.value = area.savedValue = rule[k] || '';
+          area.dataset.type = k;
           el.appendChild(clone);
         }
         bin.appendChild(el);
@@ -60,10 +61,26 @@ function loadRules(rules) {
     el.style.height = '';
   }
 
-  function autosizeArea(e) {
-    const el = e.target;
+  function validateArea(el) {
+    let error = '';
+    const v = el.value.trim();
+    try {
+      if (el.dataset.type === 'url')
+        RegExp(v);
+      else
+        document.evaluate(v, document, null, XPathResult.ANY_TYPE, null);
+    } catch (e) {
+      error = String(e);
+      if (error.includes(v))
+        error = error.slice(error.indexOf(v) + v.length + 1).replace(/^[\s:]+/, '');
+    }
+    el.setCustomValidity(error);
+  }
+
+  function onInput({target: el}) {
     if (el.localName !== 'textarea')
       return;
+    validateArea(el);
     const sh = el.scrollHeight;
     const oh = el.offsetHeight;
     if (sh > oh + defaultAreaHeight / 2 || sh < oh)
