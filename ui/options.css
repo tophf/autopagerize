@@ -4,31 +4,21 @@ body {
   min-width: 500px;
 }
 
-#warning {
-  background: gold;
-  position: absolute;
+#btnSaveWrapper {
+  background-color: #ffd700a0;
+  position: fixed;
   top: 0;
-  left: 0;
   right: 0;
   padding: 1em;
+  border: 1px solid burlywood;
+}
+
+#btnSaveWrapper div {
+  font-size: smaller;
+}
+
+#btnSave {
   font-weight: bold;
-  box-shadow: 0 0 20px black;
-}
-
-.draft {
-  padding-top: 4em;
-}
-
-.draft #warning {
-  display: initial;
-}
-
-.draft .restored {
-  box-shadow: 0 0 0 2px orange;
-}
-
-.draft #btnDiscard {
-  display: inline;
 }
 
 section:nth-child(n + 2) {
@@ -58,4 +48,105 @@ code,
 
 textarea {
   width: 100%;
+  resize: vertical;
+  border: 1px solid #8883;
+  background-color: #8882;
+}
+
+textarea:invalid {
+  opacity: .35;
+}
+
+#rules {
+  counter-reset: rule;
+}
+
+.rule {
+  position: relative;
+}
+
+.rule:not(:last-child) {
+  padding-bottom: 1em;
+  margin-bottom: 1em;
+  border-bottom: 3px double lightgray;
+}
+
+.rule.deleted {
+  padding-top: 1em;
+  border: .5em solid transparent;
+}
+.rule:not(.deleted)::before {
+  counter-increment: rule;
+  content: "Rule " counter(rule);
+  display: block;
+  font-weight: bold;
+  font-size: 60%;
+  margin-bottom: .25rem;
+  color: seagreen;
+}
+
+.rule-actions {
+  position: absolute;
+  right: 0;
+  top: -.5em;
+  text-align: right;
+}
+
+.rule-action {
+  padding: 0 1em 1px;
+  border-radius: 5px;
+  opacity: .5;
+  font-weight: bold;
+  font-size: .7rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.rule-action[data-action="add"] {
+  background-color: #bcd6bc;
+  border: 1px solid seagreen;
+  color: #165431;
+}
+
+.rule-action[data-action="delete"] {
+  background-color: #ccc;
+  border: 1px solid #888;
+  color: #444;
+}
+
+.rule-action:hover {
+  opacity: 1;
+}
+
+.deleted .rule-member {
+  opacity: .25;
+}
+
+.rule-member {
+  display: flex;
+  align-items: center;
+}
+
+.rule-member-name {
+  font-weight: bold;
+  font-size: .6rem;
+  width: 2.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: darkseagreen;
+}
+
+.rule-member-value {
+  margin-top: 2px;
+}
+
+/* first three are mandatory */
+.rule-member:nth-of-type(-n + 3) .rule-member-value:invalid {
+  background-color: #f003;
+  border: 1px solid #f008;
+}
+
+.changed {
+  box-shadow: 0 0 0 1px orange;
 }

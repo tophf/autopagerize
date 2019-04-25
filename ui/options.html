@@ -7,7 +7,28 @@
   <script src="/util/dom.js"></script>
   <script src="/util/common.js"></script>
   <script src="options.js"></script>
-  <script src="options-draft.js"></script>
+  <script src="options-rules.js"></script>
+
+  <template id="tpl:rule">
+    <article class="rule">
+      <div class="rule-actions">
+        <span class="rule-action" data-action="add">add</span>
+        <span class="rule-action" data-action="delete">delete</span>
+      </div>
+    </article>
+  </template>
+
+  <template id="tpl:ruleMember">
+    <label class="rule-member">
+      <span class="rule-member-name" title="">url</span>
+      <textarea class="rule-member-value"
+                required
+                rows="1"
+                spellcheck="false"
+                maxlength="1048576"
+                wrap="soft"></textarea>
+    </label>
+  </template>
 </head>
 
 <body>
@@ -20,30 +41,7 @@
   <section>
     <details>
       <summary tl>customRules</summary>
-      <textarea id="rules" rows="6" spellcheck="false">
-  [{
-    "url": "",
-    "nextLink": "",
-    "pageElement": ""
-  }]
-      </textarea>
-
-      <details class="desc">
-        <summary tl>example</summary>
-        <pre>
-  [{
-    "url": "^http://some\\.site/path/",
-    "nextLink": "//a[@rel='next']",
-    "pageElement": "id('main')"
-  },
-  {
-    "url": "^http://some\\.site/path/",
-    "nextLink": "//span[contains(@class,'someclass')]/following-sibling::a[1]",
-    "pageElement": "id('main')",
-    "insertBefore": "id(\"xcolumn1\")//div[@class=\"prevnext\"]"
-  }]
-        </pre>
-      </details>
+      <div id="rules"></div>
     </details>
   </section>
 
@@ -62,11 +60,6 @@
   </section>
 
   <section>
-    <button tl id="btnSave">save</button>
-    <button tl id="btnDiscard" hidden>draftDiscard</button>
-  </section>
-
-  <section>
     <details open>
       <summary tl>siteinfo</summary>
 
@@ -77,6 +70,8 @@
     </details>
   </section>
 
-  <div id="warning" hidden></div>
+  <div id="btnSaveWrapper" hidden>
+    <button tl id="btnSave">saveChanges</button>
+  </div>
 </body>
 </html>

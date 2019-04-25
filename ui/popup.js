@@ -5,20 +5,20 @@ let tab;
 
 Promise.all([
   getSettings(),
-  getLocal('draft'),
   getActiveTab(),
   onDomLoaded(),
 ]).then(([
   settings,
-  draft,
   tab_,
 ]) => {
   tab = tab_;
   $.status.checked = settings.enabled !== false;
   $.status.onchange = toggle;
+  $.openOptions.onclick = e => {
+    e.preventDefault();
+    chrome.runtime.openOptionsPage();
+  };
   renderStatus();
-  if (draft)
-    document.querySelector('a[href*="options"]').textContent += ' *';
 });
 
 function renderStatus() {

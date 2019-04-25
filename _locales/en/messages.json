@@ -1,4 +1,7 @@
 {
+  "add": {
+    "message": "Add"
+  },
   "customRules": {
     "message": "Custom rules"
   },
@@ -8,14 +11,11 @@
   "showStatus": {
     "message": "Show status while loading"
   },
+  "delete": {
+    "message": "Delete"
+  },
   "done": {
     "message": "Done"
-  },
-  "draftDiscard": {
-    "message": "Discard changes"
-  },
-  "draftRestored": {
-    "message": "Unsaved changes restored"
   },
   "error": {
     "message": "Error"
@@ -65,8 +65,11 @@
   "regexp": {
     "message": "regexp"
   },
-  "save": {
-    "message": "Save"
+  "restore": {
+    "message": "Restore"
+  },
+  "saveChanges": {
+    "message": "saveChanges"
   },
   "siteinfo": {
     "message": "Siteinfo"

@@ -260,3 +260,4 @@ overrides:
     globals:
       $: false
       onDomLoaded: false
+      i18n: false
