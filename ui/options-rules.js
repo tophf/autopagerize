@@ -105,7 +105,7 @@ function loadRules(rules) {
 
   function deleteRule(base) {
     base.classList.toggle('deleted');
-    base.value = base.classList.contains('deleted') || undefined;
+    base.value = !base.value;
     const isDisposable = base.value &&
                          $.rules.children[1] &&
                          rulesEqual(collectRules([base]), [DUMMY_RULE]);
@@ -119,11 +119,14 @@ function loadRules(rules) {
         i18n(base.value ? 'restore' : 'delete');
   }
 
-  function onClick({target: el}) {
-    const {action} = el.dataset;
+  function onClick(e) {
+    if (e.defaultPrevented)
+      return;
+    const {action} = e.target.dataset;
     if (action) {
+      e.preventDefault();
       const fn = action === 'add' ? addRule : deleteRule;
-      fn(el.closest('.rule'));
+      fn(e.target.closest('.rule'));
     }
   }
 }
@@ -131,6 +134,8 @@ function loadRules(rules) {
 function collectRules(elements) {
   const rules = [];
   for (const r of elements || $.rules.getElementsByClassName('rule')) {
+    if (r.classList.contains('deleted'))
+      continue;
     const rule = {};
     for (const m of r.getElementsByClassName('rule-member')) {
       const el = m.getElementsByTagName('textarea')[0];

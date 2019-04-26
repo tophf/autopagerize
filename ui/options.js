@@ -59,6 +59,8 @@ async function save() {
     inBG.writeSettings({...settings, ...ss});
     changedElements.forEach(el => el.classList.remove('changed'));
     changedElements.clear();
+    for (const el of $.rules.getElementsByClassName('deleted'))
+      el.savedValue = !el.savedValue;
     $.btnSaveWrapper.hidden = true;
   }
   dispatchEvent(new Event('optionsSaved'));
