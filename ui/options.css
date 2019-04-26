@@ -151,6 +151,10 @@ textarea {
   box-shadow: 0 0 0 1px gold;
 }
 
+section:last-of-type details:not([open]) summary {
+  margin-bottom: 0;
+}
+
 #backup {
   margin-top: .5em;
 }
