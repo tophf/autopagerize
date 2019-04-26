@@ -6,7 +6,7 @@ $.loadStop.onclick = stop;
 query().then(num => {
   if (num > 0) {
     renderState(true);
-    chrome.runtime.onMessage.addListener(onMessage);
+    chrome.runtime.onConnect.addListener(onConnect);
   }
 });
 
@@ -14,7 +14,7 @@ function run() {
   $.loadRemain.textContent = '';
   renderState(true);
   inTab($.loadNum.value);
-  chrome.runtime.onMessage.addListener(onMessage);
+  chrome.runtime.onConnect.addListener(onConnect);
 }
 
 /**
@@ -22,7 +22,7 @@ function run() {
  */
 function stop(event) {
   renderState(false);
-  chrome.runtime.onMessage.removeListener(onMessage);
+  chrome.runtime.onConnect.removeListener(onConnect);
   if (event)
     inTab('stop');
 }
@@ -48,10 +48,14 @@ function query() {
     }));
 }
 
-function onMessage(msg, sender) {
-  if (msg.action === 'pagesRemaining' &&
-      sender.tab && sender.tab.id === popup.tab.id) {
-    const num = msg.data;
+/** @param {chrome.runtime.Port} port */
+function onConnect(port) {
+  const {name, sender} = port;
+  let [action, num] = String(name).split(':', 2);
+  if (action === 'pagesRemaining' &&
+      sender && sender.tab && sender.tab.id === popup.tab.id) {
+    port.disconnect();
+    num = Number(num);
     $.loadRemain.textContent = num ? num + '...' : i18n('done');
     if (!num)
       stop();

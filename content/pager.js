@@ -229,7 +229,7 @@
       app.onPageProcessed = ok => {
         if (ok)
           doLoadMore.timer = setTimeout(doLoadMore, MIN_REQUEST_INTERVAL, num);
-        chrome.runtime.sendMessage({action: 'pagesRemaining', data: num});
+        chrome.runtime.connect({name: 'pagesRemaining:' + num});
       };
     } else {
       addScrollListener();
