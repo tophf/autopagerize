@@ -137,12 +137,16 @@ textarea {
   margin-top: 2px;
 }
 
-/* first three are mandatory */
-.rule-member:nth-of-type(-n + 3) .rule-member-value:invalid {
+.rule-member-value:invalid {
   background-color: #f003;
   border: 1px solid #f008;
 }
 
+.rule-member-value.empty[required] {
+  background-color: #f001;
+  border: 1px solid #f004;
+}
+
 .changed {
-  box-shadow: 0 0 0 1px orange;
+  box-shadow: 0 0 0 1px gold;
 }

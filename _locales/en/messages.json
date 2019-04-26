@@ -20,11 +20,14 @@
   "error": {
     "message": "Error"
   },
-  "errorOrigin": {
-    "message": "next link URL is not within the page domain"
+  "errorEmptyValue": {
+    "message": "Empty value is not valid"
   },
   "errorExtractInfo": {
     "message": "cannot extract the next page element or URL"
+  },
+  "errorOrigin": {
+    "message": "next link URL is not within the page domain"
   },
   "example": {
     "message": "Example"

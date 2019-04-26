@@ -33,8 +33,13 @@ function loadRules(rules) {
           memberTitle.nodeValue = k;
           clone = tplMember.cloneNode(true);
           const area = clone.getElementsByTagName('textarea')[0];
-          area.value = area.savedValue = rule[k] || '';
+          const v = rule[k] || '';
+          area.value = area.savedValue = v;
           area.dataset.type = k;
+          if (!v)
+            area.classList.add('empty');
+          if (k === 'insertBefore')
+            area.required = false;
           el.appendChild(clone);
         }
         bin.appendChild(el);
@@ -62,19 +67,26 @@ function loadRules(rules) {
   }
 
   function validateArea(el) {
-    let error = '';
     const v = el.value.trim();
-    try {
-      if (el.dataset.type === 'url')
-        RegExp(v);
-      else
-        document.evaluate(v, document, null, XPathResult.ANY_TYPE, null);
-    } catch (e) {
-      error = String(e);
-      if (error.includes(v))
-        error = error.slice(error.indexOf(v) + v.length + 1).replace(/^[\s:]+/, '');
+    let error = '';
+    if (v) {
+      try {
+        if (el.dataset.type === 'url')
+          RegExp(v);
+        else
+          document.evaluate(v, document, null, XPathResult.ANY_TYPE, null);
+      } catch (e) {
+        error = String(e);
+        const i = (error.indexOf(`'${v}'`) + 1) || (error.indexOf(`/${v}/`) + 1);
+        if (i > 0)
+          error = error.slice(i + v.length + 2).replace(/^[\s:]*(is\s)?|\.$/g, '');
+      }
+    } else if (el.required) {
+      error = i18n('errorEmptyValue');
     }
     el.setCustomValidity(error);
+    el.classList.toggle('empty', !v);
+    el.title = error;
   }
 
   function onInput({target: el}) {
