@@ -1,9 +1,9 @@
-/*
-global collectRules
-global rulesEqual
-global loadRules
- */
-'use strict';
+export {
+  renderSettings,
+  collectSettings,
+};
+
+import {loadRules, rulesEqual, collectRules} from './options-rules.js';
 
 const changedElements = new Set();
 
@@ -11,7 +11,9 @@ Promise.all([
   import('/util/storage-idb.js').then(idb => idb.exec().count()),
   getCacheDate(),
   getSettings(),
-  onDomLoaded(),
+  onDomLoaded().then(() => {
+    import('./options-backup.js');
+  }),
 ]).then(([
   cacheCount,
   cacheDate,
@@ -23,8 +25,6 @@ Promise.all([
 
   $.btnSave.onclick = save;
   $.btnUpdate.onclick = update;
-  $.btnImport.onclick = importSettings;
-  $.btnExport.onclick = exportSettings;
   $.backup.oninput = ({target: el}) => ($.importWrapper.disabled = !el.value.trim());
   addEventListener('input', onChange, {passive: true});
   addEventListener('change', onChange, {passive: true});
@@ -53,17 +53,19 @@ async function save() {
     ss.excludes.join('\n') !== arrayOrDummy(settings.excludes).join('\n') ||
     ss.showStatus !== settings.showStatus ||
     !rulesEqual(ss.rules, settings.rules);
-  if (changed) {
-    $.excludes.savedValue = ss.excludes.join('\n');
-    $.showStatus.savedValue = ss.showStatus;
-    inBG.writeSettings({...settings, ...ss});
-    changedElements.forEach(el => el.classList.remove('changed'));
-    changedElements.clear();
-    for (const el of $.rules.getElementsByClassName('deleted'))
-      el.savedValue = !el.savedValue;
-    $.btnSaveWrapper.hidden = true;
-  }
-  dispatchEvent(new Event('optionsSaved'));
+  if (!changed)
+    return;
+
+  $.excludes.savedValue = ss.excludes.join('\n');
+  $.showStatus.savedValue = ss.showStatus;
+  inBG.writeSettings({...settings, ...ss});
+
+  changedElements.forEach(el => el.classList.remove('changed'));
+  changedElements.clear();
+  for (const el of $.rules.getElementsByClassName('deleted'))
+    el.savedValue = !el.savedValue;
+
+  $.btnSaveWrapper.hidden = true;
 }
 
 async function update() {
@@ -91,47 +93,6 @@ function collectSettings() {
     excludes: $.excludes.value.trim().split(/\s+/),
     showStatus: $.showStatus.checked,
   };
-}
-
-async function importSettings() {
-  let imported;
-  try {
-    imported = JSON.parse($.backup.value);
-    $.importError.hidden = true;
-  } catch (e) {
-    $.importError.textContent = String(e);
-    $.importError.hidden = false;
-    return;
-  }
-  const defaultSettings = {
-    showStatus: true,
-    enabled: await getSettings().enabled,
-    rules: [],
-    excludes: [],
-  };
-  const ovr = $.overwriteSettings.checked;
-  const settings = ovr ? defaultSettings : collectSettings();
-  for (const [k, ref] of Object.entries(defaultSettings)) {
-    const v = imported[k];
-    settings[k] =
-      ref === true || ref === false ? Boolean(v) :
-        typeof ref === 'string' ? String(v) :
-          typeof ref === 'number' ? Number(v) :
-            Array.isArray(ref) && Array.isArray(v) ? [...settings[k], ...v] :
-              v;
-  }
-  await inBG.writeSettings(settings);
-  $.rules.textContent = '';
-  loadRules(settings.rules);
-  renderSettings(settings);
-}
-
-function exportSettings() {
-  $.backup.focus();
-  $.backup.select();
-  document.execCommand('insertText', false, JSON.stringify(collectSettings(), null, '  '));
-  $.backup.select();
-  $.importError.hidden = true;
 }
 
 function onChange({target: el}) {

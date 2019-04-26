@@ -1,7 +1,5 @@
-'use strict';
-
 /** @type chrome.tabs.Tab */
-let tab;
+export let tab;
 
 Promise.all([
   getSettings(),
@@ -19,6 +17,8 @@ Promise.all([
     chrome.runtime.openOptionsPage();
   };
   renderStatus();
+  import('./popup-load-more.js');
+  import('./popup-exclude.js');
 });
 
 function renderStatus() {

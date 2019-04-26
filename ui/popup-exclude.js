@@ -1,7 +1,10 @@
-/* global tab */
-'use strict';
+import * as popup from './popup.js';
 
-$.excludeGo.onclick = async () => {
+updateTitle();
+$.excludeGo.onclick = exclude;
+$.excludeSelector.onchange = updateTitle;
+
+async function exclude() {
   $.excludeSection.classList.add('disabled');
   $.excludeGo.textContent = i18n('done');
   const ss = await getSettings();
@@ -10,15 +13,13 @@ $.excludeGo.onclick = async () => {
     ss.excludes.push($.excludeGo.title);
     inBG.writeSettings(ss);
   }
-};
+}
 
-$.excludeSelector.onchange = async function () {
+async function updateTitle() {
   const value = $.excludeSelector.value;
-  const {url} = tab;
+  const {url} = popup.tab;
   $.excludeGo.title =
     value === 'url' ? url :
       value === 'prefix' ? url + '*' :
         value === 'domain' ? new URL(url).origin + '/*' : '';
-};
-
-$.excludeSelector.onchange();
+}

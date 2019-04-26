@@ -241,6 +241,7 @@ overrides:
   - files:
     - "bg-*.js"
     - "storage-idb.js"
+    - "ui/*.js"
     parserOptions:
       sourceType: module
 
