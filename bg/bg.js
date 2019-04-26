@@ -29,7 +29,10 @@ chrome.webNavigation.onReferenceFragmentUpdated.addListener(maybeProcess, webNav
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!endpoints)
     initMessaging();
-  const result = endpoints[msg.action](msg.data, sender);
+  const fn = endpoints.hasOwnProperty(msg.action) && endpoints[msg.action];
+  if (!fn)
+    return;
+  const result = fn(msg.data, sender);
   if (result && typeof result.then === 'function') {
     result.then(sendResponse);
     return true;
