@@ -57,6 +57,7 @@ async function save() {
     $.excludes.savedValue = ss.excludes.join('\n');
     $.showStatus.savedValue = ss.showStatus;
     inBG.writeSettings({...settings, ...ss});
+    changedElements.forEach(el => el.classList.remove('changed'));
     changedElements.clear();
     $.btnSaveWrapper.hidden = true;
   }
