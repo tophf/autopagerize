@@ -44,6 +44,12 @@
   "excludePatterns": {
     "message": "Exclude patterns"
   },
+  "export": {
+    "message": "Export"
+  },
+  "import": {
+    "message": "Import"
+  },
   "loadMore": {
     "message": "Load more pages"
   },
@@ -61,6 +67,9 @@
   },
   "options": {
     "message": "Options"
+  },
+  "overwriteSettings": {
+    "message": "Overwrite rules and exclusions on import"
   },
   "page": {
     "message": "Page:"

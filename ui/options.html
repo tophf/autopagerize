@@ -71,6 +71,19 @@
     </details>
   </section>
 
+  <section class="ignore-changes">
+    <details open>
+      <summary><span tl>import</span> / <span tl>export</span></summary>
+      <button tl id="btnExport">export</button>
+      <textarea id="backup" rows="4" spellcheck="false"></textarea>
+      <fieldset id="importWrapper" disabled>
+        <p id="importError" hidden></p>
+        <button tl id="btnImport">import</button>
+        <label><input id="overwriteSettings" type="checkbox"><span tl>overwriteSettings</span></label>
+      </fieldset>
+    </details>
+  </section>
+
   <div id="btnSaveWrapper" hidden>
     <button tl id="btnSave">saveChanges</button>
   </div>

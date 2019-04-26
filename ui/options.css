@@ -150,3 +150,23 @@ textarea {
 .changed {
   box-shadow: 0 0 0 1px gold;
 }
+
+#backup {
+  margin-top: .5em;
+}
+
+#importWrapper {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+#importWrapper:disabled span {
+  opacity: .5;
+}
+
+#importError {
+  color: red;
+  font-size: smaller;
+  font-family: monospace;
+}
