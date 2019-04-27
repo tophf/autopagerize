@@ -51,7 +51,7 @@ export async function readMissingRules(unpackedRules, toRead) {
         onDone(success && unpackedRules);
     };
   }
-  await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     onDone = resolve;
     op.onerror = reject;
   });
