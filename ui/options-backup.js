@@ -34,7 +34,7 @@ async function importSettings() {
       ref === true || ref === false ? Boolean(v) :
         typeof ref === 'string' ? String(v) :
           typeof ref === 'number' ? Number(v) :
-            Array.isArray(ref) && Array.isArray(v) ? [...settings[k], ...v] :
+            Array.isArray(ref) ? [...settings[k], ...arrayOrDummy(v)] :
               v;
   }
   await inBG.writeSettings(settings);
