@@ -7,10 +7,16 @@ A fork of [Autopagerize for Chrome](https://github.com/swdyh/autopagerize_for_ch
 * IndexedDB is used to store the data objects directly whereas the previously used localStorage serialized them into a string 
 * Simple one-time messaging and in-place code execution is used when needed instead of the persistent communication ports that were created for all the browser tabs
 
-![pic](https://i.imgur.com/4cR07JN.png)
+![popup](https://i.imgur.com/4cR07JN.png)
 
-New features:
+New features in popup:
 
 * Load 1-100 more pages
 * Exclude current page URL/prefix/domain
+
+![options](https://i.imgur.com/yTMHJvz.png)
+
+New features in options:
+
 * Custom rules in options
+* Import/export of settings
