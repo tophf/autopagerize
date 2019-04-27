@@ -48,6 +48,7 @@ code,
 
 textarea {
   width: 100%;
+  box-sizing: border-box;
   resize: vertical;
   border: 1px solid #8883;
   background-color: #8882;
@@ -173,4 +174,8 @@ section:last-of-type details:not([open]) summary {
   color: red;
   font-size: smaller;
   font-family: monospace;
+}
+
+#size, #updatedAt {
+  color: seagreen;
 }

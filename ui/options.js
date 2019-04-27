@@ -43,7 +43,30 @@ function renderSettings({excludes, showStatus}) {
 
 function renderSiteinfoStats(numRules, date) {
   $.size.textContent = numRules;
-  $.updatedAt.textContent = date > 0 ? new Date(date).toLocaleString() : 'N/A';
+  date = date > 0 ? new Date(date) : '';
+  $.updatedAt.dateTime = date;
+  $.updatedAt.textContent = date ? renderDate(date) : 'N/A';
+  $.updatedAt.title = date && date.toLocaleString();
+}
+
+function renderDate(date) {
+  if (Intl.RelativeTimeFormat) {
+    let delta = (date - Date.now()) / 1000;
+    for (const [span, unit] of [
+      [60, 'second'],
+      [60, 'minute'],
+      [24, 'hour'],
+      [7, 'day'],
+      [4, 'week'],
+      [12, 'month'],
+      [1e99, 'year'],
+    ]) {
+      if (Math.abs(delta) < span)
+        return new Intl.RelativeTimeFormat({style: 'short'}).format(Math.round(delta), unit);
+      delta /= span;
+    }
+  }
+  return date.toLocaleString();
 }
 
 async function save() {
