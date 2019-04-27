@@ -13,7 +13,7 @@ let db = null;
  * @prop {String} [index]
  */
 
-const ARGS_KEY = Symbol('idb');
+const mutex = [];
 
 const EXEC_HANDLER = {
   get(cfg, method) {
@@ -51,8 +51,14 @@ function doExec(/** ExecConfig */cfg, method, args, resolve, reject) {
   if (cfg.index)
     op = op.index(cfg.index);
   if (method) {
+    if (typeof op[method] !== 'function') {
+      console.warn([...arguments]);
+      reject(new Error(method + ' is not a function'));
+      return;
+    }
     op = op[method](...args);
-    op.onsuccess = () => resolve(op.result);
+    op.__resolve = resolve;
+    op.onsuccess = resolveResult;
     op.onerror = reject;
   } else {
     resolve(op);
@@ -60,16 +66,18 @@ function doExec(/** ExecConfig */cfg, method, args, resolve, reject) {
 }
 
 function doOpen(...args) {
+  mutex.push(args);
+  if (mutex.length > 1)
+    return;
   const op = indexedDB.open(DB_NAME);
-  op[ARGS_KEY] = args;
   op.onsuccess = onDbOpened;
   op.onupgradeneeded = onDbUpgraded;
-
 }
 
 function onDbOpened(e) {
   db = e.target.result;
-  doExec(...e.target[ARGS_KEY]);
+  while (mutex.length)
+    doExec(...mutex.shift());
 }
 
 function onDbUpgraded(e) {
@@ -78,4 +86,8 @@ function onDbUpgraded(e) {
   e.target.result.createObjectStore(DEFAULT_STORE_NAME, {keyPath: 'url'})
     .createIndex('index', 'index', {unique: true});
   e.target.result.createObjectStore('urlCache');
+}
+
+function resolveResult({target: op}) {
+  return op.__resolve(op.result);
 }
