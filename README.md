@@ -7,6 +7,10 @@ A fork of [Autopagerize for Chrome](https://github.com/swdyh/autopagerize_for_ch
 * IndexedDB is used to store the data objects directly whereas the previously used localStorage serialized them into a string 
 * Simple one-time messaging and in-place code execution is used when needed instead of the persistent communication ports that were created for all the browser tabs
 
+Differences to the original:
+
+* Easier exclusion of a single page - simply specify the full URL of the page without any `*`. In the original extension it was unnecessarily convoluted as we had to specify a regexp pattern with ^ and $ anchors.
+
 ![popup](https://i.imgur.com/lC8aWNF.png)
 
 New features in popup:
@@ -14,9 +18,9 @@ New features in popup:
 * Load 1-100 more pages
 * Exclude current page URL/prefix/domain
 
-![options](https://i.imgur.com/UVp4NnR.png)
-
 New features in options:
 
 * Custom rules in options
 * Import/export of settings
+
+![options](https://i.imgur.com/UVp4NnR.png)

@@ -100,12 +100,22 @@ function isExcluded(url) {
       url.startsWith('http://api.tweetmeme.com/button.js'))
     return true;
   for (const entry of arrayOrDummy(settings.excludes)) {
+    const isRegexp = entry.startsWith('/') && entry.endsWith('/');
+    if (!isRegexp) {
+      if (url === entry || url.endsWith('/') && url === entry + '/')
+        return true;
+      const i = entry.indexOf('*');
+      if (i < 0)
+        continue;
+      if (i === entry.length - 1 && url.startsWith(entry.slice(0, -1)))
+        return true;
+    }
     let rx = str2rx.get(entry);
     if (rx === false)
       continue;
     if (!rx) {
       try {
-        const rxStr = entry.startsWith('/') && entry.endsWith('/')
+        const rxStr = isRegexp
           ? entry.slice(1, -1)
           : '^' +
             entry.replace(/([-()[\]{}+?.$^|\\])/g, '\\$1')
