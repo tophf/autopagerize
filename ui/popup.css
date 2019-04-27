@@ -11,14 +11,6 @@ section:last-child {
   padding-bottom: .75rem;
 }
 
-section:nth-child(even) {
-  background-color: #8882;
-}
-
-section:nth-child(even) select {
-  background: none;
-}
-
 section:nth-child(n + 3) {
   border-top: 1px solid lightgray;
 }
@@ -51,6 +43,10 @@ input {
 select,
 button {
   height: 1.7em;
+}
+
+select {
+  background-color: #8882;
 }
 
 a {
