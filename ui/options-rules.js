@@ -52,6 +52,7 @@ function addRules(rules) {
   for (const rule of arrayOrDummy(rules)) {
     if (rule) {
       const el = tplRule.cloneNode(true);
+      el.savedValue = false;
       for (const k of KEYS) {
         memberName.nodeValue = k;
         memberTitle.nodeValue = k;
