@@ -120,7 +120,8 @@ function isExcluded(url) {
           : '^' +
             entry.replace(/([-()[\]{}+?.$^|\\])/g, '\\$1')
               .replace(/\x08/g, '\\x08')
-              .replace(/\*/g, '.*');
+              .replace(/\*/g, '.*') +
+            '$';
         rx = RegExp(rxStr);
         str2rx.set(entry, rx);
       } catch (e) {

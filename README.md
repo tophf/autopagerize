@@ -9,8 +9,12 @@ A fork of [Autopagerize for Chrome](https://github.com/swdyh/autopagerize_for_ch
 
 Differences to the original:
 
-* Easier exclusion of a single page - simply specify the full URL of the page without any `*`. In the original extension it was unnecessarily convoluted as we had to specify a regexp pattern with ^ and $ anchors.
-
+* Exclusions are matched to the full URL now unless there's a `*` at the end. The original extension has been incorrectly treating all non-regexp URLs as prefixes.
+  * `http://foo.com/bar` - this exact URL
+  * `http://foo.com/bar*` - URLs that start with `http://foo.com/bar`
+  * `*.foo.com/bar` - URLs that end in `foo.com/bar`
+  * `*://*.foo.com/bar*` - URLs that contain `foo.com/bar` anywhere
+  
 ![popup](https://i.imgur.com/lC8aWNF.png)
 
 New features in popup:
