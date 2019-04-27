@@ -176,6 +176,6 @@ section:last-of-type details:not([open]) summary {
   font-family: monospace;
 }
 
-#size, #updatedAt {
+#size, #date {
   color: seagreen;
 }

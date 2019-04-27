@@ -44,9 +44,9 @@ function renderSettings({excludes, showStatus}) {
 function renderSiteinfoStats(numRules, date) {
   $.size.textContent = numRules;
   date = date > 0 ? new Date(date) : '';
-  $.updatedAt.dateTime = date;
-  $.updatedAt.textContent = date ? renderDate(date) : 'N/A';
-  $.updatedAt.title = date && date.toLocaleString();
+  $.date.dateTime = date;
+  $.date.textContent = date ? renderDate(date) : 'N/A';
+  $.date.title = date && date.toLocaleString();
 }
 
 function renderDate(date) {

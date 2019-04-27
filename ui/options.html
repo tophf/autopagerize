@@ -51,13 +51,20 @@
       <summary tl>excludePatterns</summary>
       <div class="details-body">
         <textarea id="excludes" rows="7" spellcheck="false"></textarea>
-        <div class="desc">
-          <span tl>example</span> (<span tl>wildcard</span>):
-          <code>http://www.example.com/search?*</code>
-          <br/>
-          <span tl>example</span> (<span tl>regexp</span>):
-          <code>/[^.]+\.example\.com\//</code>
-        </div>
+        <table class="desc" style="border-spacing: 0">
+          <tr>
+            <td><span tl>example</span> (<span tl>singleURL</span>):</td>
+            <td><code>http://www.example.com/foo</code></td>
+          </tr>
+          <tr>
+            <td><span tl>example</span> (<span tl>wildcard</span>):</td>
+            <td><code>http://*.example.com/bar*</code></td>
+          </tr>
+          <tr>
+            <td><span tl>example</span> (<span tl>regexp</span>):</td>
+            <td><code>/[^.]+\.example\.com\//</code></td>
+          </tr>
+        </table>
       </div>
     </details>
   </section>
@@ -67,7 +74,7 @@
       <summary tl>siteinfo</summary>
       <div class="details-body">
         <div><span tl>size</span>: <output id="size"></output></div>
-        <div><span tl>updatedAt</span>: <time id="updatedAt"></time></div>
+        <div><span tl>date</span>: <time id="date"></time></div>
         <button tl id="btnUpdate">updateSiteinfo</button>
       </div>
     </details>

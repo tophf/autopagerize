@@ -47,9 +47,6 @@
   "updateSiteinfo": {
     "message": "サイト情報を更新する"
   },
-  "updatedAt": {
-    "message": "更新日時"
-  },
   "wildcard": {
     "message": "ワイルドカード"
   }

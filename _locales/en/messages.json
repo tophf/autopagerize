@@ -11,6 +11,9 @@
   "showStatus": {
     "message": "Show status while loading"
   },
+  "date": {
+    "message": "Date"
+  },
   "delete": {
     "message": "Delete"
   },
@@ -83,6 +86,9 @@
   "saveChanges": {
     "message": "saveChanges"
   },
+  "singleURL": {
+    "message": "single URL"
+  },
   "siteinfo": {
     "message": "Siteinfo"
   },
@@ -97,9 +103,6 @@
   },
   "updateSiteinfo": {
     "message": "Update siteinfo"
-  },
-  "updatedAt": {
-    "message": "Updated at"
   },
   "wildcard": {
     "message": "wildcard"
