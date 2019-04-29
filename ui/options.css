@@ -177,4 +177,7 @@ section:last-of-type details:not([open]) summary {
   textarea {
     color: #eee;
   }
+  .rule:not(:last-child) {
+    border-bottom-color: #444;
+  }
 }
