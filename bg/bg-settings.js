@@ -6,9 +6,22 @@ const PROPS_TO_NOTIFY = [
 export async function writeSettings(ss) {
   const shouldNotify = await analyze(ss);
   chrome.storage.sync.set({settings: ss});
+  mirrorThemePreference(ss);
   settings = ss;
   if (shouldNotify)
     notify();
+}
+
+export function mirrorThemePreference(settings) {
+  const enabled = Boolean(settings.darkTheme);
+  const stored = localStorage.hasOwnProperty('darkTheme');
+  if (enabled && !stored)
+    localStorage.darkTheme = '';
+  else if (!enabled && stored)
+    delete localStorage.darkTheme;
+  else
+    return false;
+  return true;
 }
 
 async function analyze(ss) {

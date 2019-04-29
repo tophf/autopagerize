@@ -148,6 +148,9 @@ section:last-of-type details:not([open]) summary {
 #size, #date {
   color: seagreen;
 }
+#toggles label {
+  display: block;
+}
 
 @media (prefers-color-scheme: dark) {
   body {

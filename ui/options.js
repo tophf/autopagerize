@@ -30,7 +30,7 @@ Promise.all([
   addEventListener('change', onChange, {passive: true});
 });
 
-function renderSettings({excludes, showStatus}) {
+function renderSettings({excludes, showStatus, darkTheme}) {
   let el;
 
   el = $.excludes;
@@ -39,6 +39,9 @@ function renderSettings({excludes, showStatus}) {
 
   el = $.showStatus;
   el.checked = el.savedValue = showStatus !== false;
+
+  el = $.darkTheme;
+  el.checked = el.savedValue = darkTheme === true;
 }
 
 function renderSiteinfoStats(numRules, date) {
@@ -75,13 +78,21 @@ async function save() {
   const changed =
     ss.excludes.join('\n') !== arrayOrDummy(settings.excludes).join('\n') ||
     ss.showStatus !== settings.showStatus ||
+    ss.darkTheme !== settings.darkTheme ||
     !rulesEqual(ss.rules, settings.rules);
   if (!changed)
     return;
 
+  const task = inBG.writeSettings({...settings, ...ss});
+  if (ss.darkTheme !== settings.darkTheme) {
+    await task;
+    location.reload();
+    return;
+  }
+
   $.excludes.savedValue = ss.excludes.join('\n');
   $.showStatus.savedValue = ss.showStatus;
-  inBG.writeSettings({...settings, ...ss});
+  $.darkTheme.savedValue = ss.darkTheme;
 
   changedElements.forEach(el => el.classList.remove('changed'));
   changedElements.clear();
@@ -115,6 +126,7 @@ function collectSettings() {
     rules: collectRules(),
     excludes: $.excludes.value.trim().split(/\s+/),
     showStatus: $.showStatus.checked,
+    darkTheme: $.darkTheme.checked,
   };
 }
 

@@ -11,6 +11,9 @@
   "showStatus": {
     "message": "Show status while loading"
   },
+  "darkTheme": {
+    "message": "Dark theme in popup/options"
+  },
   "date": {
     "message": "Date"
   },

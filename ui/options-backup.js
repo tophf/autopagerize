@@ -22,6 +22,7 @@ async function importSettings() {
   }
   const defaultSettings = {
     showStatus: true,
+    darkTheme: false,
     enabled: await getSettings().enabled,
     rules: [],
     excludes: [],
