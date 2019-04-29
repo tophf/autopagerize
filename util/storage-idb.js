@@ -51,11 +51,6 @@ function doExec(/** ExecConfig */cfg, method, args, resolve, reject) {
   if (cfg.index)
     op = op.index(cfg.index);
   if (method) {
-    if (typeof op[method] !== 'function') {
-      console.warn([...arguments]);
-      reject(new Error(method + ' is not a function'));
-      return;
-    }
     op = op[method](...args);
     op.__resolve = resolve;
     op.onsuccess = resolveResult;

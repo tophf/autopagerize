@@ -41,7 +41,7 @@ export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
     }
   };
 
-  const op = (await idb.execRW({store: 'urlCache'})).openCursor();
+  const op = (await idb.execRW({store: 'urlCache'}).RAW).openCursor();
 
   await new Promise((resolve, reject) => {
     op.onsuccess = () => {
