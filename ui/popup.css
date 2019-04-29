@@ -2,83 +2,96 @@ body {
   font: normal 100%/1.25 sans-serif;
   margin: 0;
 }
-
 section {
   padding: .5rem 1rem;
 }
-
 section:last-child {
   padding-bottom: .75rem;
 }
-
 section:nth-child(n + 3) {
-  border-top: 1px solid lightgray;
+  border-top: 1px solid #ccc;
 }
-
 section[data-status] {
   transition: background-color .25s;
 }
-
 section[data-status="true"] {
   background-color: darkseagreen;
 }
-
 section[data-status="false"] {
-  background-color: lightgray;
+  background-color: #bbb;
 }
-
 section[data-status="false"] label {
   opacity: .5;
 }
-
 input {
   vertical-align: bottom;
 }
-
 label,
 input {
   cursor: pointer;
 }
-
 select,
 button {
   height: 1.7em;
 }
-
 select {
-  background-color: #8882;
+  background-color: #eee;
+  border-color: #ddd;
 }
-
 a {
   text-decoration: none;
 }
-
 a:hover {
   text-decoration: underline;
 }
-
 [nowrap] {
   white-space: nowrap;
 }
-
 .disabled #loadGo {
   display: none;
 }
-
 .disabled #loadStop {
   display: initial;
 }
-
 .disabled > :not(#loadStop) {
   opacity: .5;
   pointer-events: none;
   user-select: none;
 }
-
 #excludeSection {
   display: flex;
 }
-
 #excludeSelector {
   max-width: 8em;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #333;
+    color: #aaa;
+  }
+  a {
+    color: skyblue;
+  }
+  select {
+    color: #bbb;
+    background-color: #222;
+    border-color: #111;
+  }
+  section[data-status="true"] {
+    background-color: seagreen;
+    color: #fff;
+  }
+  section[data-status="false"] {
+    background-color: #555;
+    color: #fff;
+  }
+  section:nth-child(n + 3) {
+    border-color: #222;
+  }
+  button {
+    background: linear-gradient(-15deg, #333, #666);
+    border: 1px solid #000;
+    color: #eee;
+  }
 }

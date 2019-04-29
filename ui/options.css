@@ -3,7 +3,6 @@ body {
   padding: 0 1em 1em;
   min-width: 500px;
 }
-
 #btnSaveWrapper {
   background-color: #ffd700a0;
   position: fixed;
@@ -12,40 +11,32 @@ body {
   padding: 1em;
   border: 1px solid burlywood;
 }
-
 #btnSaveWrapper div {
   font-size: smaller;
 }
-
 #btnSave {
   font-weight: bold;
 }
-
 section:nth-child(n + 2) {
   margin-top: 1em;
 }
-
 summary {
   cursor: pointer;
   font-weight: bold;
   margin-bottom: .5em;
 }
-
 .desc {
   margin: 1em;
   font-size: 75%;
 }
-
 .desc summary {
   font-weight: normal;
 }
-
 code,
 .desc pre {
   font-weight: bold;
   color: darkgreen;
 }
-
 textarea {
   width: 100%;
   box-sizing: border-box;
@@ -53,21 +44,17 @@ textarea {
   border: 1px solid #8883;
   background-color: #8882;
 }
-
 #rules {
   counter-reset: rule;
 }
-
 .rule {
   position: relative;
 }
-
 .rule:not(:last-child) {
   padding-bottom: 1em;
   margin-bottom: 1em;
   border-bottom: 3px double lightgray;
 }
-
 .rule.deleted {
   padding-top: 1em;
   border: .5em solid transparent;
@@ -81,14 +68,12 @@ textarea {
   margin-bottom: .25rem;
   color: seagreen;
 }
-
 .rule-actions {
   position: absolute;
   right: 0;
   top: -.5em;
   text-align: right;
 }
-
 .rule-action {
   padding: 0 1em 1px;
   border-radius: 5px;
@@ -98,32 +83,26 @@ textarea {
   cursor: pointer;
   user-select: none;
 }
-
 .rule-action[data-action="add"] {
   background-color: #bcd6bc;
   border: 1px solid seagreen;
   color: #165431;
 }
-
 .rule-action[data-action="delete"] {
   background-color: #ccc;
   border: 1px solid #888;
   color: #444;
 }
-
 .rule-action:hover {
   opacity: 1;
 }
-
 .deleted .rule-member {
   opacity: .25;
 }
-
 .rule-member {
   display: flex;
   align-items: center;
 }
-
 .rule-member-name {
   font-weight: bold;
   font-size: .6rem;
@@ -133,49 +112,66 @@ textarea {
   text-overflow: ellipsis;
   color: darkseagreen;
 }
-
 .rule-member-value {
   margin-top: 2px;
 }
-
 .rule-member-value:invalid {
   background-color: #f003;
   border: 1px solid #f008;
 }
-
 .rule-member-value.empty[required] {
   background-color: #f001;
   border: 1px solid #f004;
 }
-
 .changed {
   box-shadow: 0 0 0 1px gold;
 }
-
 section:last-of-type details:not([open]) summary {
   margin-bottom: 0;
 }
-
 #backup {
   margin-top: .5em;
 }
-
 #importWrapper {
   border: none;
   padding: 0;
   margin: 0;
 }
-
 #importWrapper:disabled span {
   opacity: .5;
 }
-
 #importError {
   color: red;
   font-size: smaller;
   font-family: monospace;
 }
-
 #size, #date {
   color: seagreen;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #222;
+    color: #999;
+  }
+  code,
+  .desc pre,
+  #size,
+  #date {
+    color: darkseagreen;
+  }
+  button {
+    background: linear-gradient(-10deg, #333, #555);
+    border: 1px solid #181818;
+    border-radius: 3px;
+    color: #eee;
+    padding: .4em 1em .35em;
+    box-shadow: 1px 1px 3px #0003;
+  }
+  summary {
+    color: #bbb;
+  }
+  textarea {
+    color: #eee;
+  }
 }
