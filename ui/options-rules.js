@@ -15,7 +15,8 @@ function loadRules(rules) {
   rulesContainer.addEventListener('input', onInput);
   rulesContainer.addEventListener('click', onClick);
 
-  const bin = addRules(rules);
+  rules = arrayOrDummy(rules);
+  const bin = addRules(rules.length ? rules : [DUMMY_RULE]);
   if (bin.firstChild) {
     rulesContainer.appendChild(bin);
     rulesContainer.closest('details').open = true;
@@ -29,14 +30,19 @@ function collectRules(elements) {
     if (r.classList.contains('deleted'))
       continue;
     const rule = {};
+    let isDummy = true;
     for (const m of r.getElementsByClassName('rule-member')) {
       const el = m.getElementsByTagName('textarea')[0];
       const value = el.value.trim();
       const v = el.savedValue = value;
-      if (v)
-        rule[m.querySelector('.rule-member-name').textContent] = v;
+      if (!v)
+        continue;
+      if (isDummy && v !== DUMMY_RULE[el.dataset.type])
+        isDummy = false;
+      rule[m.querySelector('.rule-member-name').textContent] = v;
     }
-    rules.push(rule);
+    if (!isDummy)
+      rules.push(rule);
   }
   return rules;
 }
@@ -49,7 +55,7 @@ function addRules(rules) {
   const memberTitle = memberName.parentNode.attributes.title;
   const KEYS = ['url', 'pageElement', 'nextLink', 'insertBefore'];
   let clone;
-  for (const rule of arrayOrDummy(rules)) {
+  for (const rule of rules) {
     if (rule) {
       const el = tplRule.cloneNode(true);
       el.savedValue = false;
