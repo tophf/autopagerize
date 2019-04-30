@@ -4,7 +4,6 @@
 // IIFE simplifies complete unregistering for garbage collection
 (() => {
   const BASE_REMAIN_HEIGHT = 400;
-  const MIN_REQUEST_INTERVAL = 2000;
 
   const app = {
     /** @type Boolean */
@@ -29,6 +28,8 @@
     onPageProcessed: null,
     /** @type Number */
     pagesRemaining: 0,
+    /** @type Number */
+    requestInterval: 2000,
   };
 
   const status = {
@@ -110,8 +111,8 @@
       statusShow({error: chrome.i18n.getMessage('errorOrigin')});
       return;
     }
-    if (!force && Date.now() - app.requestTime < MIN_REQUEST_INTERVAL) {
-      setTimeout(onScroll, MIN_REQUEST_INTERVAL);
+    if (!force && Date.now() - app.requestTime < app.requestInterval) {
+      setTimeout(onScroll, app.requestInterval);
       return;
     }
     app.requestTime = Date.now();
@@ -228,7 +229,7 @@
       removeScrollListener();
       app.onPageProcessed = ok => {
         if (ok)
-          doLoadMore.timer = setTimeout(doLoadMore, MIN_REQUEST_INTERVAL, num);
+          doLoadMore.timer = setTimeout(doLoadMore, app.requestInterval, num);
         chrome.runtime.connect({name: 'pagesRemaining:' + num});
       };
     } else {
@@ -344,6 +345,7 @@
 
   function loadSettings(ss) {
     app.enabled = notFalse(ss.enabled);
+    app.requestInterval = ss.requestInterval * 1000 || app.requestInterval;
     status.enabled = notFalse(ss.showStatus);
   }
 

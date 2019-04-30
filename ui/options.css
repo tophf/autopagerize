@@ -115,11 +115,11 @@ textarea {
 .rule-member-value {
   margin-top: 2px;
 }
-.rule-member-value:invalid {
+:invalid {
   background-color: #f003;
   border: 1px solid #f008;
 }
-.rule-member-value.empty[required] {
+.empty[required] {
   background-color: #f001;
   border: 1px solid #f004;
 }
@@ -151,6 +151,10 @@ section:last-of-type details:not([open]) summary {
 #toggles label {
   display: block;
 }
+#requestInterval {
+  width: 4em;
+  margin-left: .25em;
+}
 
 @media (prefers-color-scheme: dark) {
   body {
@@ -174,6 +178,8 @@ section:last-of-type details:not([open]) summary {
   summary {
     color: #bbb;
   }
+  input[type="text"],
+  input[type="number"],
   textarea {
     color: #aaa;
     background-color: #181818;

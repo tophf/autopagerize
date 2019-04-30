@@ -19,6 +19,7 @@ export async function launch(tabId, rules, key, {lastTry} = {}) {
   await poke(tabId).doRun({
     enabled: settings.enabled,
     showStatus: settings.showStatus,
+    requestInterval: settings.requestInterval,
   });
 }
 

@@ -83,6 +83,9 @@
   "regexp": {
     "message": "regexp"
   },
+  "requestInterval": {
+    "message": "Minimum page request interval (in seconds)"
+  },
   "restore": {
     "message": "Restore"
   },

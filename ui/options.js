@@ -30,18 +30,21 @@ Promise.all([
   addEventListener('change', onChange, {passive: true});
 });
 
-function renderSettings({excludes, showStatus, darkTheme}) {
+function renderSettings(ss) {
   let el;
 
   el = $.excludes;
-  el.value = el.savedValue = arrayOrDummy(excludes).join('\n');
-  el.rows = Math.max(2, Math.min(20, arrayOrDummy(excludes).length + 1));
+  el.value = el.savedValue = arrayOrDummy(ss.excludes).join('\n');
+  el.rows = Math.max(2, Math.min(20, arrayOrDummy(ss.excludes).length + 1));
 
   el = $.showStatus;
-  el.checked = el.savedValue = showStatus !== false;
+  el.checked = el.savedValue = ss.showStatus !== false;
 
   el = $.darkTheme;
-  el.checked = el.savedValue = darkTheme === true;
+  el.checked = el.savedValue = ss.darkTheme === true;
+
+  el = $.requestInterval;
+  el.value = el.savedValue = String(ss.requestInterval || 2);
 }
 
 function renderSiteinfoStats(numRules, date) {
@@ -79,6 +82,7 @@ async function save() {
     ss.excludes.join('\n') !== arrayOrDummy(settings.excludes).join('\n') ||
     ss.showStatus !== settings.showStatus ||
     ss.darkTheme !== settings.darkTheme ||
+    ss.requestInterval !== settings.requestInterval ||
     !rulesEqual(ss.rules, settings.rules);
   if (!changed)
     return;
@@ -93,6 +97,7 @@ async function save() {
   $.excludes.savedValue = ss.excludes.join('\n');
   $.showStatus.savedValue = ss.showStatus;
   $.darkTheme.savedValue = ss.darkTheme;
+  $.requestInterval.savedValue = String(ss.requestInterval);
 
   changedElements.forEach(el => el.classList.remove('changed'));
   changedElements.clear();
@@ -127,6 +132,7 @@ function collectSettings() {
     excludes: $.excludes.value.trim().split(/\s+/),
     showStatus: $.showStatus.checked,
     darkTheme: $.darkTheme.checked,
+    requestInterval: parseFloat($.requestInterval.value) || 2,
   };
 }
 

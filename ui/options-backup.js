@@ -23,6 +23,7 @@ async function importSettings() {
   const defaultSettings = {
     showStatus: true,
     darkTheme: false,
+    requestInterval: 2,
     enabled: await getSettings().enabled,
     rules: [],
     excludes: [],

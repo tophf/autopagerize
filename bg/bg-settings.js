@@ -1,6 +1,7 @@
 const PROPS_TO_NOTIFY = [
   'enabled',
   'showStatus',
+  'requestInterval',
 ];
 
 export async function writeSettings(ss) {
