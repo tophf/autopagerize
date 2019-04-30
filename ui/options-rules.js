@@ -37,7 +37,7 @@ function collectRules(elements) {
       const v = el.savedValue = value;
       if (!v)
         continue;
-      if (isDummy && v !== DUMMY_RULE[el.dataset.type])
+      if (isDummy && v !== (DUMMY_RULE[el.dataset.type] || ''))
         isDummy = false;
       rule[m.querySelector('.rule-member-name').textContent] = v;
     }
