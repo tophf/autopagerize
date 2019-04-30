@@ -15,11 +15,13 @@ if ('darkTheme' in localStorage) {
   sheet.ownerNode.onload = function () {
     this.onload = null;
     for (const rule of sheet.cssRules) {
-      if (rule.media) {
+      if (rule.media && rule.media.mediaText === 'not all') {
         rule.media.deleteMedium(rule.media[0]);
         rule.media.appendMedium('screen');
         return;
       }
     }
   };
+  if (sheet.cssRules.length)
+    sheet.ownerNode.onload();
 }
