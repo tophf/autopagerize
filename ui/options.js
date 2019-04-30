@@ -1,9 +1,12 @@
 export {
-  renderSettings,
   collectSettings,
+  renderSettings,
 };
 
-import {loadRules, rulesEqual, collectRules} from './options-rules.js';
+import {
+  collectRules,
+  loadRules,
+} from './options-rules.js';
 
 const changedElements = new Set();
 
@@ -78,15 +81,6 @@ function renderDate(date) {
 async function save() {
   const settings = await getSettings();
   const ss = collectSettings();
-  const changed =
-    ss.excludes.join('\n') !== arrayOrDummy(settings.excludes).join('\n') ||
-    ss.showStatus !== settings.showStatus ||
-    ss.darkTheme !== settings.darkTheme ||
-    ss.requestInterval !== settings.requestInterval ||
-    !rulesEqual(ss.rules, settings.rules);
-  if (!changed)
-    return;
-
   const task = inBG.writeSettings({...settings, ...ss});
   if (ss.darkTheme !== settings.darkTheme) {
     await task;
