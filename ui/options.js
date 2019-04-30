@@ -126,7 +126,7 @@ function collectSettings() {
     excludes: $.excludes.value.trim().split(/\s+/),
     showStatus: $.showStatus.checked,
     darkTheme: $.darkTheme.checked,
-    requestInterval: parseFloat($.requestInterval.value) || 2,
+    requestInterval: $.requestInterval.valueAsNumber || 2,
   };
 }
 
