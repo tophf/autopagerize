@@ -1,6 +1,6 @@
 export {
-  loadRules,
   collectRules,
+  loadRules,
   rulesEqual,
 };
 

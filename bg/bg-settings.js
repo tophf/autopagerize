@@ -1,10 +1,15 @@
+export {
+  mirrorThemePreference,
+  writeSettings,
+};
+
 const PROPS_TO_NOTIFY = [
   'enabled',
   'showStatus',
   'requestInterval',
 ];
 
-export async function writeSettings(ss) {
+async function writeSettings(ss) {
   const shouldNotify = await analyze(ss);
   chrome.storage.sync.set({settings: ss});
   mirrorThemePreference(ss);
@@ -13,7 +18,7 @@ export async function writeSettings(ss) {
     notify();
 }
 
-export function mirrorThemePreference(settings) {
+function mirrorThemePreference(settings) {
   const enabled = Boolean(settings.darkTheme);
   const stored = localStorage.hasOwnProperty('darkTheme');
   if (enabled && !stored)

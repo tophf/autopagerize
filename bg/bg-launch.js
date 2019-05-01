@@ -1,4 +1,8 @@
-export async function launch(tabId, rules, key, {lastTry} = {}) {
+export {
+  launch,
+};
+
+async function launch(tabId, rules, key, {lastTry} = {}) {
   if (!await poke(tabId).checkDeps()) {
     // no deps while retrying means the tab got navigated away
     // and already being handled in another event
