@@ -1,26 +1,21 @@
-export async function buildGlobalRules() {
-  globalRules = {};
-  const index = /** @type IDBIndex */ await idb.exec({index: 'index'}).RAW;
-  await new Promise((resolve, reject) => {
-    const op = index.openCursor(null, 'prev');
-    op.__ucs2 = new TextDecoder();
-    op.__resolve = resolve;
-    op.onsuccess = processCursor;
-    op.onerror = reject;
-  });
-  chrome.storage.local.set({globalRules});
-}
+export {
+  buildGlobalRules,
+};
 
-function processCursor({target: op}) {
-  const cursor = /** @type IDBCursorWithValue */ op.result;
-  if (cursor) {
-    const url = op.__ucs2.decode(cursor.primaryKey).slice(1);
-    if (isGlobalUrl(url)) {
-      globalRules[cursor.key] = cursor.value;
-      cursor.value.url = url;
-      cursor.continue();
-      return;
+async function buildGlobalRules() {
+  if (!cacheKeys)
+    await (await import('/bg/bg-filter.js')).loadCacheKeys();
+  const toRead = [];
+  globalRules.length = 0;
+  for (const key of cacheKeys.values()) {
+    if (isGlobalUrl(key.url)) {
+      const rule = cache.get(key.id);
+      if (!rule)
+        toRead.push([globalRules.length, key.id]);
+      globalRules.push(rule);
     }
   }
-  op.__resolve();
+  if (toRead.length)
+    await (await import('/bg/bg-unpack.js')).readMissingRules(globalRules, toRead);
+  chrome.storage.local.set({globalRules});
 }

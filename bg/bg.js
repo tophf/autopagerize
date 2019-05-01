@@ -6,12 +6,13 @@ var CACHE_DURATION = 24 * 60 * 60 * 1000;
 
 var settings = null;
 var cache = new Map();
-var cacheUrls = null;
-var cacheUrlsRE = [];
+var cacheKeys = null;
 var globalRules = null;
 var str2rx = new Map();
 /** @type module:storage-idb */
 var idb = null;
+var utf8encoder = new TextEncoder();
+var utf8decoder = new TextDecoder();
 /* eslint-enable no-var */
 
 let endpoints;
@@ -88,7 +89,9 @@ async function maybeLaunch(tabId, url, lastTry) {
   const rules =
     packedRules && await (await import('/bg/bg-unpack.js')).unpackRules(packedRules) ||
     await (await import('/bg/bg-filter.js')).filterCache(url, key, packedRules);
-  await addGlobalRules(rules);
+  if (!globalRules)
+    await addGlobalRules();
+  rules.push(...globalRules);
   if (rules.length)
     await (await import('/bg/bg-launch.js')).launch(tabId, rules, key, {lastTry});
 }
@@ -134,15 +137,28 @@ function isExcluded(url) {
   }
 }
 
-async function addGlobalRules(rules) {
-  globalRules = await getLocal('globalRules');
-  if (!globalRules)
+async function addGlobalRules() {
+  globalRules = arrayOrDummy(await getLocal('globalRules'));
+  if (!globalRules.length)
     await (await import('/bg/bg-global-rules.js')).buildGlobalRules();
-  rules.push(...Object.values(globalRules));
 }
 
 async function calcUrlCacheKey(url) {
-  const bytes = new TextEncoder().encode(url);
+  const bytes = utf8encoder.encode(url);
   const hash = await crypto.subtle.digest('SHA-256', bytes);
   return new Uint8Array(hash).slice(0, 16);
+}
+
+function calcRuleKey(rule) {
+  const url = utf8encoder.encode(rule.url);
+  const key = new Uint8Array(url.length + 4);
+  new DataView(key.buffer).setUint32(0, rule.id, true);
+  key.set(url, 4);
+  return key;
+}
+
+function parseRuleKey(rule) {
+  const key = rule.url;
+  rule.id = new DataView(key.buffer).getUint32(0, true);
+  rule.url = utf8decoder.decode(key.slice(4));
 }

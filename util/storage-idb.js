@@ -76,10 +76,8 @@ function onDbOpened(e) {
 }
 
 function onDbUpgraded(e) {
-  // ordered by created_at that doesn't change for a given rule
-  // thus only the changed/added rules will be rewritten on update
   e.target.result.createObjectStore(DEFAULT_STORE_NAME, {keyPath: 'url'})
-    .createIndex('index', 'index', {unique: true});
+    .createIndex('id', 'id', {unique: true});
   e.target.result.createObjectStore('urlCache');
 }
 

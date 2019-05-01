@@ -1,9 +1,14 @@
-export async function filterCache(url, urlCacheKey, packedRules) {
-  if (!cacheUrls)
-    await loadCacheUrls();
-  if (!cacheUrls.length)
+export {
+  filterCache,
+  loadCacheKeys,
+};
+
+async function filterCache(url, urlCacheKey, packedRules) {
+  if (!cacheKeys)
+    await loadCacheKeys();
+  if (!cacheKeys.size)
     await (await import('/bg/bg-load-siteinfo.js')).loadBuiltinSiteinfo();
-  if (!cacheUrlsRE.length)
+  if (!cacheKeys.values().next().value.hasOwnProperty('rx'))
     regexpifyCache();
   const customRules = arrayOrDummy(settings.rules);
   if (customRules.length && !customRules[0].hasOwnProperty('rx'))
@@ -11,49 +16,53 @@ export async function filterCache(url, urlCacheKey, packedRules) {
   const toUse = [];
   const toWrite = [];
   const toRead = [];
-  for (const rules of [customRules, cacheUrlsRE]) {
-    const inMainRules = rules === cacheUrlsRE;
-    for (let i = 0, len = rules.length; i < len; i++) {
-      if (inMainRules && i > len - 10 &&
-          isGlobalUrl(cacheUrls[i]))
-        continue;
-      let r = rules[i];
-      const rx = r.rx || r;
-      if (!rx || !rx.test(url))
-        continue;
-      if (inMainRules) {
-        r = cache.get(i);
-        if (!r)
-          toRead.push([toUse.length, i]);
-      }
-      toUse.push(r);
-      toWrite.push(inMainRules ? i : -i - 1);
+  for (let i = 0, len = customRules.length; i < len; i++) {
+    const rule = customRules[i];
+    if (rule.rx && rule.rx.test(url)) {
+      toUse.push(rule);
+      toWrite.push(-i - 1);
+    }
+  }
+  for (const key of cacheKeys.values()) {
+    if (!isGlobalUrl(key.url) && key.rx && key.rx.test(url)) {
+      const rule = cache.get(key.id);
+      if (!rule)
+        toRead.push([toUse.length, key.id]);
+      toUse.push(rule);
+      toWrite.push(key.id);
     }
   }
   if (toRead.length)
     await (await import('/bg/bg-unpack.js')).readMissingRules(toUse, toRead);
   if (urlCacheKey && `${toWrite}` !== `${packedRules}`)
-    idb.execRW({store: 'urlCache'}).put(new Int16Array(toWrite), urlCacheKey);
+    idb.execRW({store: 'urlCache'}).put(new Int32Array(toWrite), urlCacheKey);
   return toUse;
 }
 
-export async function loadCacheUrls() {
-  const ucs2 = new TextDecoder();
-  // N.B. the same sequence (createdAt then length) must be used everywhere
-  cacheUrls = (await idb.exec().getAllKeys() || [])
-    .map(k => ucs2.decode(k).slice(1))
-    .sort((a, b) => b.length - a.length);
+async function loadCacheKeys() {
+  const keys = arrayOrDummy(await idb.exec().getAllKeys());
+  keys.sort((a, b) => b.url.length - a.url.length);
+  cacheKeys = new Map();
+  for (const key of keys) {
+    const rule = {
+      url: key,
+      id: 0,
+      rx: null,
+    };
+    parseRuleKey(rule);
+    cacheKeys.set(rule.id, rule);
+  }
 }
 
 function regexpifyCache() {
-  cacheUrlsRE = Array(cacheUrls.length);
-  for (let i = 0, rx; i < cacheUrls.length; i++) {
+  for (const key of cacheKeys.values()) {
+    let rx;
     try {
-      rx = RegExp(cacheUrls[i]);
+      rx = RegExp(key.url);
     } catch (e) {
       rx = false;
     }
-    cacheUrlsRE[i] = rx;
+    Object.defineProperty(key, 'rx', {value: rx});
   }
 }
 

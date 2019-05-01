@@ -1,58 +1,58 @@
-export async function unpackRules(rules) {
+export {
+  readMissingRules,
+  unpackRules,
+};
+
+// (!) needs `settings` to be already loaded
+async function unpackRules(packedRules) {
   const customRules = arrayOrDummy(settings.rules);
   const unpackedRules = [];
   const toRead = [];
-  for (let i = 0; i < rules.length; i++) {
-    const index = rules[i];
+  for (const id of packedRules) {
     let r;
-    if (index >= 0) {
-      r = cache.get(index) || true;
-      if (r === true)
-        toRead.push([i, index]);
+    if (id < 0) {
+      r = customRules[-id - 1];
+      if (!r)
+        return;
     } else {
-      r = customRules[-index - 1];
+      r = cache.get(id);
+      !r && toRead.push([unpackedRules.length, id]);
     }
     unpackedRules.push(r);
-    if (!r)
-      return;
   }
   return toRead.length
     ? readMissingRules(unpackedRules, toRead)
     : unpackedRules;
 }
 
-export async function readMissingRules(unpackedRules, toRead) {
-  const index = /** @type IDBIndex */ await idb.exec({index: 'index'}).RAW;
-  if (!cacheUrls)
-    cacheUrls = [];
-  const ucs2 = new TextDecoder();
-  let success = true;
-  let onDone;
+async function readMissingRules(rules, toRead) {
+  if (!cacheKeys)
+    cacheKeys = new Map();
+  const index = /** @type IDBIndex */ await idb.exec({index: 'id'}).RAW;
+  index.__rules = rules;
   let op;
-  for (let i = 0; i < toRead.length; i++) {
-    const [arrayPos, ruleIndex] = toRead[i];
-    let url = cacheUrls[ruleIndex];
-    if (!url)
-      index.getKey(ruleIndex).onsuccess = ({target: {result: key}}) => {
-        if (key)
-          url = ucs2.decode(key).slice(1);
-      };
-    op = index.get(ruleIndex);
-    // eslint-disable-next-line no-loop-func
-    op.onsuccess = ({target: {result: rule}}) => {
-      if (success && url && rule) {
-        rule.url = url;
-        cache.set(ruleIndex, rule);
-        unpackedRules[arrayPos] = rule;
-      } else {
-        success = false;
-      }
-      if (i === toRead.length - 1)
-        onDone(success && unpackedRules);
-    };
+  for (const [arrayPos, id] of toRead) {
+    op = index.get(id);
+    op.__arrayPos = arrayPos;
+    op.onsuccess = readRule;
+    op.onerror = console.error;
   }
-  return new Promise((resolve, reject) => {
-    onDone = resolve;
-    op.onerror = reject;
+  return new Promise(resolve => {
+    op.__resolve = resolve;
+    op.onerror = () => resolve(false);
   });
+}
+
+function readRule(e) {
+  const op = /** @type IDBRequest */ e.target;
+  const r = op.result;
+  if (!r) {
+    op.transaction.abort();
+    return;
+  }
+  cache.set(r.id, r);
+  cacheKeys.set(r.id, r);
+  op.source.__rules[op.__arrayPos] = r;
+  if (op.__resolve)
+    op.__resolve(op.source.__rules);
 }

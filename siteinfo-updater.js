@@ -32,15 +32,12 @@ http.get(DATA_URL, r => {
 
 function sanitize(data) {
   return (Array.isArray(data) ? data : [])
-    .map(x => x && x.data && x.data.url && pickKnownKeys(x.data, x.created_at))
+    .map(x => x && x.data && x.data.url && pickKnownKeys(x.data, x.resource_url))
     .filter(Boolean)
-    .sort((a, b) => a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0)
-    .map((x, i) => (((x.createdAt = i), x)))
-    // N.B. the same sequence (createdAt then length) must be used everywhere
-    .sort((a, b) => b.url.length - a.url.length);
+    .sort((a, b) => a.id - b.id);
 }
 
-function pickKnownKeys(entry, createdAt) {
+function pickKnownKeys(entry, resourceUrl) {
   for (const key of Object.keys(entry)) {
     if (!KNOWN_KEYS.includes(key)) {
       const newEntry = {};
@@ -53,6 +50,6 @@ function pickKnownKeys(entry, createdAt) {
       break;
     }
   }
-  entry.createdAt = createdAt;
+  entry.id = Number(resourceUrl.slice(resourceUrl.lastIndexOf('/') + 1));
   return entry;
 }

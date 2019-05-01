@@ -1,61 +1,75 @@
-let busy;
+export {
+  convertToMap,
+  trimUrlCache,
+};
 
-export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
-  if (busy)
+let state;
+
+async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
+  if (state)
     return;
-  busy = true;
-  oldRules = arrayOrDummy(oldRules);
-  newRules = arrayOrDummy(newRules);
-
+  state = {
+    main,
+    old: convertToMap(oldRules),
+    new: convertToMap(newRules),
+  };
   if (!idb)
     idb = await import('/util/storage-idb.js');
-
-  const invalidateAll =
-    oldRules.length !== newRules.length ||
-    oldRules.some((r, i) => (r || {}).url !== (newRules[i] || {}).url);
-  if (invalidateAll) {
-    await idb.execRW({store: 'urlCache'}).clear();
-    busy = false;
-    return;
+  const store = idb.execRW({store: 'urlCache'});
+  if (someUrlChanged()) {
+    await store.clear();
+  } else {
+    const op = (await store.RAW).openCursor();
+    await new Promise((resolve, reject) => {
+      op.onsuccess = processCursor;
+      op.onerror = reject;
+      op.__resolve = resolve;
+    });
   }
+  state = null;
+}
 
-  const rulesChanged = packedRules => {
-    for (let i = 0; i < packedRules.length; i++) {
-      let index = packedRules[i];
-      if (index < 0) {
-        if (main)
-          continue;
-        index = -index - 1;
-      } else if (!main)
+function convertToMap(obj) {
+  return obj instanceof Map ? obj : new Map(arrayOrDummy(obj).map(x => [x.id, x]));
+}
+
+function someUrlChanged() {
+  const newRules = state.new;
+  if (state.old.size !== newRules.size)
+    return true;
+  for (const r of state.old.values())
+    if (r.url !== (newRules.get(r.id) || {}).url)
+      return true;
+}
+
+function someRuleChanged(packedRules) {
+  for (let id of packedRules) {
+    if (id < 0) {
+      if (state.main)
         continue;
-      const a = oldRules[index];
-      const b = newRules[index];
-      if (!a || !b)
+      id = -id - 1;
+    } else if (!state.main)
+      continue;
+    const a = state.old.get(id);
+    const b = state.new.get(id);
+    if (!a || !b)
+      return true;
+    for (const k in a)
+      if (a[k] !== b[k])
         return true;
-      for (const k in a)
-        if (k !== 'index' && a[k] !== b[k])
-          return true;
-      for (const k in b)
-        if (!a.hasOwnProperty(k))
-          return true;
-    }
-  };
+    for (const k in b)
+      if (!a.hasOwnProperty(k))
+        return true;
+  }
+}
 
-  const op = (await idb.execRW({store: 'urlCache'}).RAW).openCursor();
-
-  await new Promise((resolve, reject) => {
-    op.onsuccess = () => {
-      const cursor = /** IDBCursorWithValue */ op.result;
-      if (!cursor) {
-        resolve();
-      } else if (rulesChanged(cursor.value)) {
-        cursor.delete().onsuccess = () => cursor.continue();
-      } else {
-        cursor.continue();
-      }
-    };
-    op.onerror = reject;
-  });
-
-  busy = false;
+function processCursor({target: op}) {
+  const cursor = /** IDBCursorWithValue */ op.result;
+  if (cursor) {
+    if (someRuleChanged(cursor.value))
+      cursor.delete();
+    cursor.continue();
+  } else {
+    op.__resolve();
+  }
 }

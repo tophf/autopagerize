@@ -1,3 +1,7 @@
+export {
+  updateSiteinfo,
+};
+
 const DATA_URL = 'http://wedata.net/databases/AutoPagerize/items_all.json';
 const KNOWN_KEYS = [
   'url',
@@ -11,42 +15,28 @@ const KNOWN_KEYS = [
  * @param {boolean} [_.force]
  * @param {function(ProgressEvent)} [_.onprogress]
  */
-export async function updateSiteinfo({force, onprogress} = {}) {
+async function updateSiteinfo({force, onprogress} = {}) {
   if (!idb)
     idb = await import('/util/storage-idb.js');
-  if (!cacheUrls)
-    cacheUrls = [];
+  if (!cacheKeys)
+    cacheKeys = new Map();
   if (!force && await idb.exec().count())
     return;
+  const bgTrim = await import('/bg/bg-trim.js');
   try {
-    const [current, fresh] = await Promise.all([
-      getCurrentSortedByCreatedAt(),
-      // `fresh` is sorted using the primary method used by filtering - by url length
-      sanitize(await download(onprogress)),
+    const [old, fresh] = await Promise.all([
+      getCacheIndexedById(),
+      download(onprogress).then(sanitize).then(bgTrim.convertToMap),
     ]);
-    if (!fresh.length)
+    if (!fresh.size)
       return 0;
-    await (await import('/bg/bg-trim.js')).trimUrlCache(current, fresh);
-    await (await import('/bg/bg-load-siteinfo.js')).loadSiteinfo(fresh,
-      rule => !shallowEqual(rule, current[rule.createdAt]));
-    return fresh.length;
+    await removeObsoleteRules(old, fresh);
+    await bgTrim.trimUrlCache(old, fresh);
+    await (await import('/bg/bg-load-siteinfo.js'))
+      .loadSiteinfo(fresh.values(), rule => !shallowEqual(rule, old.get(rule.id)));
+    return fresh.size;
   } catch (e) {
-    return e;
-  }
-}
-
-async function getCurrentSortedByCreatedAt() {
-  if (cache.size && cache.size === cacheUrls.length) {
-    return [...cache.values()].sort((a, b) => a.createdAt - b.createdAt);
-  } else {
-    const all = await idb.exec().getAll();
-    const ucs2 = new TextDecoder();
-    for (const r of all) {
-      const key = ucs2.decode(r.url);
-      r.url = key.slice(1);
-      r.createdAt = key.charCodeAt(0) - 32;
-    }
-    return all;
+    return (e.target || {}).error || e;
   }
 }
 
@@ -67,16 +57,12 @@ function download(onprogress) {
 
 function sanitize(data) {
   return arrayOrDummy(data)
-    .map(x => x && x.data && x.data.url && pickKnownKeys(x.data, x.created_at))
+    .map(x => x && x.data && x.data.url && pickKnownKeys(x.data, x.resource_url))
     .filter(Boolean)
-    .sort((a, b) => a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0)
-    .map((x, i) => (((x.createdAt = i), x)))
-    // N.B. the same sequence (createdAt then length) must be used everywhere
-    .sort((a, b) => b.url.length - a.url.length)
-    .map((x, i) => (((x.index = i), x)));
+    .sort((a, b) => a.id - b.id);
 }
 
-function pickKnownKeys(entry, createdAt) {
+function pickKnownKeys(entry, resourceUrl) {
   for (const key of Object.keys(entry)) {
     if (!KNOWN_KEYS.includes(key)) {
       const newEntry = {};
@@ -89,15 +75,44 @@ function pickKnownKeys(entry, createdAt) {
       break;
     }
   }
-  entry.createdAt = createdAt;
+  entry.id = Number(resourceUrl.slice(resourceUrl.lastIndexOf('/') + 1));
   return entry;
+}
+
+async function getCacheIndexedById() {
+  if (cache.size && cache.size === cacheKeys.size)
+    return cache;
+  const all = await idb.exec().getAll();
+  const byId = new Map();
+  for (const r of all) {
+    parseRuleKey(r);
+    byId.set(r.id, r);
+  }
+  return byId;
+}
+
+async function removeObsoleteRules(old, fresh) {
+  let /** @type IDBObjectStore */ store, op;
+  for (const a of old.values()) {
+    const b = fresh.get(a.id);
+    if (b && b.url === a.url)
+      continue;
+    if (!store)
+      store = await idb.execRW().RAW;
+    op = store.delete(calcRuleKey(a));
+  }
+  if (op)
+    await new Promise((resolve, reject) => {
+      op.onsuccess = resolve;
+      op.onerror = reject;
+    });
 }
 
 function shallowEqual(a, b) {
   if (!a !== !b)
     return;
   for (const k in a)
-    if (k !== 'index' && a[k] !== b[k])
+    if (a[k] !== b[k])
       return;
   for (const k in b)
     if (!a.hasOwnProperty(k))

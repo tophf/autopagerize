@@ -1,33 +1,36 @@
-export function loadBuiltinSiteinfo() {
+export {
+  loadBuiltinSiteinfo,
+  loadSiteinfo,
+};
+
+function loadBuiltinSiteinfo() {
   return Promise.all([
     fetch('/siteinfo.json').then(r => r.json()),
-    idb.execRW().clear().then(() =>
-      idb.execRW({store: 'urlCache'}).clear()),
+    idb.execRW().clear(),
+    idb.execRW({store: 'urlCache'}).clear(),
   ]).then(([si]) => loadSiteinfo(si));
 }
 
-export async function loadSiteinfo(si, fnCanWrite) {
+async function loadSiteinfo(si, fnCanWrite) {
   cache.clear();
-  cacheUrls.length = 0;
-  cacheUrlsRE.length = 0;
-  globalRules = {};
-  const utf8 = new TextEncoder();
+  cacheKeys.clear();
+  globalRules = [];
   let /** @type IDBObjectStore */ store, op;
-  for (let i = 0; i < si.length; i++) {
-    const rule = si[i];
-    const {url} = rule;
-    cacheUrls.push(url);
-    cache.set(i, rule);
+  for (const rule of si) {
+    const {id, url} = rule;
+    cache.set(id, rule);
+    cacheKeys.set(id, rule);
     if (isGlobalUrl(url))
-      globalRules[i] = rule;
-    if (fnCanWrite && !fnCanWrite(rule))
-      continue;
-    if (!store)
-      store = await idb.execRW().RAW;
-    const {createdAt, ...toWrite} = rule;
-    toWrite.url = utf8.encode(String.fromCharCode(createdAt + 32) + url);
-    toWrite.index = i;
-    op = store.put(toWrite);
+      globalRules.push(rule);
+    if (!fnCanWrite || fnCanWrite(rule)) {
+      if (!store)
+        store = await idb.execRW().RAW;
+      op = store.put({
+        ...rule,
+        url: calcRuleKey(rule),
+      });
+      op.onerror = console.error;
+    }
   }
   setCacheDate();
   chrome.storage.local.set({globalRules});

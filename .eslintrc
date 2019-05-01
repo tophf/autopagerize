@@ -248,13 +248,16 @@ overrides:
   - files:
     - "bg/*.js"
     globals:
-      settings: true
       cache: false
-      cacheUrls: true
-      cacheUrlsRE: true
+      cacheKeys: true
+      calcRuleKey: false
       globalRules: true
-      str2rx: false
       idb: true
+      parseRuleKey: false
+      settings: true
+      str2rx: false
+      utf8decoder: false
+      utf8encoder: false
 
   - files:
     - "ui/*.js"
