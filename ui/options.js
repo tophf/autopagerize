@@ -106,18 +106,21 @@ async function update() {
   const label = btn.textContent;
   btn.disabled = true;
 
+  chrome.runtime.onConnect.addListener(displayProgress);
   const portName = performance.now() + '.' + Math.random();
-  chrome.runtime.onConnect.addListener(port => {
-    if (port.name === portName)
-      port.onMessage.addListener(loaded => {
-        btn.textContent = (loaded / 1024).toFixed(0) + ' kiB';
-      });
-  });
   const numRules = await inBG.updateSiteinfo(portName);
+  chrome.runtime.onConnect.removeListener(displayProgress);
 
   renderSiteinfoStats(numRules, numRules > 0 ? new Date() : null);
   btn.textContent = label;
   btn.disabled = false;
+
+  function displayProgress(port) {
+    if (port.name === portName)
+      port.onMessage.addListener(loaded => {
+        btn.textContent = (loaded / 1024).toFixed(0) + ' kiB';
+      });
+  }
 }
 
 function collectSettings() {
