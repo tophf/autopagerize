@@ -15,7 +15,7 @@ Differences to the original:
   * `*.foo.com/bar` - URLs that end in `foo.com/bar`
   * `*://*.foo.com/bar*` - URLs that contain `foo.com/bar` anywhere
   
-![popup](https://i.imgur.com/lC8aWNF.png)
+![popup](https://i.imgur.com/lC8aWNF.png) ![popup-dark](https://i.imgur.com/mxbBMVw.png)
 
 New features in popup:
 
@@ -26,5 +26,8 @@ New features in options:
 
 * Custom rules in options
 * Import/export of settings
+* Customizable page request interval
+* Dark theme
 
 ![options](https://i.imgur.com/UVp4NnR.png)
+![options-dark](https://i.imgur.com/PZu716Z.png)
