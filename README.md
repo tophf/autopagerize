@@ -30,4 +30,4 @@ New features in options:
 * Dark theme
 
 ![options](https://i.imgur.com/UVp4NnR.png)
-![options-dark](https://i.imgur.com/PZu716Z.png)
+![options-dark](https://i.imgur.com/z8vgAqS.png)
