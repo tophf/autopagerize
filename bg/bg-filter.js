@@ -41,7 +41,7 @@ async function filterCache(url, urlCacheKey, packedRules) {
 
 async function loadCacheKeys() {
   const keys = arrayOrDummy(await idb.exec().getAllKeys());
-  keys.sort((a, b) => b.url.length - a.url.length);
+  keys.sort((a, b) => b.length - a.length);
   cacheKeys = new Map();
   for (const key of keys) {
     const rule = {

@@ -159,6 +159,6 @@ function calcRuleKey(rule) {
 
 function parseRuleKey(rule) {
   const key = rule.url;
-  rule.id = new DataView(key.buffer).getUint32(0, true);
+  rule.id = new DataView(key.buffer || key).getUint32(0, true);
   rule.url = utf8decoder.decode(key.slice(4));
 }
