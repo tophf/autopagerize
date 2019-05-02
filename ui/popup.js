@@ -2,19 +2,21 @@
 export let tab;
 
 Promise.all([
-  getSettings(),
   getActiveTab(),
   onDomLoaded(),
 ]).then(([
-  settings,
   tab_,
 ]) => {
   tab = tab_;
-  $.status.checked = settings.enabled !== false;
-  $.status.onchange = toggle;
-  $.openOptions.onclick = e => {
+  $.status.checked = isGloballyEnabled();
+  $.status.onchange = toggled;
+  $.hotkeys.onclick = e => {
+    chrome.tabs.create({url: $.hotkeys.href});
     e.preventDefault();
+  };
+  $.openOptions.onclick = e => {
     chrome.runtime.openOptionsPage();
+    e.preventDefault();
   };
   renderStatus();
   import('./popup-load-more.js');
@@ -27,11 +29,8 @@ function renderStatus() {
   $.statusText.textContent = i18n(enabled ? 'on' : 'off');
 }
 
-async function toggle() {
-  inBG.writeSettings({
-    ...await getSettings(),
-    enabled: $.status.checked,
-  });
+function toggled() {
+  inBG.switchGlobalState($.status.checked);
   renderStatus();
 }
 

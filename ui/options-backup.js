@@ -24,7 +24,6 @@ async function importSettings() {
     showStatus: true,
     darkTheme: false,
     requestInterval: 2,
-    enabled: await getSettings().enabled,
     rules: [],
     excludes: [],
   };

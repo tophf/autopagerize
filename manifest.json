@@ -30,10 +30,29 @@
       "32": "icons/off/icon32.png"
     }
   },
+  "commands": {
+    "_execute_page_action": {},
+    "onOff": {
+      "description": "__MSG_onOff__"
+    },
+    "loadMore01": {
+      "description": "__MSG_loadMore__ (1)"
+    },
+    "loadMore02": {
+      "description": "__MSG_loadMore__ (2)"
+    },
+    "loadMore05": {
+      "description": "__MSG_loadMore__ (5)"
+    },
+    "loadMore10": {
+      "description": "__MSG_loadMore__ (10)"
+    }
+  },
   "permissions": [
     "*://wedata.net/",
     "<all_urls>",
     "webNavigation",
+    "contextMenus",
     "storage",
     "tabs"
   ],

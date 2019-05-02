@@ -16,6 +16,7 @@ globals:
   getLocal: false
   getCacheDate: false
   setCacheDate: false
+  isGloballyEnabled: false
   isGlobalUrl: false
   ignoreLastError: false
   arrayOrDummy: false

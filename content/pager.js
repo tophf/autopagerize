@@ -6,8 +6,6 @@
   const BASE_REMAIN_HEIGHT = 400;
 
   const app = {
-    /** @type Boolean */
-    enabled: null,
     /** @type Object */
     rule: null,
     /** @type Node */
@@ -41,13 +39,15 @@
     timer: 0,
   };
 
-  window.run = ({rules, matchedRule, settings, loadMore}) => {
-    if (settings)
-      loadSettings(settings);
-    if (rules && !maybeInit(rules, matchedRule))
-      setTimeout(maybeInit, 2000, rules);
-    if (loadMore)
-      return doLoadMore(loadMore);
+  window.run = cfg => {
+    if (cfg.settings)
+      loadSettings(cfg.settings);
+    if (cfg.rules && !maybeInit(cfg.rules, cfg.matchedRule))
+      setTimeout(maybeInit, 2000, cfg.rules);
+    if (cfg.loadMore)
+      return doLoadMore(cfg.loadMore);
+    if (cfg.terminate)
+      terminate();
   };
 
   function maybeInit(rules, rule) {
@@ -210,7 +210,7 @@
   function onScroll() {
     const {scrollHeight} = document.scrollingElement;
     const remain = scrollHeight - window.innerHeight - window.scrollY;
-    if (app.enabled && remain < app.remainHeight)
+    if (remain < app.remainHeight)
       request();
   }
 
@@ -344,7 +344,6 @@
   }
 
   function loadSettings(ss) {
-    app.enabled = notFalse(ss.enabled);
     app.requestInterval = ss.requestInterval * 1000 || app.requestInterval;
     status.enabled = notFalse(ss.showStatus);
   }

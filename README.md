@@ -3,6 +3,7 @@ A fork of [Autopagerize for Chrome](https://github.com/swdyh/autopagerize_for_ch
 * the background page now auto-unloads when inactive
 * the content script is added to a web page only if its URL has a matching rule
 * the content script unregisters all of its listeners when there are no more pages to load according to the paging rules - and thus it gets removed by the garbage collector (several megabytes per each tab)
+* when disabling the extension via the On/Off command all content scripts are fully unloaded 
 * the URL matching regexps are cached upon each run of the background page so subsequent checks during the run are almost 100 times faster and take just a few milliseconds (the background page unloads after approximately five seconds of no navigation activity)
 * IndexedDB is used to store the data objects directly whereas the previously used localStorage serialized them into a string 
 * Simple one-time messaging and in-place code execution is used when needed instead of the persistent communication ports that were created for all the browser tabs
@@ -14,7 +15,15 @@ Differences to the original:
   * `http://foo.com/bar*` - URLs that start with `http://foo.com/bar`
   * `*.foo.com/bar` - URLs that end in `foo.com/bar`
   * `*://*.foo.com/bar*` - URLs that contain `foo.com/bar` anywhere
-  
+
+New features:
+
+* Configurable hotkeys chrome://extensions/shortcuts:
+  * On/Off switch
+  * Show the popup
+  * Load 1,2,5,10 more pages - four separate commands
+* On/Off command in the context menu of the extension icon in the browser toolbar
+
 ![popup](https://i.imgur.com/lC8aWNF.png) ![popup-dark](https://i.imgur.com/mxbBMVw.png)
 
 New features in popup:

@@ -3,7 +3,6 @@
 // using var to share via `window` or `self` with modules
 /* eslint-disable no-var */
 var CACHE_DURATION = 24 * 60 * 60 * 1000;
-
 var settings = null;
 var cache = new Map();
 var cacheKeys = null;
@@ -13,37 +12,34 @@ var str2rx = new Map();
 var idb = null;
 var utf8encoder = new TextEncoder();
 var utf8decoder = new TextDecoder();
+var endpoints;
 /* eslint-enable no-var */
 
-let endpoints;
+const processing = new Map();
+
+import('/bg/bg-api.js');
 
 if (getCacheDate() + CACHE_DURATION < Date.now())
   import('/bg/bg-update.js').then(m =>
     m.updateSiteinfo({force: true}));
 
-const processing = new Map();
-const webNavigationFilter = {url: [{schemes: ['http', 'https']}]};
-chrome.webNavigation.onCompleted.addListener(maybeProcess.bind(true), webNavigationFilter);
-chrome.webNavigation.onHistoryStateUpdated.addListener(maybeProcess, webNavigationFilter);
-chrome.webNavigation.onReferenceFragmentUpdated.addListener(maybeProcess, webNavigationFilter);
-
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+function onRuntimeMessage(msg, sender, sendResponse) {
   if (!endpoints)
     initMessaging();
-  const fn = endpoints.hasOwnProperty(msg.action) && endpoints[msg.action];
+  const fn = endpoints[msg.action];
   if (!fn)
     return;
   const result = fn(msg.data, sender);
   if (result && typeof result.then === 'function') {
     result.then(sendResponse);
     return true;
-  } else if (result !== undefined) {
-    sendResponse(result);
   }
-});
+  if (result !== undefined)
+    sendResponse(result);
+}
 
 function initMessaging() {
-  endpoints = {
+  endpoints = Object.assign(Object.create(null), {
     launched: (_, {tab: {id}}) => {
       chrome.pageAction.show(id);
       chrome.pageAction.setIcon({
@@ -67,7 +63,15 @@ function initMessaging() {
       port.disconnect();
       return result >= 0 ? result : String(result);
     },
-  };
+    switchGlobalState: async state => {
+      await (await import('/bg/bg-switch.js')).switchGlobalState(state);
+    },
+  });
+  return endpoints;
+}
+
+function maybeProcessMain(info) {
+  return maybeProcess.call(true, info);
 }
 
 async function maybeProcess({tabId, frameId, url}) {

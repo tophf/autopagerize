@@ -1,40 +1,32 @@
 export {
-  mirrorThemePreference,
   writeSettings,
 };
 
 const PROPS_TO_NOTIFY = [
-  'enabled',
   'showStatus',
   'requestInterval',
 ];
 
 async function writeSettings(ss) {
-  const shouldNotify = await analyze(ss);
-  chrome.storage.sync.set({settings: ss});
-  mirrorThemePreference(ss);
-  settings = ss;
+  if (!settings)
+    settings = await getSettings();
+  if (ss.rules)
+    (await import('/bg/bg-trim.js')).trimUrlCache(settings.rules, ss.rules, {main: false});
+  const shouldNotify = PROPS_TO_NOTIFY.some(k => notFalse(settings[k]) !== notFalse(ss[k]));
+  Object.assign(settings, ss);
+  chrome.storage.sync.set({settings});
+  mirrorThemePreference();
   if (shouldNotify)
     notify();
 }
 
-function mirrorThemePreference(settings) {
+function mirrorThemePreference() {
   const enabled = Boolean(settings.darkTheme);
   const stored = localStorage.hasOwnProperty('darkTheme');
   if (enabled && !stored)
     localStorage.darkTheme = '';
   else if (!enabled && stored)
     delete localStorage.darkTheme;
-  else
-    return false;
-  return true;
-}
-
-async function analyze(ss) {
-  if (!settings)
-    settings = await getSettings();
-  (await import('/bg/bg-trim.js')).trimUrlCache(settings.rules, ss.rules, {main: false});
-  return PROPS_TO_NOTIFY.some(k => notFalse(settings[k]) !== notFalse(ss[k]));
 }
 
 function notify() {

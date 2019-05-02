@@ -22,6 +22,10 @@ function getLocal(key) {
       resolve(data[key])));
 }
 
+function isGloballyEnabled() {
+  return localStorage.enabled !== 'false';
+}
+
 function getCacheDate() {
   return Number(localStorage.cacheDate) || 0;
 }
