@@ -8,7 +8,7 @@ async function filterCache(url, urlCacheKey, packedRules) {
     await loadCacheKeys();
   if (!cacheKeys.size)
     await (await import('/bg/bg-load-siteinfo.js')).loadBuiltinSiteinfo();
-  if (!cacheKeys.values().next().value.hasOwnProperty('rx'))
+  if (cacheKeys.values().next().value.rx === null)
     regexpifyCache();
   const customRules = arrayOrDummy(settings.rules);
   if (customRules.length && !customRules[0].hasOwnProperty('rx'))
