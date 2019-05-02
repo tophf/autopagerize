@@ -19,7 +19,7 @@ async function switchGlobalState(state) {
 
 async function activate() {
   localStorage.enabled = '';
-  (await import('/bg/bg-api.js')).observeNavigation();
+  self.observeNavigation();
   for (const {id, url} of await queryTabs()) {
     await self.maybeProcessMain({url, tabId: id, frameId: 0});
     if (stopIt)

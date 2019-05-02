@@ -17,11 +17,50 @@ var endpoints;
 
 const processing = new Map();
 
-import('/bg/bg-api.js');
-
 if (getCacheDate() + CACHE_DURATION < Date.now())
   import('/bg/bg-update.js').then(m =>
     m.updateSiteinfo({force: true}));
+
+if (isGloballyEnabled())
+  observeNavigation();
+
+chrome.contextMenus.create({
+  id: 'onOff',
+  type: 'checkbox',
+  contexts: ['page_action', 'browser_action'],
+  title: chrome.i18n.getMessage('onOff'),
+  checked: isGloballyEnabled(),
+}, ignoreLastError);
+chrome.contextMenus.onClicked.addListener(onChromeMenu);
+chrome.commands.onCommand.addListener(onChromeCommand);
+chrome.runtime.onMessage.addListener(onRuntimeMessage);
+
+function observeNavigation() {
+  const filter = {url: [{schemes: ['http', 'https']}]};
+  chrome.webNavigation.onCompleted.addListener(maybeProcessMain, filter);
+  chrome.webNavigation.onHistoryStateUpdated.addListener(maybeProcess, filter);
+  chrome.webNavigation.onReferenceFragmentUpdated.addListener(maybeProcess, filter);
+}
+
+function onChromeMenu(info) {
+  (endpoints || initMessaging()).switchGlobalState(info.checked);
+}
+
+function onChromeCommand(cmd) {
+  if (cmd === 'onOff') {
+    (endpoints || initMessaging()).switchGlobalState(!isGloballyEnabled());
+    return;
+  }
+  if (cmd.startsWith('loadMore')) {
+    chrome.tabs.executeScript({
+      code: `
+        typeof run === 'function' &&
+        run({loadMore: ${cmd.slice(-2)}})
+      `,
+    }, ignoreLastError);
+    return;
+  }
+}
 
 function onRuntimeMessage(msg, sender, sendResponse) {
   if (!endpoints)
