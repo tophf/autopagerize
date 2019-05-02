@@ -26,8 +26,6 @@ async function unpackRules(packedRules) {
 }
 
 async function readMissingRules(rules, toRead) {
-  if (!cacheKeys)
-    cacheKeys = new Map();
   const index = /** @type IDBIndex */ await idb.exec({index: 'id'}).RAW;
   index.__rules = rules;
   let op;
@@ -50,8 +48,14 @@ function readRule(e) {
     op.transaction.abort();
     return;
   }
+  const old = cacheKeys && cacheKeys.get(r.id);
+  if (!old)
+    r.url = ruleKeyToUrl(r.url);
+  else {
+    r.url = old.url;
+    'rx' in old && Object.defineProperty(r, 'rx', {value: old.rx});
+  }
   cache.set(r.id, r);
-  cacheKeys.set(r.id, r);
   op.source.__rules[op.__arrayPos] = r;
   if (op.__resolve)
     op.__resolve(op.source.__rules);

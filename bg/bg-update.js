@@ -85,7 +85,7 @@ async function getCacheIndexedById() {
   const all = await idb.exec().getAll();
   const byId = new Map();
   for (const r of all) {
-    parseRuleKey(r);
+    r.url = ruleKeyToUrl(r.url);
     byId.set(r.id, r);
   }
   return byId;

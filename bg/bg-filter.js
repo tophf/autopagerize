@@ -45,11 +45,10 @@ async function loadCacheKeys() {
   cacheKeys = new Map();
   for (const key of keys) {
     const rule = {
-      url: key,
-      id: 0,
+      url: ruleKeyToUrl(key),
+      id: new DataView(key.buffer || key).getUint32(0, true),
       rx: null,
     };
-    parseRuleKey(rule);
     cacheKeys.set(rule.id, rule);
   }
 }

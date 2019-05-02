@@ -254,7 +254,7 @@ overrides:
       calcRuleKey: false
       globalRules: true
       idb: true
-      parseRuleKey: false
+      ruleKeyToUrl: false
       settings: true
       str2rx: false
       utf8decoder: false
