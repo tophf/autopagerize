@@ -22,8 +22,10 @@ async function activate() {
   self.observeNavigation();
   for (const {id, url} of await queryTabs()) {
     await self.maybeProcessMain({url, tabId: id, frameId: 0});
-    if (stopIt)
+    if (stopIt) {
+      stopIt = false;
       return;
+    }
   }
 }
 
@@ -43,8 +45,10 @@ async function deactivate() {
         run({terminate: true});
       `,
     });
-    if (stopIt)
+    if (stopIt) {
+      stopIt = false;
       return;
+    }
   }
 }
 
