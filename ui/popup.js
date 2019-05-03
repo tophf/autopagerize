@@ -13,17 +13,15 @@ import {
 
 import {i18n} from '/util/locale.js';
 
-Promise.all([
-  getActiveTab(),
-  onDomLoaded(),
-]).then(([
-  tab_,
-]) => {
-  tab = tab_;
+chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+  tab = tabs[0];
+});
+
+onDomLoaded().then(() => {
   $.status.checked = isGloballyEnabled();
   $.status.onchange = toggled;
-  $.hotkeys.onclick = e => {
-    chrome.tabs.create({url: $.hotkeys.href});
+  $.hotkeys.onclick = function (e) {
+    chrome.tabs.create({url: this.href});
     e.preventDefault();
   };
   $.openOptions.onclick = e => {
@@ -44,10 +42,4 @@ function renderStatus() {
 function toggled() {
   inBG.switchGlobalState($.status.checked);
   renderStatus();
-}
-
-function getActiveTab() {
-  return new Promise(resolve =>
-    chrome.tabs.query({active: true, currentWindow: true}, tabs =>
-      resolve(tabs[0])));
 }
