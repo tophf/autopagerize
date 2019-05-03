@@ -8,7 +8,7 @@ A fork of [Autopagerize for Chrome](https://github.com/swdyh/autopagerize_for_ch
 * IndexedDB is used to store the data objects directly whereas the previously used localStorage serialized them into a string 
 * Simple one-time messaging and in-place code execution is used when needed instead of the persistent communication ports that were created for all the browser tabs
 
-Differences to the original:
+<img align="right" src="https://i.imgur.com/6wWETeo.png">Differences to the original:
 
 * Exclusions are matched to the full URL now unless there's a `*` at the end. The original extension has been incorrectly treating all non-regexp URLs as prefixes.
   * `http://foo.com/bar` - this exact URL
@@ -38,5 +38,4 @@ New features in options:
 * Customizable page request interval
 * Dark theme
 
-![options](https://i.imgur.com/UVp4NnR.png)
-![options-dark](https://i.imgur.com/z8vgAqS.png)
+![options-dark](https://i.imgur.com/tHkuMmM.png)
