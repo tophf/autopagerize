@@ -10,10 +10,12 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => mo.disconnect(), {once: true});
 }
 
-function onMutation(mutations) {
+// 'observer' is present when invoked by real mutations
+// so when absent we translate all supplied elements with no further checks
+function onMutation(mutations, observer) {
   for (const m of mutations) {
     for (const node of m.addedNodes) {
-      if (node.tagName && node.hasAttribute('tl')) {
+      if (!observer || node.tagName && node.hasAttribute('tl')) {
         const textNode = node.firstChild;
         textNode.nodeValue = i18n(textNode.nodeValue.trim());
       }
