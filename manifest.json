@@ -4,7 +4,7 @@
   "minimum_chrome_version": "63",
   "name": "AutoPagerize",
   "description": "__MSG_description__",
-  "homepage_url": "https://github.com/tophf/autopagerize_for_chrome",
+  "homepage_url": "https://github.com/tophf/autopagerize",
   "default_locale": "en",
   "background": {
     "page": "bg/bg.html",
