@@ -23,19 +23,14 @@ import {
 const changedElements = new Set();
 
 Promise.all([
-  import('/util/storage-idb.js').then(idb => idb.exec().count()),
   getCacheDate(),
   getSettings(),
-  onDomLoaded().then(() => {
-    import('./options-backup.js');
-  }),
+  onDomLoaded(),
 ]).then(([
-  cacheCount,
   cacheDate,
   settings,
 ]) => {
   renderSettings(settings);
-  renderSiteinfoStats(cacheCount, cacheDate);
   loadRules(settings.rules);
 
   $.btnSave.onclick = save;
@@ -43,6 +38,11 @@ Promise.all([
   $.backup.oninput = ({target: el}) => ($.importWrapper.disabled = !el.value.trim());
   addEventListener('input', onChange, {passive: true});
   addEventListener('change', onChange, {passive: true});
+
+  import('/util/storage-idb.js')
+    .then(idb => idb.exec().count())
+    .then(cacheCount => renderSiteinfoStats(cacheCount, cacheDate));
+  import('./options-backup.js');
 });
 
 function renderSettings(ss) {
