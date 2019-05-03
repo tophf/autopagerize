@@ -2,6 +2,8 @@
 
 export const utf8encoder = new TextEncoder();
 export const utf8decoder = new TextDecoder();
+
+/** @type Map<String,(RegExp|null)> - null means a bad regexp */
 export const str2rx = new Map();
 
 import {
@@ -30,7 +32,7 @@ export function isUrlExcluded(url) {
         return true;
     }
     let rx = str2rx.get(entry);
-    if (rx === false)
+    if (rx === null)
       continue;
     if (!rx) {
       try {
@@ -44,7 +46,7 @@ export function isUrlExcluded(url) {
         rx = RegExp(rxStr);
         str2rx.set(entry, rx);
       } catch (e) {
-        str2rx.set(entry, false);
+        str2rx.set(entry, null);
         continue;
       }
     }

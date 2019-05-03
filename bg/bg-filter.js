@@ -26,7 +26,7 @@ async function filterCache(url, urlCacheKey, packedRules) {
     await loadCacheKeys();
   if (!cacheKeys.size)
     await (await import('./bg-load-siteinfo.js')).loadBuiltinSiteinfo();
-  if (cacheKeys.values().next().value.rx === null)
+  if (cacheKeys.values().next().value.rx === undefined)
     regexpifyCache();
   const customRules = arrayOrDummy(settings().rules);
   if (customRules.length && !customRules[0].hasOwnProperty('rx'))
@@ -65,7 +65,7 @@ async function loadCacheKeys() {
     const rule = {
       url: ruleKeyToUrl(key),
       id: new DataView(key.buffer || key).getUint32(0, true),
-      rx: null,
+      rx: undefined,
     };
     cacheKeys.set(rule.id, rule);
   }
@@ -77,7 +77,7 @@ function regexpifyCache() {
     try {
       rx = RegExp(key.url);
     } catch (e) {
-      rx = false;
+      rx = null;
     }
     Object.defineProperty(key, 'rx', {value: rx});
   }
@@ -87,13 +87,13 @@ function regexpifyCustomRules() {
   for (const r of settings().rules) {
     const {url} = r;
     let rx = str2rx.get(url);
-    if (rx === false)
+    if (rx === null)
       continue;
     if (!rx) {
       try {
         rx = RegExp(url);
       } catch (e) {
-        rx = false;
+        rx = null;
       }
       str2rx.set(url, rx);
     }
