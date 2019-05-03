@@ -49,7 +49,7 @@ async function deactivate() {
   const code = `(${runTerminateInContentScript})()`;
   for (const {id} of await queryTabs()) {
     chrome.pageAction.hide(id, ignoreLastError);
-    chrome.pageAction.setIcon({tabId: id, path: '/icons/off/icon16.png'}, ignoreLastError);
+    chrome.pageAction.setIcon({tabId: id, path: '/icons/off/16.png'}, ignoreLastError);
     await executeScript(id, {code});
     if (stopIt) {
       stopIt = false;

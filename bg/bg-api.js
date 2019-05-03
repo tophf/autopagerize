@@ -58,9 +58,9 @@ function initEndpoints() {
       chrome.pageAction.setIcon({
         tabId: id,
         path: {
-          16: '/icons/icon16.png',
-          32: '/icons/icon32.png',
-          48: '/icons/icon48.png',
+          16: '/icons/16.png',
+          32: '/icons/32.png',
+          48: '/icons/48.png',
         },
       });
     },
