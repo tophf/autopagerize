@@ -1,13 +1,13 @@
-'use strict';
+// inline 'export' keyword is used since everything in this module is expected to be exported
 
-const inBG = new Proxy({}, {
+export const inBG = new Proxy({}, {
   get(_, action) {
     return data =>
       new Promise(r => chrome.runtime.sendMessage({action, data}, r));
   },
 });
 
-function getSettings() {
+export function getSettings() {
   return new Promise(resolve => {
     chrome.storage.sync.get('settings', data => {
       const v = data.settings;
@@ -16,33 +16,44 @@ function getSettings() {
   });
 }
 
-function getLocal(key) {
+export function getLocal(key) {
   return new Promise(resolve =>
     chrome.storage.local.get(key, data =>
       resolve(data[key])));
 }
 
-function isGloballyEnabled() {
+export function isGloballyEnabled() {
   return localStorage.enabled !== 'false';
 }
 
-function getCacheDate() {
+export function getCacheDate() {
   return Number(localStorage.cacheDate) || 0;
 }
 
-function setCacheDate(d = Date.now()) {
+export function setCacheDate(d = Date.now()) {
   localStorage.cacheDate = d;
 }
 
-function isGlobalUrl(url) {
+export function isGlobalUrl(url) {
   return url === '^https?://.' ||
          url === '^https?://.+';
 }
 
-function ignoreLastError() {
+export function ignoreLastError() {
   return chrome.runtime.lastError;
 }
 
-function arrayOrDummy(v) {
+export function arrayOrDummy(v) {
   return Array.isArray(v) ? v : [];
+}
+
+export function executeScript(tabId, options, ...codeParams) {
+  if (typeof options === 'function')
+    options = {code: `(${options})(${JSON.stringify(codeParams).slice(1, -1)})`};
+  return new Promise(resolve => {
+    chrome.tabs.executeScript(tabId, options, results => {
+      ignoreLastError();
+      resolve(results && results[0]);
+    });
+  });
 }

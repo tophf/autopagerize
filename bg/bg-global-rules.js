@@ -2,20 +2,31 @@ export {
   buildGlobalRules,
 };
 
+import {
+  isGlobalUrl,
+} from '/util/common.js';
+
+import {
+  cache,
+  cacheKeys,
+  globalRules,
+} from './bg.js';
+
 async function buildGlobalRules() {
-  if (!cacheKeys)
-    await (await import('/bg/bg-filter.js')).loadCacheKeys();
+  if (!cacheKeys.size)
+    await (await import('./bg-filter.js')).loadCacheKeys();
   const toRead = [];
-  globalRules.length = 0;
+  const rules = [];
   for (const key of cacheKeys.values()) {
     if (isGlobalUrl(key.url)) {
       const rule = cache.get(key.id);
       if (!rule)
-        toRead.push([globalRules.length, key.id]);
-      globalRules.push(rule);
+        toRead.push([rules.length, key.id]);
+      rules.push(rule);
     }
   }
   if (toRead.length)
-    await (await import('/bg/bg-unpack.js')).readMissingRules(globalRules, toRead);
-  chrome.storage.local.set({globalRules});
+    await (await import('./bg-unpack.js')).readMissingRules(rules, toRead);
+  chrome.storage.local.set({globalRules: rules});
+  globalRules(rules);
 }

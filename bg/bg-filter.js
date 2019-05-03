@@ -3,14 +3,32 @@ export {
   loadCacheKeys,
 };
 
+import {
+  arrayOrDummy,
+  isGlobalUrl,
+} from '/util/common.js';
+
+import {
+  ruleKeyToUrl,
+  str2rx,
+} from './bg-util.js';
+
+import {
+  cache,
+  cacheKeys,
+  settings,
+} from './bg.js';
+
+import * as idb from '/util/storage-idb.js';
+
 async function filterCache(url, urlCacheKey, packedRules) {
-  if (!cacheKeys)
+  if (!cacheKeys.size)
     await loadCacheKeys();
   if (!cacheKeys.size)
-    await (await import('/bg/bg-load-siteinfo.js')).loadBuiltinSiteinfo();
+    await (await import('./bg-load-siteinfo.js')).loadBuiltinSiteinfo();
   if (cacheKeys.values().next().value.rx === null)
     regexpifyCache();
-  const customRules = arrayOrDummy(settings.rules);
+  const customRules = arrayOrDummy(settings().rules);
   if (customRules.length && !customRules[0].hasOwnProperty('rx'))
     regexpifyCustomRules();
   const toUse = [];
@@ -33,7 +51,7 @@ async function filterCache(url, urlCacheKey, packedRules) {
     }
   }
   if (toRead.length)
-    await (await import('/bg/bg-unpack.js')).readMissingRules(toUse, toRead);
+    await (await import('./bg-unpack.js')).readMissingRules(toUse, toRead);
   if (urlCacheKey && `${toWrite}` !== `${packedRules}`)
     idb.execRW({store: 'urlCache'}).put(new Int32Array(toWrite), urlCacheKey);
   return toUse;
@@ -42,7 +60,7 @@ async function filterCache(url, urlCacheKey, packedRules) {
 async function loadCacheKeys() {
   const keys = arrayOrDummy(await idb.exec().getAllKeys());
   keys.sort((a, b) => b.length - a.length);
-  cacheKeys = new Map();
+  cacheKeys.clear();
   for (const key of keys) {
     const rule = {
       url: ruleKeyToUrl(key),
@@ -66,7 +84,7 @@ function regexpifyCache() {
 }
 
 function regexpifyCustomRules() {
-  for (const r of settings.rules) {
+  for (const r of settings().rules) {
     const {url} = r;
     let rx = str2rx.get(url);
     if (rx === false)

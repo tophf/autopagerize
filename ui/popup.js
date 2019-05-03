@@ -1,6 +1,18 @@
 /** @type chrome.tabs.Tab */
 export let tab;
 
+import {
+  inBG,
+  isGloballyEnabled,
+} from '/util/common.js';
+
+import {
+  $,
+  onDomLoaded,
+} from '/util/dom.js';
+
+import {i18n} from '/util/locale.js';
+
 Promise.all([
   getActiveTab(),
   onDomLoaded(),

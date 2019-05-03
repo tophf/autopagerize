@@ -2,6 +2,22 @@ export {
   updateSiteinfo,
 };
 
+import {
+  arrayOrDummy,
+} from '/util/common.js';
+
+import {
+  calcRuleKey,
+  ruleKeyToUrl,
+} from './bg-util.js';
+
+import {
+  cache,
+  cacheKeys,
+} from './bg.js';
+
+import * as idb from '/util/storage-idb.js';
+
 const DATA_URL = 'http://wedata.net/databases/AutoPagerize/items_all.json';
 const KNOWN_KEYS = [
   'url',
@@ -16,13 +32,9 @@ const KNOWN_KEYS = [
  * @param {function(ProgressEvent)} [_.onprogress]
  */
 async function updateSiteinfo({force, onprogress} = {}) {
-  if (!idb)
-    idb = await import('/util/storage-idb.js');
-  if (!cacheKeys)
-    cacheKeys = new Map();
   if (!force && await idb.exec().count())
     return;
-  const bgTrim = await import('/bg/bg-trim.js');
+  const bgTrim = await import('./bg-trim.js');
   try {
     const [old, fresh] = await Promise.all([
       getCacheIndexedById(),
@@ -32,7 +44,7 @@ async function updateSiteinfo({force, onprogress} = {}) {
       return 0;
     await removeObsoleteRules(old, fresh);
     await bgTrim.trimUrlCache(old, fresh);
-    await (await import('/bg/bg-load-siteinfo.js'))
+    await (await import('./bg-load-siteinfo.js'))
       .loadSiteinfo(fresh.values(), rule => !shallowEqual(rule, old.get(rule.id)));
     return fresh.size;
   } catch (e) {

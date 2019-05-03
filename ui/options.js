@@ -8,6 +8,18 @@ import {
   loadRules,
 } from './options-rules.js';
 
+import {
+  arrayOrDummy,
+  getCacheDate,
+  getSettings,
+  inBG,
+} from '/util/common.js';
+
+import {
+  $,
+  onDomLoaded,
+} from '/util/dom.js';
+
 const changedElements = new Set();
 
 Promise.all([

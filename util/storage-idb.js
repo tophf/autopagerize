@@ -1,5 +1,3 @@
-/** @module storage-idb */
-
 export const DB_NAME = 'db';
 export const DEFAULT_STORE_NAME = 'cache';
 

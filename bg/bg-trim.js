@@ -3,6 +3,12 @@ export {
   trimUrlCache,
 };
 
+import {
+  arrayOrDummy,
+} from '/util/common.js';
+
+import * as idb from '/util/storage-idb.js';
+
 let state;
 
 async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
@@ -13,8 +19,6 @@ async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
     old: convertToMap(oldRules),
     new: convertToMap(newRules),
   };
-  if (!idb)
-    idb = await import('/util/storage-idb.js');
   const store = idb.execRW({store: 'urlCache'});
   if (someUrlChanged()) {
     await store.clear();

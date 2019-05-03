@@ -4,23 +4,12 @@ parser: babel-eslint
 
 parserOptions:
   ecmaVersion: 2017
-  sourceType: script
+  sourceType: module
 
 env:
   browser: true
   es6: true
   webextensions: true
-
-globals:
-  getSettings: false
-  getLocal: false
-  getCacheDate: false
-  setCacheDate: false
-  isGloballyEnabled: false
-  isGlobalUrl: false
-  ignoreLastError: false
-  arrayOrDummy: false
-  inBG: false
 
 rules:
   accessor-pairs: [2]
@@ -240,29 +229,9 @@ rules:
 
 overrides:
   - files:
-    - "bg-*.js"
-    - "storage-idb.js"
-    - "ui/*.js"
+    - "siteinfo-updater.js"
+    - "content/*.js"
     parserOptions:
-      sourceType: module
-
-  - files:
-    - "bg/*.js"
-    globals:
-      cache: false
-      cacheKeys: true
-      calcRuleKey: false
-      globalRules: true
-      idb: true
-      ruleKeyToUrl: false
-      settings: true
-      str2rx: false
-      utf8decoder: false
-      utf8encoder: false
-
-  - files:
-    - "ui/*.js"
-    globals:
-      $: false
-      onDomLoaded: false
-      i18n: false
+      sourceType: script
+    env:
+      node: true

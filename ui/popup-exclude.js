@@ -1,5 +1,14 @@
 import * as popup from './popup.js';
 
+import {
+  arrayOrDummy,
+  getSettings,
+  inBG,
+} from '/util/common.js';
+
+import {$} from '/util/dom.js';
+import {i18n} from '/util/locale.js';
+
 updateTitle();
 $.excludeGo.onclick = exclude;
 $.excludeSelector.onchange = updateTitle;

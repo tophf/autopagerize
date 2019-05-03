@@ -7,10 +7,7 @@
   "homepage_url": "https://github.com/tophf/autopagerize_for_chrome",
   "default_locale": "en",
   "background": {
-    "scripts": [
-      "util/common.js",
-      "bg/bg.js"
-    ],
+    "page": "bg/bg.html",
     "persistent": false
   },
   "icons": {

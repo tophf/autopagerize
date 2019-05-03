@@ -7,6 +7,13 @@ import {
   loadRules,
 } from './options-rules.js';
 
+import {
+  arrayOrDummy,
+  inBG,
+} from '/util/common.js';
+
+import {$} from '/util/dom.js';
+
 $.btnImport.onclick = importSettings;
 $.btnExport.onclick = exportSettings;
 

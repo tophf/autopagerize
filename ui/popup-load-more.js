@@ -1,5 +1,12 @@
 import * as popup from './popup.js';
 
+import {
+  executeScript,
+} from '/util/common.js';
+
+import {$} from '/util/dom.js';
+import {i18n} from '/util/locale.js';
+
 $.loadGo.onclick = run;
 $.loadStop.onclick = stop;
 
@@ -28,24 +35,15 @@ function stop(event) {
 }
 
 function inTab(data) {
-  chrome.tabs.executeScript(popup.tab.id, {
-    code: `
-      typeof run === 'function' &&
-      run({loadMore: ${data}})
-    `,
-  }, ignoreLastError);
+  executeScript(
+    popup.tab.id,
+    data => typeof run === 'function' && window.run({loadMore: data}),
+    data);
 }
 
 function query() {
-  return new Promise(resolve =>
-    chrome.tabs.executeScript({
-      code: `
-        typeof run === 'function' &&
-        run({loadMore: 'query'})
-      `,
-    }, r => {
-      resolve(chrome.runtime.lastError ? 0 : r[0]);
-    }));
+  return executeScript(null,
+    () => typeof run === 'function' && window.run({loadMore: 'query'}));
 }
 
 /** @param {chrome.runtime.Port} port */

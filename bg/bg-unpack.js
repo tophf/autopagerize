@@ -3,9 +3,25 @@ export {
   unpackRules,
 };
 
+import {
+  arrayOrDummy,
+} from '/util/common.js';
+
+import {
+  ruleKeyToUrl,
+} from './bg-util.js';
+
+import {
+  cache,
+  cacheKeys,
+  settings,
+} from './bg.js';
+
+import * as idb from '/util/storage-idb.js';
+
 // (!) needs `settings` to be already loaded
 async function unpackRules(packedRules) {
-  const customRules = arrayOrDummy(settings.rules);
+  const customRules = arrayOrDummy(settings().rules);
   const unpackedRules = [];
   const toRead = [];
   for (const id of packedRules) {
@@ -48,7 +64,7 @@ function readRule(e) {
     op.transaction.abort();
     return;
   }
-  const old = cacheKeys && cacheKeys.get(r.id);
+  const old = cacheKeys.get(r.id);
   if (!old)
     r.url = ruleKeyToUrl(r.url);
   else {

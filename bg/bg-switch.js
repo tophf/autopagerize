@@ -2,6 +2,17 @@ export {
   switchGlobalState,
 };
 
+import {
+  executeScript,
+  ignoreLastError,
+} from '/util/common.js';
+
+import {
+  maybeProcess,
+  maybeProcessMain,
+  observeNavigation,
+} from './bg.js';
+
 let busy, stopIt;
 
 async function switchGlobalState(state) {
@@ -19,9 +30,9 @@ async function switchGlobalState(state) {
 
 async function activate() {
   localStorage.enabled = '';
-  self.observeNavigation();
+  observeNavigation();
   for (const {id, url} of await queryTabs()) {
-    await self.maybeProcessMain({url, tabId: id, frameId: 0});
+    await maybeProcessMain({url, tabId: id, frameId: 0});
     if (stopIt) {
       stopIt = false;
       return;
@@ -31,25 +42,25 @@ async function activate() {
 
 async function deactivate() {
   localStorage.enabled = 'false';
-  chrome.webNavigation.onCompleted.removeListener(self.maybeProcessMain);
-  chrome.webNavigation.onHistoryStateUpdated.removeListener(self.maybeProcess);
-  chrome.webNavigation.onReferenceFragmentUpdated.removeListener(self.maybeProcess);
+  chrome.webNavigation.onCompleted.removeListener(maybeProcessMain);
+  chrome.webNavigation.onHistoryStateUpdated.removeListener(maybeProcess);
+  chrome.webNavigation.onReferenceFragmentUpdated.removeListener(maybeProcess);
 
-  const exec = (await import('/bg/bg-launch.js')).executeScript;
+  const code = `(${runTerminateInContentScript})()`;
   for (const {id} of await queryTabs()) {
     chrome.pageAction.hide(id, ignoreLastError);
-    chrome.pageAction.setIcon({tabId: id, path: 'icons/off/icon16.png'}, ignoreLastError);
-    await exec(id, {
-      code: `
-        typeof run === 'function' &&
-        run({terminate: true});
-      `,
-    });
+    chrome.pageAction.setIcon({tabId: id, path: '/icons/off/icon16.png'}, ignoreLastError);
+    await executeScript(id, {code});
     if (stopIt) {
       stopIt = false;
       return;
     }
   }
+}
+
+function runTerminateInContentScript() {
+  if (typeof run === 'function')
+    window.run({terminate: true});
 }
 
 function queryTabs() {

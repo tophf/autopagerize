@@ -1,7 +1,14 @@
 export {
   launch,
-  executeScript,
 };
+
+import {
+  executeScript,
+} from '/util/common.js';
+
+import {
+  settings,
+} from './bg.js';
 
 async function launch(tabId, rules, key, {lastTry} = {}) {
   if (!await poke(tabId).checkDeps()) {
@@ -22,8 +29,8 @@ async function launch(tabId, rules, key, {lastTry} = {}) {
     await poke(tabId, {file: '/content/pager.js'});
 
   await poke(tabId).doRun({
-    showStatus: settings.showStatus,
-    requestInterval: settings.requestInterval,
+    showStatus: settings().showStatus,
+    requestInterval: settings().requestInterval,
   });
 }
 
@@ -32,11 +39,12 @@ function retry(resolve, args) {
   launch(...args).then(resolve);
 }
 
+// declare as anonymous functions for proper stringification in executeScript
 const CONTENT_SCRIPT_CODE = {
-  checkDeps() {
+  checkDeps: function () {
     return typeof (window.xpather || {}).getMatchingRule === 'function';
   },
-  checkRules(rules) {
+  checkRules: function (rules) {
     const r = window.xpather.getMatchingRule(rules);
     if (r) {
       window.rules = rules;
@@ -49,7 +57,7 @@ const CONTENT_SCRIPT_CODE = {
       delete window.xpather;
     }
   },
-  doRun(settings) {
+  doRun: function (settings) {
     // eslint-disable-next-line no-undef
     window.run({rules, matchedRule, settings});
     delete window.rules;
@@ -57,27 +65,15 @@ const CONTENT_SCRIPT_CODE = {
   },
 };
 
-function poke(tabId, exec) {
-  if (exec)
-    return executeScript(tabId, exec);
-  else
-    return new Proxy({}, {
-      get(_, name) {
-        return (...params) => {
-          const paramsStr = JSON.stringify(params).slice(1, -1);
-          return executeScript(tabId, {
-            code: `(function ${CONTENT_SCRIPT_CODE[name]})(${paramsStr})`,
-          });
-        };
-      },
-    });
-}
+const POKE_HANDLER = {
+  get(cfg, name) {
+    return (...params) =>
+      executeScript(cfg.tabId, CONTENT_SCRIPT_CODE[name], ...params);
+  },
+};
 
-function executeScript(tabId, options) {
-  return new Promise(resolve => {
-    chrome.tabs.executeScript(tabId, options, results => {
-      ignoreLastError();
-      resolve(results && results[0]);
-    });
-  });
+function poke(tabId, options) {
+  return options
+    ? executeScript(tabId, options)
+    : new Proxy({tabId}, POKE_HANDLER);
 }

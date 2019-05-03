@@ -2,26 +2,35 @@ export {
   writeSettings,
 };
 
+import {
+  getSettings,
+  ignoreLastError,
+} from '/util/common.js';
+
+import {
+  settings,
+} from './bg.js';
+
 const PROPS_TO_NOTIFY = [
   'showStatus',
   'requestInterval',
 ];
 
 async function writeSettings(ss) {
-  if (!settings)
-    settings = await getSettings();
+  const all = settings() || await getSettings();
   if (ss.rules)
-    (await import('/bg/bg-trim.js')).trimUrlCache(settings.rules, ss.rules, {main: false});
-  const shouldNotify = PROPS_TO_NOTIFY.some(k => notFalse(settings[k]) !== notFalse(ss[k]));
-  Object.assign(settings, ss);
-  chrome.storage.sync.set({settings});
+    (await import('./bg-trim.js')).trimUrlCache(all.rules, ss.rules, {main: false});
+  const shouldNotify = PROPS_TO_NOTIFY.some(k => notFalse(all[k]) !== notFalse(ss[k]));
+  Object.assign(all, ss);
+  chrome.storage.sync.set({settings: all});
+  settings(all);
   mirrorThemePreference();
   if (shouldNotify)
-    notify();
+    notify(all);
 }
 
 function mirrorThemePreference() {
-  const enabled = Boolean(settings.darkTheme);
+  const enabled = Boolean(settings().darkTheme);
   const stored = localStorage.hasOwnProperty('darkTheme');
   if (enabled && !stored)
     localStorage.darkTheme = '';
@@ -29,8 +38,8 @@ function mirrorThemePreference() {
     delete localStorage.darkTheme;
 }
 
-function notify() {
-  const props = PROPS_TO_NOTIFY.map(p => p + ':' + JSON.stringify(settings[p])).join(',');
+function notify(ss = settings()) {
+  const props = PROPS_TO_NOTIFY.map(p => p + ':' + JSON.stringify(ss[p])).join(',');
   const code = `(${passSettingsToContentScript})({${props}})`;
   chrome.tabs.query({url: '*://*/*'}, tabs =>
     tabs.forEach(tab =>

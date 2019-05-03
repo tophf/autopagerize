@@ -3,25 +3,43 @@ export {
   loadSiteinfo,
 };
 
-function loadBuiltinSiteinfo() {
-  return Promise.all([
-    fetch('/siteinfo.json').then(r => r.json()),
+import {
+  isGlobalUrl,
+  setCacheDate,
+} from '/util/common.js';
+
+import {
+  calcRuleKey,
+} from './bg-util.js';
+
+import {
+  cache,
+  cacheKeys,
+  globalRules,
+} from './bg.js';
+
+import * as idb from '/util/storage-idb.js';
+
+async function loadBuiltinSiteinfo() {
+  const [si] = await Promise.all([
+    (await fetch('/siteinfo.json')).json(),
     idb.execRW().clear(),
     idb.execRW({store: 'urlCache'}).clear(),
-  ]).then(([si]) => loadSiteinfo(si));
+  ]);
+  return loadSiteinfo(si);
 }
 
 async function loadSiteinfo(si, fnCanWrite) {
   cache.clear();
   cacheKeys.clear();
-  globalRules = [];
+  const globals = [];
   let /** @type IDBObjectStore */ store, op;
   for (const rule of si) {
     const {id, url} = rule;
     cache.set(id, rule);
     cacheKeys.set(id, rule);
     if (isGlobalUrl(url))
-      globalRules.push(rule);
+      globals.push(rule);
     if (!fnCanWrite || fnCanWrite(rule)) {
       if (!store)
         store = await idb.execRW().RAW;
@@ -33,7 +51,8 @@ async function loadSiteinfo(si, fnCanWrite) {
     }
   }
   setCacheDate();
-  chrome.storage.local.set({globalRules});
+  globalRules(globals);
+  chrome.storage.local.set({globalRules: globals});
   if (op) {
     return new Promise((resolve, reject) => {
       op.onsuccess = resolve;
