@@ -7,20 +7,24 @@ import {
 import {$} from '/util/dom.js';
 import {i18n} from '/util/locale.js';
 
-$.loadGo.onclick = run;
 $.loadStop.onclick = stop;
+for (const el of $.loadMoreSection.querySelectorAll('a'))
+  el.onclick = run;
 
-query().then(num => {
+inTab('query').then(num => {
   if (num > 0) {
     renderState(true);
+    $.loadMoreSection.querySelector('details').open = true;
     chrome.runtime.onConnect.addListener(onConnect);
   }
 });
 
-function run() {
+function run(e) {
+  e.preventDefault();
+  e.target.classList.add('done');
   $.loadRemain.textContent = '';
   renderState(true);
-  inTab($.loadNum.value);
+  inTab(Number(e.target.textContent));
   chrome.runtime.onConnect.addListener(onConnect);
 }
 
@@ -32,18 +36,15 @@ function stop(event) {
   chrome.runtime.onConnect.removeListener(onConnect);
   if (event)
     inTab('stop');
+  for (const el of $.loadMoreSection.getElementsByClassName('done'))
+    el.classList.remove('done');
 }
 
 function inTab(data) {
-  executeScript(
-    popup.tab.id,
+  return executeScript(
+    popup.tab.id || null,
     data => typeof run === 'function' && window.run({loadMore: data}),
     data);
-}
-
-function query() {
-  return executeScript(null,
-    () => typeof run === 'function' && window.run({loadMore: 'query'}));
 }
 
 /** @param {chrome.runtime.Port} port */
@@ -61,5 +62,5 @@ function onConnect(port) {
 }
 
 function renderState(running) {
-  $.loadGo.closest('section').classList.toggle('disabled', running);
+  $.loadMoreSection.classList.toggle('disabled', running);
 }

@@ -22,29 +22,31 @@
     <a id="openOptions" href="options.html" tl>options</a>
     <a id="hotkeys" href="chrome://extensions/shortcuts" tl>hotkeys</a>
   </section>
-  <section id="excludeSection" class="hide-when-failed">
-    <select id="excludeSelector">
-      <option tl value="url">excludeUrl
-      <option tl value="prefix">excludeUrlPrefix
-      <option tl value="domain">excludeDomain
-    </select>
-    &nbsp;
-    <button id="excludeGo">X</button>
+  <section class="hide-when-failed full-width" id="excludeSection">
+    <details>
+      <summary tl>exclude</summary>
+      <ul>
+        <li><a tl href="#" data-type="url">excludeUrl</a></li>
+        <li><a tl href="#" data-type="prefix">excludeUrlPrefix</a></li>
+        <li><a tl href="#" data-type="domain">excludeDomain</a></li>
+      </ul>
+    </details>
   </section>
-  <section class="hide-when-failed">
-    <small tl nowrap>loadMore</small>
-    <select id="loadNum">
-      <option>1
-      <option>2
-      <option>5
-      <option>10
-      <option>20
-      <option>50
-      <option>100
-    </select>
-    <button tl id="loadGo">ok</button>
-    <button tl id="loadStop" hidden>stop</button>
-    <span id="loadRemain"></span>
+  <section class="hide-when-failed full-width" id="loadMoreSection">
+    <details>
+      <summary tl>loadMore</summary>
+      <ul>
+        <li><a href="#">1</a></li>
+        <li><a href="#">2</a></li>
+        <li><a href="#">5</a></li>
+        <li><a href="#">10</a></li>
+        <li><a href="#">20</a></li>
+        <li><a href="#">50</a></li>
+        <li><a href="#">100</a></li>
+      </ul>
+      <button tl id="loadStop" hidden>stop</button>
+      <span id="loadRemain"></span>
+    </details>
   </section>
   <footer id="failure" hidden></footer>
 </body>

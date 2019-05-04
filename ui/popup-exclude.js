@@ -7,28 +7,32 @@ import {
 } from '/util/common.js';
 
 import {$} from '/util/dom.js';
-import {i18n} from '/util/locale.js';
 
-updateTitle();
-$.excludeGo.onclick = exclude;
-$.excludeSelector.onchange = updateTitle;
+if (popup.tab.url)
+  updateTitles();
+else
+  addEventListener('gotTab', updateTitles, {once: true});
 
-async function exclude() {
+async function exclude(e) {
+  e.preventDefault();
+  e.target.classList.add('done');
   $.excludeSection.classList.add('disabled');
-  $.excludeGo.textContent = i18n('done');
   const ss = await getSettings();
-  ss.excludes = arrayOrDummy(ss.excludes);
-  if (!ss.excludes.includes($.excludeGo.title)) {
-    ss.excludes.push($.excludeGo.title);
-    inBG.writeSettings(ss);
+  const excludes = arrayOrDummy(ss.excludes);
+  if (!excludes.includes(e.target.title)) {
+    excludes.push(e.target.title);
+    inBG.writeSettings({excludes});
   }
 }
 
-async function updateTitle() {
-  const value = $.excludeSelector.value;
+function updateTitles() {
   const {url} = popup.tab;
-  $.excludeGo.title =
-    value === 'url' ? url :
-      value === 'prefix' ? url + '*' :
-        value === 'domain' ? new URL(url).origin + '/*' : '';
+  for (const el of $.excludeSection.querySelectorAll('a')) {
+    const {type} = el.dataset;
+    el.title =
+      type === 'url' ? url :
+        type === 'prefix' ? url + '*' :
+          type === 'domain' ? new URL(url).origin + '/*' : '';
+    el.onclick = exclude;
+  }
 }

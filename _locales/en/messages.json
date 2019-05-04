@@ -38,14 +38,17 @@
   "example": {
     "message": "Example"
   },
+  "exclude": {
+    "message": "Exclude..."
+  },
   "excludeUrl": {
-    "message": "Exclude page address"
+    "message": "page"
   },
   "excludeUrlPrefix": {
-    "message": "Exclude page address/and/deeper"
+    "message": "page/and/deeper"
   },
   "excludeDomain": {
-    "message": "Exclude entire domain"
+    "message": "entire domain"
   },
   "excludePatterns": {
     "message": "Exclude patterns"
@@ -69,7 +72,7 @@
     "message": "Import"
   },
   "loadMore": {
-    "message": "Load more pages"
+    "message": "Load more..."
   },
   "loading": {
     "message": "Loading"

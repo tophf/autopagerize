@@ -1,5 +1,5 @@
 /** @type chrome.tabs.Tab */
-export let tab;
+export let tab = {};
 
 import {
   getSettings,
@@ -16,6 +16,7 @@ import {i18n} from '/util/locale.js';
 
 chrome.tabs.query({active: true, currentWindow: true}, tabs => {
   tab = tabs[0];
+  dispatchEvent(new Event('gotTab'));
   if (window.failedPage && $.failure)
     renderFailure();
 });
@@ -32,7 +33,7 @@ onDomLoaded().then(() => {
     e.preventDefault();
   };
   renderStatus();
-  if (window.failedPage && tab) {
+  if (window.failedPage && tab.url) {
     renderFailure();
     return;
   }
