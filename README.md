@@ -24,7 +24,7 @@ New features:
   * Load 1,2,5,10 more pages - four separate commands
 * On/Off command in the context menu of the extension icon in the browser toolbar
 
-![popup](https://i.imgur.com/lC8aWNF.png) ![popup-dark](https://i.imgur.com/mxbBMVw.png)
+![popup](https://i.imgur.com/8tqVUxs.png) ![popup-dark](https://i.imgur.com/aV2cyw8.png)
 
 New features in popup:
 
