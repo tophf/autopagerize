@@ -8,7 +8,6 @@ import {
 
 import {
   maybeProcess,
-  maybeProcessMain,
   observeNavigation,
 } from './bg.js';
 
@@ -31,7 +30,7 @@ async function activate() {
   localStorage.enabled = '';
   observeNavigation();
   for (const {id, url} of await queryTabs()) {
-    await maybeProcessMain({url, tabId: id, frameId: 0});
+    await maybeProcess({url, tabId: id, frameId: 0});
     if (stopIt) {
       stopIt = false;
       return;
@@ -41,7 +40,7 @@ async function activate() {
 
 async function deactivate() {
   localStorage.enabled = 'false';
-  chrome.webNavigation.onCompleted.removeListener(maybeProcessMain);
+  chrome.webNavigation.onCompleted.removeListener(maybeProcess);
   chrome.webNavigation.onHistoryStateUpdated.removeListener(maybeProcess);
   chrome.webNavigation.onReferenceFragmentUpdated.removeListener(maybeProcess);
 

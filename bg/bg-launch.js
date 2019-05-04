@@ -10,7 +10,9 @@ import {
   settings,
 } from './bg.js';
 
-async function launch(tabId, rules, key, {lastTry} = {}) {
+const RETRY_TIMEOUT = 2000;
+
+async function launch(tabId, rules, key, lastTry) {
   if (!await poke(tabId).checkDeps()) {
     // no deps while retrying means the tab got navigated away
     // and already being handled in another event
@@ -19,9 +21,9 @@ async function launch(tabId, rules, key, {lastTry} = {}) {
     await poke(tabId, {file: '/content/xpather.js'});
   }
 
-  const rr = await poke(tabId).checkRules(rules) || {};
+  const rr = await poke(tabId).checkRules(rules, !lastTry && RETRY_TIMEOUT) || {};
   if (!rr.hasRule && !lastTry)
-    await new Promise(r => setTimeout(retry, 2000, r, [...arguments]));
+    await new Promise(r => setTimeout(retry, RETRY_TIMEOUT, r, [...arguments]));
   if (!rr.hasRule)
     return;
 
@@ -35,7 +37,7 @@ async function launch(tabId, rules, key, {lastTry} = {}) {
 }
 
 function retry(resolve, args) {
-  args[args.length - 1] = {lastTry: 'setTimeout'};
+  args[args.length - 1] = 'setTimeout';
   launch(...args).then(resolve);
 }
 
@@ -44,9 +46,11 @@ const CONTENT_SCRIPT_CODE = {
   checkDeps: function () {
     return typeof (window.xpather || {}).getMatchingRule === 'function';
   },
-  checkRules: function (rules) {
+  checkRules: function (rules, retryTimeout) {
     const r = window.xpather.getMatchingRule(rules);
     if (r) {
+      clearTimeout(window.retryTimer);
+      window.retryTimer = null;
       window.rules = rules;
       window.matchedRule = r;
       return {
@@ -54,7 +58,9 @@ const CONTENT_SCRIPT_CODE = {
         hasRun: typeof run === 'function',
       };
     } else {
-      delete window.xpather;
+      window.retryTimer = setTimeout(() => {
+        delete window.xpather;
+      }, retryTimeout * 1.5);
     }
   },
   doRun: function (settings) {

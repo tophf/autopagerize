@@ -10,7 +10,6 @@ export const settings = v => v ? (_settings = v) : _settings;
 
 export {
   maybeProcess,
-  maybeProcessMain,
   observeNavigation,
 };
 
@@ -38,13 +37,9 @@ if (isGloballyEnabled())
 
 function observeNavigation() {
   const filter = {url: [{schemes: ['http', 'https']}]};
-  chrome.webNavigation.onCompleted.addListener(maybeProcessMain, filter);
+  chrome.webNavigation.onCompleted.addListener(maybeProcess, filter);
   chrome.webNavigation.onHistoryStateUpdated.addListener(maybeProcess, filter);
   chrome.webNavigation.onReferenceFragmentUpdated.addListener(maybeProcess, filter);
-}
-
-function maybeProcessMain(info) {
-  return maybeProcess.call(true, info);
 }
 
 async function maybeProcess({tabId, frameId, url}) {
@@ -53,12 +48,12 @@ async function maybeProcess({tabId, frameId, url}) {
     if (!_settings)
       _settings = await getSettings();
     if (!isUrlExcluded(url))
-      await maybeLaunch(tabId, url, this); // eslint-disable-line no-invalid-this
+      await maybeLaunch(tabId, url);
     processing.delete(tabId);
   }
 }
 
-async function maybeLaunch(tabId, url, lastTry) {
+async function maybeLaunch(tabId, url) {
   const [idb, key] = await Promise.all([
     import('/util/storage-idb.js'),
     calcUrlCacheKey(url),
@@ -74,5 +69,5 @@ async function maybeLaunch(tabId, url, lastTry) {
   }
   rules.push(..._globalRules);
   if (rules.length)
-    await (await import('./bg-launch.js')).launch(tabId, rules, key, {lastTry});
+    await (await import('./bg-launch.js')).launch(tabId, rules, key);
 }
