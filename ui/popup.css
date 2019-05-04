@@ -64,6 +64,18 @@ a:hover {
 #excludeSelector {
   max-width: 8em;
 }
+.failed-page .hide-when-failed {
+  display: none !important;
+}
+.failed-page #failure {
+  display: block;
+}
+#failure {
+  padding: 1em;
+  font-size: small;
+  background-color: moccasin;
+  color: firebrick;
+}
 
 @media (prefers-color-scheme: dark) {
   body {

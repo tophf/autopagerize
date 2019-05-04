@@ -2,6 +2,7 @@
 export let tab;
 
 import {
+  getSettings,
   inBG,
   isGloballyEnabled,
 } from '/util/common.js';
@@ -15,6 +16,8 @@ import {i18n} from '/util/locale.js';
 
 chrome.tabs.query({active: true, currentWindow: true}, tabs => {
   tab = tabs[0];
+  if (window.failedPage && $.failure)
+    renderFailure();
 });
 
 onDomLoaded().then(() => {
@@ -29,6 +32,10 @@ onDomLoaded().then(() => {
     e.preventDefault();
   };
   renderStatus();
+  if (window.failedPage && tab) {
+    renderFailure();
+    return;
+  }
   import('./popup-load-more.js');
   import('./popup-exclude.js');
 });
@@ -37,6 +44,17 @@ function renderStatus() {
   const enabled = $.status.checked;
   $.status.closest('[data-status]').dataset.status = enabled;
   $.statusText.textContent = i18n(enabled ? 'on' : 'off');
+}
+
+async function renderFailure() {
+  let msg;
+  if (!tab.url.startsWith('http'))
+    msg = 'failedUnsupported';
+  else {
+    const [{excludes}, bgUtil] = await Promise.all([getSettings(), import('/bg/bg-util.js')]);
+    msg = await bgUtil.isUrlExcluded(tab.url, excludes) ? 'failedExcluded' : 'failedUnpageable';
+  }
+  $.failure.textContent = i18n(msg);
 }
 
 function toggled() {

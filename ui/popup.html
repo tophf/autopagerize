@@ -7,6 +7,7 @@
   <script src="/util/dom.js" type="module"></script>
   <script src="/util/common.js" type="module"></script>
   <script src="popup.js" type="module"></script>
+  <script src="popup-fail-detect.js"></script>
 </head>
 
 <body>
@@ -21,7 +22,7 @@
     <a id="openOptions" href="options.html" tl>options</a>
     <a id="hotkeys" href="chrome://extensions/shortcuts" tl>hotkeys</a>
   </section>
-  <section id="excludeSection">
+  <section id="excludeSection" class="hide-when-failed">
     <select id="excludeSelector">
       <option tl value="url">excludeUrl
       <option tl value="prefix">excludeUrlPrefix
@@ -30,7 +31,7 @@
     &nbsp;
     <button id="excludeGo">X</button>
   </section>
-  <section>
+  <section class="hide-when-failed">
     <small tl nowrap>loadMore</small>
     <select id="loadNum">
       <option>1
@@ -45,5 +46,6 @@
     <button tl id="loadStop" hidden>stop</button>
     <span id="loadRemain"></span>
   </section>
+  <footer id="failure" hidden></footer>
 </body>
 </html>
