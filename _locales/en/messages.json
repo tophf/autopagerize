@@ -50,8 +50,8 @@
   "excludeDomain": {
     "message": "entire domain"
   },
-  "excludePatterns": {
-    "message": "Exclude patterns"
+  "excludedPages": {
+    "message": "Excluded pages or patterns"
   },
   "export": {
     "message": "Export"
