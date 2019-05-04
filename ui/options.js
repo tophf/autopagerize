@@ -48,9 +48,9 @@ Promise.all([
 function renderSettings(ss) {
   let el;
 
-  el = $.excludes;
-  el.value = el.savedValue = arrayOrDummy(ss.excludes).join('\n');
-  el.rows = Math.max(2, Math.min(20, arrayOrDummy(ss.excludes).length + 1));
+  el = $.exclusions;
+  el.value = el.savedValue = arrayOrDummy(ss.exclusions).join('\n');
+  el.rows = Math.max(2, Math.min(20, arrayOrDummy(ss.exclusions).length + 1));
 
   el = $.showStatus;
   el.checked = el.savedValue = ss.showStatus !== false;
@@ -100,7 +100,7 @@ async function save() {
     return;
   }
 
-  $.excludes.savedValue = ss.excludes.join('\n');
+  $.exclusions.savedValue = ss.exclusions.join('\n');
   $.showStatus.savedValue = ss.showStatus;
   $.darkTheme.savedValue = ss.darkTheme;
   $.requestInterval.savedValue = String(ss.requestInterval);
@@ -138,7 +138,7 @@ async function update() {
 function collectSettings() {
   return {
     rules: collectRules(),
-    excludes: $.excludes.value.trim().split(/\s+/),
+    exclusions: $.exclusions.value.trim().split(/\s+/),
     showStatus: $.showStatus.checked,
     darkTheme: $.darkTheme.checked,
     requestInterval: $.requestInterval.valueAsNumber || 2,

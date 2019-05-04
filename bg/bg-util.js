@@ -14,14 +14,14 @@ import {
   settings,
 } from './bg.js';
 
-// N.B. requires 'settings' to be already loaded when no 'excludes' were supplied
-export function isUrlExcluded(url, excludes) {
+// N.B. requires 'settings' to be already loaded when no 'exclusions' were supplied
+export function isUrlExcluded(url, exclusions) {
   if (url.startsWith('https://mail.google.com/') ||
       url.startsWith('http://b.hatena.ne.jp/') ||
       url.startsWith('https://www.facebook.com/plugins/like.php') ||
       url.startsWith('http://api.tweetmeme.com/button.js'))
     return true;
-  for (const entry of arrayOrDummy(excludes || settings().excludes)) {
+  for (const entry of arrayOrDummy(exclusions || settings().exclusions)) {
     const isRegexp = entry.startsWith('/') && entry.endsWith('/');
     if (!isRegexp) {
       if (url === entry || url.endsWith('/') && url === entry + '/')

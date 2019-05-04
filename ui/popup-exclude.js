@@ -18,10 +18,10 @@ async function exclude(e) {
   e.target.classList.add('done');
   $.excludeSection.classList.add('disabled');
   const ss = await getSettings();
-  const excludes = arrayOrDummy(ss.excludes);
-  if (!excludes.includes(e.target.title)) {
-    excludes.push(e.target.title);
-    inBG.writeSettings({excludes});
+  const exclusions = arrayOrDummy(ss.exclusions);
+  if (!exclusions.includes(e.target.title)) {
+    exclusions.push(e.target.title);
+    inBG.writeSettings({exclusions});
   }
 }
 

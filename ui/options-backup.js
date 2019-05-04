@@ -32,7 +32,7 @@ async function importSettings() {
     darkTheme: false,
     requestInterval: 2,
     rules: [],
-    excludes: [],
+    exclusions: [],
   };
   const ovr = $.overwriteSettings.checked;
   const settings = ovr ? defaultSettings : collectSettings();

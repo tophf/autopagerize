@@ -52,8 +52,8 @@ async function renderFailure() {
   if (!tab.url.startsWith('http'))
     msg = 'failedUnsupported';
   else {
-    const [{excludes}, bgUtil] = await Promise.all([getSettings(), import('/bg/bg-util.js')]);
-    msg = await bgUtil.isUrlExcluded(tab.url, excludes) ? 'failedExcluded' : 'failedUnpageable';
+    const [{exclusions}, bgUtil] = await Promise.all([getSettings(), import('/bg/bg-util.js')]);
+    msg = await bgUtil.isUrlExcluded(tab.url, exclusions) ? 'failedExcluded' : 'failedUnpageable';
   }
   $.failure.textContent = i18n(msg);
 }
