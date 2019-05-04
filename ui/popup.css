@@ -71,10 +71,10 @@ a:hover {
   display: block;
 }
 #failure {
-  padding: 1em;
-  font-size: small;
+  padding: .5rem 1rem;
+  font-size: smaller;
   background-color: moccasin;
-  color: firebrick;
+  color: sienna;
 }
 
 @media (prefers-color-scheme: dark) {
