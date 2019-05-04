@@ -53,16 +53,10 @@ function onRuntimeMessage(msg, sender, sendResponse) {
 function initEndpoints() {
   _endpoints = Object.assign(Object.create(null), {
 
-    launched: (_, {tab: {id}}) => {
-      chrome.pageAction.show(id);
-      chrome.pageAction.setIcon({
-        tabId: id,
-        path: {
-          16: '/icons/16.png',
-          32: '/icons/32.png',
-          48: '/icons/48.png',
-        },
-      });
+    launched: async (_, sender) => {
+      const tabId = sender.tab.id;
+      chrome.browserAction.setPopup({tabId, popup: '/ui/popup.html'});
+      (await import('./bg-icon.js')).setIcon(tabId);
     },
 
     writeSettings: async ss => {

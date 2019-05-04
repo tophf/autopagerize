@@ -20,15 +20,15 @@
     "page": "ui/options.html",
     "chrome_style": false
   },
-  "page_action": {
-    "default_popup": "ui/popup.html",
+  "browser_action": {
     "default_icon": {
       "16": "icons/off/16.png",
-      "32": "icons/off/32.png"
+      "32": "icons/off/32.png",
+      "48": "icons/off/48.png"
     }
   },
   "commands": {
-    "_execute_page_action": {},
+    "_execute_browser_action": {},
     "onOff": {
       "description": "__MSG_onOff__"
     },

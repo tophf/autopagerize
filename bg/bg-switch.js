@@ -4,7 +4,6 @@ export {
 
 import {
   executeScript,
-  ignoreLastError,
 } from '/util/common.js';
 
 import {
@@ -47,10 +46,10 @@ async function deactivate() {
   chrome.webNavigation.onReferenceFragmentUpdated.removeListener(maybeProcess);
 
   const code = `(${runTerminateInContentScript})()`;
+  const bgIcon = await import('./bg-icon.js');
   for (const {id} of await queryTabs()) {
-    chrome.pageAction.hide(id, ignoreLastError);
-    chrome.pageAction.setIcon({tabId: id, path: '/icons/off/16.png'}, ignoreLastError);
-    await executeScript(id, {code});
+    bgIcon.setIcon(id, 'off');
+    executeScript(id, {code});
     if (stopIt) {
       stopIt = false;
       return;
