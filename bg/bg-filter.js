@@ -59,6 +59,7 @@ async function filterCache(url, urlCacheKey, packedRules) {
 
 async function loadCacheKeys() {
   const keys = arrayOrDummy(await idb.exec().getAllKeys());
+  // currently URLs don't have weird characters so the length delta in UTF8 is same as in UTF16
   keys.sort((a, b) => b.length - a.length);
   cacheKeys.clear();
   for (const key of keys) {
