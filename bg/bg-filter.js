@@ -42,7 +42,13 @@ async function filterCache(url, urlCacheKey, packedRules) {
     }
   }
   for (const key of cacheKeys.values()) {
-    if (!isGlobalUrl(key.url) && key.rx && key.rx.test(url)) {
+    const {rx} = key;
+    if (!isGlobalUrl(key.url) && rx &&
+        (!rx.txt
+          ? rx.test(url)
+          : (rx.atStart ? url.startsWith(rx.txt) : url.includes(rx.txt)) ||
+            rx.txt2 && (rx.atStart ? url.startsWith(rx.txt2) : url.includes(rx.txt2)))
+    ) {
       const rule = cache.get(key.id);
       if (!rule)
         toRead.push([toUse.length, key.id]);
@@ -73,12 +79,27 @@ async function loadCacheKeys() {
 }
 
 function regexpifyCache() {
+  // many rules have an unescaped '.' in host name so we'll treat it same as '\.'
+  const rxTrivial = /^(\^?)https?(\??):\/\/([-\w]*\\?\.)+[-\w/]*$/;
   for (const key of cacheKeys.values()) {
     let rx;
-    try {
-      rx = RegExp(key.url);
-    } catch (e) {
-      rx = null;
+    const {url} = key;
+    // provides a ~2x speed-up for the first run of filterCache()
+    // and reduces the memory consumption by a few megs
+    // by recognizing trivial/literal url expressions
+    // (50% of 4000 rules at the moment)
+    if (rxTrivial.test(url)) {
+      const atStart = RegExp.$1 === '^';
+      const hasQuestion = RegExp.$2;
+      const txt = (hasQuestion ? url.replace('https?', 'http') : url).replace(/[\\?^]/g, '');
+      const txt2 = hasQuestion ? 'https' + txt.slice(4) : '';
+      rx = {atStart, txt, txt2};
+    } else {
+      try {
+        rx = RegExp(url);
+      } catch (e) {
+        rx = null;
+      }
     }
     Object.defineProperty(key, 'rx', {value: rx});
   }
