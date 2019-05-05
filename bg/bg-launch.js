@@ -12,7 +12,7 @@ import {
 
 const RETRY_TIMEOUT = 2000;
 
-async function launch(tabId, rules, key, lastTry) {
+async function launch({tabId, rules, lastTry}) {
   if (!await poke(tabId).checkDeps()) {
     // no deps while retrying means the tab got navigated away
     // and already being handled in another event
@@ -23,7 +23,7 @@ async function launch(tabId, rules, key, lastTry) {
 
   const rr = await poke(tabId).checkRules(rules, !lastTry && RETRY_TIMEOUT) || {};
   if (!rr.hasRule && !lastTry)
-    await new Promise(r => setTimeout(retry, RETRY_TIMEOUT, r, [...arguments]));
+    return new Promise(r => setTimeout(retry, RETRY_TIMEOUT, r, arguments[0]));
   if (!rr.hasRule)
     return;
 
@@ -36,9 +36,8 @@ async function launch(tabId, rules, key, lastTry) {
   });
 }
 
-function retry(resolve, args) {
-  args[args.length - 1] = 'setTimeout';
-  launch(...args).then(resolve);
+function retry(resolve, cfg) {
+  launch({...cfg, lastTry: 'setTimeout'}).then(resolve);
 }
 
 // declare as anonymous functions for proper stringification in executeScript

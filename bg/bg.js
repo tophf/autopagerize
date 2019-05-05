@@ -69,5 +69,5 @@ async function maybeLaunch(tabId, url) {
   }
   rules.push(..._globalRules);
   if (rules.length)
-    await (await import('./bg-launch.js')).launch(tabId, rules, key);
+    await (await import('./bg-launch.js')).launch({tabId, rules});
 }
