@@ -14,6 +14,7 @@ import {
 import {
   cache,
   cacheKeys,
+  globalRules,
 } from './bg.js';
 
 import * as idb from '/util/storage-idb.js';
@@ -46,6 +47,8 @@ async function updateSiteinfo({force, onprogress} = {}) {
     await bgTrim.trimUrlCache(old, fresh);
     await (await import('./bg-load-siteinfo.js'))
       .loadSiteinfo(fresh.values(), rule => !shallowEqual(rule, old.get(rule.id)));
+    chrome.storage.local.remove('globalRules');
+    globalRules(null);
     return fresh.size;
   } catch (e) {
     return (e.target || {}).error || e;
