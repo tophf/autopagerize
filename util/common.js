@@ -7,6 +7,21 @@ export const inBG = new Proxy({}, {
   },
 });
 
+export const DEFAULT_SETTINGS = Object.freeze({
+  /** @type boolean */
+  showStatus: true,
+  /** @type boolean */
+  darkTheme: false,
+  /** @type number - seconds */
+  requestInterval: 2,
+  /** @type number - minutes */
+  unloadAfter: 1,
+  /** @type object[] */
+  rules: [],
+  /** @type string[] */
+  exclusions: [],
+});
+
 export function getSettings() {
   return new Promise(resolve => {
     chrome.storage.sync.get('settings', data => {
