@@ -28,5 +28,5 @@ async function buildGlobalRules() {
   if (toRead.length)
     await (await import('./bg-unpack.js')).readMissingRules(rules, toRead);
   chrome.storage.local.set({globalRules: rules});
-  globalRules(rules);
+  return globalRules(rules);
 }

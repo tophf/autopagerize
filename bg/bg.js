@@ -20,7 +20,6 @@ import {
 
 import {
   DEFAULT_SETTINGS,
-  arrayOrDummy,
   getCacheDate,
   getLocal,
   getSettings,
@@ -64,14 +63,15 @@ async function maybeLaunch(tabId, url) {
   const rules =
     packedRules && await (await import('./bg-unpack.js')).unpackRules(packedRules) ||
     await (await import('./bg-filter.js')).filterCache(url, key, packedRules);
-  if (!_globalRules) {
-    _globalRules = arrayOrDummy(await getLocal('globalRules'));
-    if (!_globalRules.length)
-      await (await import('./bg-global-rules.js')).buildGlobalRules();
-  }
-  rules.push(..._globalRules);
+  rules.push(..._globalRules || await loadGlobalRules());
   if (rules.length)
     await (await import('./bg-launch.js')).launch({tabId, rules});
+}
+
+async function loadGlobalRules() {
+  return globalRules(
+    await getLocal('globalRules') ||
+    await (await import('./bg-global-rules.js')).buildGlobalRules());
 }
 
 function maybeKeepAlive() {
