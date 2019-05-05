@@ -149,11 +149,21 @@ section:last-of-type details:not([open]) summary {
   color: seagreen;
 }
 #toggles label {
-  display: block;
+  display: flex;
+  align-items: start;
+  margin-top: .25rem;
+  margin-bottom: .25rem;
 }
-#requestInterval {
+#toggles label input {
+  margin-right: .5em;
+}
+input[type="number"] {
   width: 4em;
   margin-left: .25em;
+}
+#toggles small {
+  display: block;
+  margin: .25em 0;
 }
 
 @media (prefers-color-scheme: dark) {

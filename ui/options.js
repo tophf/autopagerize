@@ -9,6 +9,7 @@ import {
 } from './options-rules.js';
 
 import {
+  DEFAULT_SETTINGS,
   arrayOrDummy,
   getCacheDate,
   getSettings,
@@ -59,7 +60,10 @@ function renderSettings(ss) {
   el.checked = el.savedValue = ss.darkTheme === true;
 
   el = $.requestInterval;
-  el.value = el.savedValue = String(ss.requestInterval || 2);
+  el.value = el.savedValue = String(ss.requestInterval || DEFAULT_SETTINGS.requestInterval);
+
+  el = $.unloadAfter;
+  el.value = el.savedValue = String(ss.unloadAfter || DEFAULT_SETTINGS.unloadAfter);
 }
 
 function renderSiteinfoStats(numRules, date) {
@@ -104,6 +108,7 @@ async function save() {
   $.showStatus.savedValue = ss.showStatus;
   $.darkTheme.savedValue = ss.darkTheme;
   $.requestInterval.savedValue = String(ss.requestInterval);
+  $.unloadAfter.savedValue = String(ss.unloadAfter);
 
   changedElements.forEach(el => el.classList.remove('changed'));
   changedElements.clear();
@@ -141,7 +146,8 @@ function collectSettings() {
     exclusions: $.exclusions.value.trim().split(/\s+/),
     showStatus: $.showStatus.checked,
     darkTheme: $.darkTheme.checked,
-    requestInterval: $.requestInterval.valueAsNumber || 2,
+    requestInterval: $.requestInterval.valueAsNumber || DEFAULT_SETTINGS.requestInterval,
+    unloadAfter: $.unloadAfter.valueAsNumber || DEFAULT_SETTINGS.unloadAfter,
   };
 }
 

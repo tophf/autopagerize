@@ -19,6 +19,7 @@ import {
 } from './bg-util.js';
 
 import {
+  DEFAULT_SETTINGS,
   arrayOrDummy,
   getCacheDate,
   getLocal,
@@ -50,6 +51,7 @@ async function maybeProcess({tabId, frameId, url}) {
     if (!isUrlExcluded(url))
       await maybeLaunch(tabId, url);
     processing.delete(tabId);
+    maybeKeepAlive();
   }
 }
 
@@ -70,4 +72,14 @@ async function maybeLaunch(tabId, url) {
   rules.push(..._globalRules);
   if (rules.length)
     await (await import('./bg-launch.js')).launch({tabId, rules});
+}
+
+function maybeKeepAlive() {
+  const {unloadAfter = DEFAULT_SETTINGS.unloadAfter} = _settings;
+  const enabled = unloadAfter === -1 || unloadAfter > 0;
+  const iframe = document.getElementsByTagName('iframe')[0];
+  if (enabled && !iframe)
+    document.body.appendChild(document.createElement('iframe')).src = '/bg/bg-iframe.html';
+  if (!enabled && iframe)
+    iframe.remove();
 }

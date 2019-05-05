@@ -9,6 +9,7 @@ import {
 
 import {
   arrayOrDummy,
+  DEFAULT_SETTINGS,
   inBG,
 } from '/util/common.js';
 
@@ -27,16 +28,9 @@ async function importSettings() {
     $.importError.hidden = false;
     return;
   }
-  const defaultSettings = {
-    showStatus: true,
-    darkTheme: false,
-    requestInterval: 2,
-    rules: [],
-    exclusions: [],
-  };
   const ovr = $.overwriteSettings.checked;
-  const settings = ovr ? defaultSettings : collectSettings();
-  for (const [k, ref] of Object.entries(defaultSettings)) {
+  const settings = ovr ? DEFAULT_SETTINGS : collectSettings();
+  for (const [k, ref] of Object.entries(DEFAULT_SETTINGS)) {
     const v = imported[k];
     settings[k] =
       ref === true || ref === false ? Boolean(v) :

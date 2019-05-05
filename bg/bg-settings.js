@@ -20,6 +20,10 @@ async function writeSettings(ss) {
   const all = settings() || await getSettings();
   if (ss.rules)
     (await import('./bg-trim.js')).trimUrlCache(all.rules, ss.rules, {main: false});
+  if (ss.unloadAfter !== all.unloadAfter) {
+    const iframe = document.getElementsByTagName('iframe')[0];
+    iframe && iframe.remove();
+  }
   const shouldNotify = PROPS_TO_NOTIFY.some(k => notFalse(all[k]) !== notFalse(ss[k]));
   Object.assign(all, ss);
   chrome.storage.sync.set({settings: all});

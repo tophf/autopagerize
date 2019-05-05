@@ -1,8 +1,13 @@
 import {
+  DEFAULT_SETTINGS,
   executeScript,
   ignoreLastError,
   isGloballyEnabled,
 } from '/util/common.js';
+
+import {
+  settings,
+} from './bg.js';
 
 let _endpoints;
 export const endpoints = () => _endpoints || initEndpoints();
@@ -75,6 +80,14 @@ function initEndpoints() {
 
     switchGlobalState: async state => {
       await (await import('./bg-switch.js')).switchGlobalState(state);
+    },
+
+    keepAlive: () => {
+      const {unloadAfter = DEFAULT_SETTINGS.unloadAfter} = settings();
+      const minutes = unloadAfter < 0 ? 24 * 60 :
+        // subtracting the native 5 second timeout as the browser will wait that long anyway
+        Math.max(.25, unloadAfter - 5 / 60);
+      return new Promise(resolve => setTimeout(resolve, minutes * 60e3));
     },
   });
   return _endpoints;
