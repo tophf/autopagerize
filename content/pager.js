@@ -39,6 +39,9 @@
     timer: 0,
   };
 
+  const EXTENSION_ID = chrome.runtime.id;
+  dispatchEvent(new Event(EXTENSION_ID));
+
   window.run = cfg => {
     if (cfg.settings)
       loadSettings(cfg.settings);
@@ -84,6 +87,7 @@
     app.loadedURLs.add(location.href);
 
     addScrollListener();
+    addEventListener(EXTENSION_ID, terminate);
     chrome.runtime.sendMessage({action: 'launched'});
 
     const {scrollHeight} = document.scrollingElement;
@@ -214,11 +218,14 @@
       request();
   }
 
-  function terminate() {
+  function terminate(e) {
     delete window.run;
     delete window.xpather;
     removeScrollListener();
+    removeEventListener(EXTENSION_ID, terminate);
     statusRemove(1500);
+    if (e.type === EXTENSION_ID)
+      dispatchEvent(new Event(EXTENSION_ID + 'terminated'));
   }
 
   function doLoadMore(num) {

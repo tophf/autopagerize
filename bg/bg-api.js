@@ -6,6 +6,7 @@ import {
 } from '/util/common.js';
 
 import {
+  maybeProcess,
   settings,
 } from './bg.js';
 
@@ -89,6 +90,13 @@ function initEndpoints() {
         Math.max(.25, unloadAfter - 5 / 60);
       return new Promise(resolve => setTimeout(resolve, minutes * 60e3));
     },
+
+    reinject: () => new Promise(resolve => {
+      chrome.tabs.query({active: true, currentWindow: true}, ([{id, url}]) => {
+        maybeProcess({url, tabId: id, frameId: 0})
+          .then(resolve);
+      });
+    }),
   });
   return _endpoints;
 }
