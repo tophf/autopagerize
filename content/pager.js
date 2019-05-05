@@ -218,7 +218,7 @@
       request();
   }
 
-  function terminate(e) {
+  function terminate(e = {}) {
     delete window.run;
     delete window.xpather;
     removeScrollListener();
