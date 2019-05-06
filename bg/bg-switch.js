@@ -46,9 +46,9 @@ async function deactivate() {
 
   const code = `(${runTerminateInContentScript})()`;
   const bgIcon = await import('./bg-icon.js');
-  for (const {id} of await queryTabs()) {
-    bgIcon.setIcon(id, 'off');
-    executeScript(id, {code});
+  for (const {id: tabId} of await queryTabs()) {
+    bgIcon.setIcon({tabId, type: 'off'});
+    executeScript(tabId, {code});
     if (stopIt) {
       stopIt = false;
       return;

@@ -10,7 +10,7 @@ import {
 const iconCache = new Map();
 let iconBaseDir;
 
-async function setIcon(tabId, type = '') {
+async function setIcon({tabId, type = ''}) {
   const imageData = iconCache.get(type) || await loadFromSource(type);
   chrome.browserAction.setIcon({tabId, imageData}, ignoreLastError);
 }

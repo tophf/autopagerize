@@ -62,7 +62,7 @@ function initEndpoints() {
     launched: (_, sender) => {
       const tabId = sender.tab.id;
       chrome.browserAction.setPopup({tabId, popup: '/ui/popup.html'});
-      import('./bg-icon.js').then(m => m.setIcon(tabId));
+      import('./bg-icon.js').then(m => m.setIcon({tabId}));
     },
 
     writeSettings: async ss => {
@@ -97,6 +97,10 @@ function initEndpoints() {
           .then(resolve);
       });
     }),
+
+    setIcon: async cfg => {
+      await (await import('./bg-icon.js')).setIcon(cfg);
+    },
   });
   return _endpoints;
 }
