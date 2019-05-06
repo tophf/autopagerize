@@ -3,10 +3,7 @@ export {
   trimUrlCache,
 };
 
-import {
-  arrayOrDummy,
-} from '/util/common.js';
-
+import {arrayOrDummy} from '/util/common.js';
 import * as idb from '/util/storage-idb.js';
 
 let state;

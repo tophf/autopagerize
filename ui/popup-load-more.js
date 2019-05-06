@@ -1,11 +1,7 @@
-import * as popup from './popup.js';
-
-import {
-  executeScript,
-} from '/util/common.js';
-
+import {execScript} from '/util/common.js';
 import {$} from '/util/dom.js';
 import {i18n} from '/util/locale.js';
+import * as popup from './popup.js';
 
 $.loadStop.onclick = stop;
 for (const el of $.loadMoreSection.querySelectorAll('a'))
@@ -41,7 +37,7 @@ function stop(event) {
 }
 
 function inTab(data) {
-  return executeScript(
+  return execScript(
     popup.tab.id || null,
     data => typeof run === 'function' && window.run({loadMore: data}),
     data);

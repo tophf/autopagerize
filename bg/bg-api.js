@@ -1,25 +1,18 @@
-import {
-  DEFAULT_SETTINGS,
-  executeScript,
-  ignoreLastError,
-  isGloballyEnabled,
-} from '/util/common.js';
+export {
+  endpoints,
+};
 
-import {
-  maybeProcess,
-  settings,
-} from './bg.js';
+import {DEFAULTS, execScript, ignoreLastError, isAppEnabled} from '/util/common.js';
+import {onNavigation, settings} from './bg.js';
 
 let _endpoints;
-/** @return EndPoints */
-export const endpoints = () => _endpoints || initEndpoints();
 
 chrome.contextMenus.create({
   id: 'onOff',
   type: 'checkbox',
   contexts: ['page_action', 'browser_action'],
   title: chrome.i18n.getMessage('onOff'),
-  checked: isGloballyEnabled(),
+  checked: isAppEnabled(),
 }, ignoreLastError);
 
 chrome.contextMenus.onClicked.addListener(onChromeMenu);
@@ -32,11 +25,11 @@ function onChromeMenu(info) {
 
 function onChromeCommand(cmd) {
   if (cmd === 'onOff') {
-    endpoints().switchGlobalState(!isGloballyEnabled());
+    endpoints().switchGlobalState(!isAppEnabled());
     return;
   }
   if (cmd.startsWith('loadMore')) {
-    executeScript(
+    execScript(
       null,
       num => typeof run === 'function' && window.run({loadMore: num}),
       Number(cmd.slice(-2)));
@@ -86,7 +79,7 @@ function initEndpoints() {
     },
 
     keepAlive: () => {
-      const {unloadAfter = DEFAULT_SETTINGS.unloadAfter} = settings();
+      const {unloadAfter = DEFAULTS.unloadAfter} = settings();
       const minutes = unloadAfter < 0 ? 24 * 60 :
         // subtracting the native 5 second timeout as the browser will wait that long anyway
         Math.max(.25, unloadAfter - 5 / 60);
@@ -95,7 +88,7 @@ function initEndpoints() {
 
     reinject: () => new Promise(resolve => {
       chrome.tabs.query({active: true, currentWindow: true}, ([{id, url}]) => {
-        maybeProcess({url, tabId: id, frameId: 0})
+        onNavigation({url, tabId: id, frameId: 0})
           .then(resolve);
       });
     }),
@@ -106,4 +99,9 @@ function initEndpoints() {
   };
   Object.setPrototypeOf(EndPoints, null);
   return (_endpoints = EndPoints);
+}
+
+/** @return EndPoints */
+function endpoints() {
+  return _endpoints || initEndpoints();
 }

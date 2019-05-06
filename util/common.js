@@ -7,7 +7,7 @@ export const inBG = new Proxy({}, {
   },
 });
 
-export const DEFAULT_SETTINGS = Object.freeze({
+export const DEFAULTS = Object.freeze({
   /** @type boolean */
   showStatus: true,
   /** @type boolean */
@@ -37,7 +37,7 @@ export function getLocal(key) {
       resolve(data[key])));
 }
 
-export function isGloballyEnabled() {
+export function isAppEnabled() {
   return localStorage.enabled !== 'false';
 }
 
@@ -62,7 +62,7 @@ export function arrayOrDummy(v) {
   return Array.isArray(v) ? v : [];
 }
 
-export function executeScript(tabId, options, ...codeParams) {
+export function execScript(tabId, options, ...codeParams) {
   if (typeof options === 'function')
     options = {code: `(${options})(${JSON.stringify(codeParams).slice(1, -1)})`};
   return new Promise(resolve => {

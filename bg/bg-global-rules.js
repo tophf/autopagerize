@@ -2,15 +2,8 @@ export {
   buildGlobalRules,
 };
 
-import {
-  isGlobalUrl,
-} from '/util/common.js';
-
-import {
-  cache,
-  cacheKeys,
-  globalRules,
-} from './bg.js';
+import {isGlobalUrl} from '/util/common.js';
+import {cache, cacheKeys, globalRules} from './bg.js';
 
 async function buildGlobalRules() {
   if (!cacheKeys.size)

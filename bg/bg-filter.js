@@ -3,23 +3,10 @@ export {
   loadCacheKeys,
 };
 
-import {
-  arrayOrDummy,
-  isGlobalUrl,
-} from '/util/common.js';
-
-import {
-  ruleKeyToUrl,
-  str2rx,
-} from './bg-util.js';
-
-import {
-  cache,
-  cacheKeys,
-  settings,
-} from './bg.js';
-
+import {arrayOrDummy, isGlobalUrl} from '/util/common.js';
 import * as idb from '/util/storage-idb.js';
+import {ruleKeyToUrl, str2rx} from './bg-util.js';
+import {cache, cacheKeys, settings} from './bg.js';
 
 async function filterCache(url, urlCacheKey, packedRules) {
   if (!cacheKeys.size)

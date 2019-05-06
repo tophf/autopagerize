@@ -4,10 +4,7 @@ export {
   rulesEqual,
 };
 
-import {
-  arrayOrDummy,
-} from '/util/common.js';
-
+import {arrayOrDummy} from '/util/common.js';
 import {$} from '/util/dom.js';
 import {i18n} from '/util/locale.js';
 

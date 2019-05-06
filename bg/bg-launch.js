@@ -2,13 +2,8 @@ export {
   launch,
 };
 
-import {
-  executeScript,
-} from '/util/common.js';
-
-import {
-  settings,
-} from './bg.js';
+import {execScript} from '/util/common.js';
+import {settings} from './bg.js';
 
 const RETRY_TIMEOUT = 2000;
 
@@ -74,12 +69,12 @@ const CONTENT_SCRIPT_CODE = {
 const POKE_HANDLER = {
   get(cfg, name) {
     return (...params) =>
-      executeScript(cfg.tabId, CONTENT_SCRIPT_CODE[name], ...params);
+      execScript(cfg.tabId, CONTENT_SCRIPT_CODE[name], ...params);
   },
 };
 
 function poke(tabId, options) {
   return options
-    ? executeScript(tabId, options)
+    ? execScript(tabId, options)
     : new Proxy({tabId}, POKE_HANDLER);
 }

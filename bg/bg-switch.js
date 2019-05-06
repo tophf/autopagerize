@@ -2,14 +2,8 @@ export {
   switchGlobalState,
 };
 
-import {
-  executeScript,
-} from '/util/common.js';
-
-import {
-  maybeProcess,
-  observeNavigation,
-} from './bg.js';
+import {execScript} from '/util/common.js';
+import {observeNavigation, onNavigation} from './bg.js';
 
 let busy, stopIt;
 
@@ -30,7 +24,7 @@ async function activate() {
   localStorage.enabled = '';
   observeNavigation();
   for (const {id, url} of await queryTabs()) {
-    await maybeProcess({url, tabId: id, frameId: 0});
+    await onNavigation({url, tabId: id, frameId: 0});
     if (stopIt) {
       stopIt = false;
       return;
@@ -40,15 +34,15 @@ async function activate() {
 
 async function deactivate() {
   localStorage.enabled = 'false';
-  chrome.webNavigation.onCompleted.removeListener(maybeProcess);
-  chrome.webNavigation.onHistoryStateUpdated.removeListener(maybeProcess);
-  chrome.webNavigation.onReferenceFragmentUpdated.removeListener(maybeProcess);
+  chrome.webNavigation.onCompleted.removeListener(onNavigation);
+  chrome.webNavigation.onHistoryStateUpdated.removeListener(onNavigation);
+  chrome.webNavigation.onReferenceFragmentUpdated.removeListener(onNavigation);
 
   const code = `(${runTerminateInContentScript})()`;
   const bgIcon = await import('./bg-icon.js');
   for (const {id: tabId} of await queryTabs()) {
     bgIcon.setIcon({tabId, type: 'off'});
-    executeScript(tabId, {code});
+    execScript(tabId, {code});
     if (stopIt) {
       stopIt = false;
       return;

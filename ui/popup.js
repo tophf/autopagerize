@@ -1,17 +1,8 @@
 /** @type chrome.tabs.Tab */
 export let tab = {};
 
-import {
-  getSettings,
-  inBG,
-  isGloballyEnabled,
-} from '/util/common.js';
-
-import {
-  $,
-  onDomLoaded,
-} from '/util/dom.js';
-
+import {getSettings, inBG, isAppEnabled} from '/util/common.js';
+import {$, onDomLoaded} from '/util/dom.js';
 import {i18n} from '/util/locale.js';
 
 chrome.tabs.query({active: true, currentWindow: true}, tabs => {
@@ -22,7 +13,7 @@ chrome.tabs.query({active: true, currentWindow: true}, tabs => {
 });
 
 onDomLoaded().then(() => {
-  $.status.checked = isGloballyEnabled();
+  $.status.checked = isAppEnabled();
   $.status.onchange = toggled;
   $.hotkeys.onclick = function (e) {
     chrome.tabs.create({url: this.href});

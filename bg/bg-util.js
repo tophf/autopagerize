@@ -2,17 +2,11 @@
 
 export const utf8encoder = new TextEncoder();
 export const utf8decoder = new TextDecoder();
-
 /** @type Map<String,(RegExp|null)> - null means a bad regexp */
 export const str2rx = new Map();
 
-import {
-  arrayOrDummy,
-} from '/util/common.js';
-
-import {
-  settings,
-} from './bg.js';
+import {arrayOrDummy} from '/util/common.js';
+import {settings} from './bg.js';
 
 // N.B. requires 'settings' to be already loaded when no 'exclusions' were supplied
 export function isUrlExcluded(url, exclusions) {

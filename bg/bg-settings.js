@@ -2,14 +2,8 @@ export {
   writeSettings,
 };
 
-import {
-  getSettings,
-  ignoreLastError,
-} from '/util/common.js';
-
-import {
-  settings,
-} from './bg.js';
+import {getSettings, ignoreLastError} from '/util/common.js';
+import {settings} from './bg.js';
 
 const PROPS_TO_NOTIFY = [
   'showStatus',

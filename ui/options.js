@@ -3,23 +3,9 @@ export {
   renderSettings,
 };
 
-import {
-  collectRules,
-  loadRules,
-} from './options-rules.js';
-
-import {
-  DEFAULT_SETTINGS,
-  arrayOrDummy,
-  getCacheDate,
-  getSettings,
-  inBG,
-} from '/util/common.js';
-
-import {
-  $,
-  onDomLoaded,
-} from '/util/dom.js';
+import {arrayOrDummy, DEFAULTS, getCacheDate, getSettings, inBG} from '/util/common.js';
+import {$, onDomLoaded} from '/util/dom.js';
+import {collectRules, loadRules} from './options-rules.js';
 
 const changedElements = new Set();
 
@@ -60,10 +46,10 @@ function renderSettings(ss) {
   el.checked = el.savedValue = ss.darkTheme === true;
 
   el = $.requestInterval;
-  el.value = el.savedValue = String(ss.requestInterval || DEFAULT_SETTINGS.requestInterval);
+  el.value = el.savedValue = String(ss.requestInterval || DEFAULTS.requestInterval);
 
   el = $.unloadAfter;
-  el.value = el.savedValue = String(ss.unloadAfter || DEFAULT_SETTINGS.unloadAfter);
+  el.value = el.savedValue = String(ss.unloadAfter || DEFAULTS.unloadAfter);
 }
 
 function renderSiteinfoStats(numRules, date) {
@@ -146,8 +132,8 @@ function collectSettings() {
     exclusions: $.exclusions.value.trim().split(/\s+/),
     showStatus: $.showStatus.checked,
     darkTheme: $.darkTheme.checked,
-    requestInterval: $.requestInterval.valueAsNumber || DEFAULT_SETTINGS.requestInterval,
-    unloadAfter: $.unloadAfter.valueAsNumber || DEFAULT_SETTINGS.unloadAfter,
+    requestInterval: $.requestInterval.valueAsNumber || DEFAULTS.requestInterval,
+    unloadAfter: $.unloadAfter.valueAsNumber || DEFAULTS.unloadAfter,
   };
 }
 

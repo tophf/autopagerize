@@ -2,22 +2,10 @@ export {
   updateSiteinfo,
 };
 
-import {
-  arrayOrDummy,
-} from '/util/common.js';
-
-import {
-  calcRuleKey,
-  ruleKeyToUrl,
-} from './bg-util.js';
-
-import {
-  cache,
-  cacheKeys,
-  globalRules,
-} from './bg.js';
-
+import {arrayOrDummy} from '/util/common.js';
 import * as idb from '/util/storage-idb.js';
+import {calcRuleKey, ruleKeyToUrl} from './bg-util.js';
+import {cache, cacheKeys, globalRules} from './bg.js';
 
 const DATA_URL = 'http://wedata.net/databases/AutoPagerize/items_all.json';
 const KNOWN_KEYS = [

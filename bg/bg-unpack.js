@@ -3,21 +3,10 @@ export {
   unpackRules,
 };
 
-import {
-  arrayOrDummy,
-} from '/util/common.js';
-
-import {
-  ruleKeyToUrl,
-} from './bg-util.js';
-
-import {
-  cache,
-  cacheKeys,
-  settings,
-} from './bg.js';
-
+import {arrayOrDummy} from '/util/common.js';
 import * as idb from '/util/storage-idb.js';
+import {ruleKeyToUrl} from './bg-util.js';
+import {cache, cacheKeys, settings} from './bg.js';
 
 // (!) needs `settings` to be already loaded
 async function unpackRules(packedRules) {

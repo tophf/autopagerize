@@ -1,18 +1,13 @@
-export const DB_NAME = 'db';
-export const DEFAULT_STORE_NAME = 'cache';
+export {
+  exec,
+  execRW,
+};
 
 /** @type IDBDatabase */
 let db = null;
-
-/**
- * @typedef ExecConfig
- * @prop {String} [store=cache]
- * @prop {Boolean} [write]
- * @prop {String} [index]
- */
-
 const mutex = [];
-
+const DB_NAME = 'db';
+const DEFAULT_STORE_NAME = 'cache';
 const EXEC_HANDLER = {
   get(cfg, method) {
     return method === 'RAW'
@@ -22,10 +17,17 @@ const EXEC_HANDLER = {
 };
 
 /**
+ * @typedef ExecConfig
+ * @prop {String} [store=cache]
+ * @prop {Boolean} [write]
+ * @prop {String} [index]
+ */
+
+/**
  * @param {ExecConfig} [cfg]
  * @return {IDBObjectStore|IDBIndex}
  */
-export function exec(cfg = {}) {
+function exec(cfg = {}) {
   return new Proxy(cfg, EXEC_HANDLER);
 }
 
@@ -33,7 +35,7 @@ export function exec(cfg = {}) {
  * @param {ExecConfig} [cfg]
  * @return {IDBObjectStore|IDBIndex}
  */
-export function execRW(cfg = {}) {
+function execRW(cfg = {}) {
   return exec({...cfg, write: true});
 }
 

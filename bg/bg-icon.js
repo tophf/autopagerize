@@ -3,9 +3,7 @@ export {
   setIcon,
 };
 
-import {
-  ignoreLastError,
-} from '/util/common.js';
+import {ignoreLastError} from '/util/common.js';
 
 const iconCache = new Map();
 let iconBaseDir;

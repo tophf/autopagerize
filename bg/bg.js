@@ -1,60 +1,58 @@
 export const CACHE_DURATION = 24 * 60 * 60 * 1000;
 export const cache = new Map();
 export const cacheKeys = new Map();
-
-let _globalRules = null;
-let _settings = null;
-
-export const globalRules = v => v ? (_globalRules = v) : _globalRules;
-export const settings = v => v ? (_settings = v) : _settings;
-
 export {
-  maybeProcess,
+  globalRules,
+  onNavigation,
   observeNavigation,
+  settings,
 };
 
 import {
-  endpoints,
-} from './bg-api.js';
-
-import {
-  isUrlExcluded,
-  calcUrlCacheKey,
-} from './bg-util.js';
-
-import {
-  DEFAULT_SETTINGS,
+  DEFAULTS,
+  execScript,
   getCacheDate,
   getLocal,
   getSettings,
-  executeScript,
-  isGloballyEnabled,
+  isAppEnabled,
 } from '/util/common.js';
+import {endpoints} from './bg-api.js';
+import {calcUrlCacheKey, isUrlExcluded} from './bg-util.js';
 
 const processing = new Map();
+let _globalRules = null;
+let _settings = null;
 
 if (getCacheDate() + CACHE_DURATION < Date.now())
   import('./bg-update.js').then(m =>
     m.updateSiteinfo({force: true}));
 
-if (isGloballyEnabled())
+if (isAppEnabled())
   observeNavigation();
+
+function globalRules(v) {
+  return v ? (_globalRules = v) : _globalRules;
+}
+
+function settings(v) {
+  return v ? (_settings = v) : _settings;
+}
 
 function observeNavigation() {
   const filter = {url: [{schemes: ['http', 'https']}]};
-  chrome.webNavigation.onCompleted.addListener(maybeProcess, filter);
-  chrome.webNavigation.onHistoryStateUpdated.addListener(maybeProcess, filter);
-  chrome.webNavigation.onReferenceFragmentUpdated.addListener(maybeProcess, filter);
+  chrome.webNavigation.onCompleted.addListener(onNavigation, filter);
+  chrome.webNavigation.onHistoryStateUpdated.addListener(onNavigation, filter);
+  chrome.webNavigation.onReferenceFragmentUpdated.addListener(onNavigation, filter);
 }
 
-async function maybeProcess({tabId, frameId, url}) {
+async function onNavigation({tabId, frameId, url}) {
   if (!frameId && processing.get(tabId) !== url) {
     processing.set(tabId, url);
     if (!_settings)
       _settings = await getSettings();
     if (!isUrlExcluded(url))
       await maybeLaunch(tabId, url);
-    else if (await executeScript(tabId, needsDisabling) === true)
+    else if (await execScript(tabId, tabNeedsDisabling) === true)
       await endpoints().setIcon({tabId, type: 'off'});
     processing.delete(tabId);
     maybeKeepAlive();
@@ -75,14 +73,8 @@ async function maybeLaunch(tabId, url) {
     await (await import('./bg-launch.js')).launch({tabId, rules});
 }
 
-async function loadGlobalRules() {
-  return globalRules(
-    await getLocal('globalRules') ||
-    await (await import('./bg-global-rules.js')).buildGlobalRules());
-}
-
 function maybeKeepAlive() {
-  const {unloadAfter = DEFAULT_SETTINGS.unloadAfter} = _settings;
+  const {unloadAfter = DEFAULTS.unloadAfter} = _settings;
   const enabled = unloadAfter === -1 || unloadAfter > 0;
   const iframe = document.getElementsByTagName('iframe')[0];
   if (enabled && !iframe)
@@ -91,7 +83,13 @@ function maybeKeepAlive() {
     iframe.remove();
 }
 
-function needsDisabling() {
+async function loadGlobalRules() {
+  return globalRules(
+    await getLocal('globalRules') ||
+    await (await import('./bg-global-rules.js')).buildGlobalRules());
+}
+
+function tabNeedsDisabling() {
   const {launched} = window;
   delete window.launched;
   return launched;

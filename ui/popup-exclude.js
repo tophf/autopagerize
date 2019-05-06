@@ -1,13 +1,6 @@
-import * as popup from './popup.js';
-
-import {
-  arrayOrDummy,
-  executeScript,
-  getSettings,
-  inBG,
-} from '/util/common.js';
-
+import {arrayOrDummy, execScript, getSettings, inBG} from '/util/common.js';
 import {$} from '/util/dom.js';
+import * as popup from './popup.js';
 
 if (popup.tab.url)
   updateTitles();
@@ -32,7 +25,7 @@ async function exclude(e) {
   for (const {id: tabId} of await findExcludedTabs(pattern)) {
     await Promise.all([
       inBG.setIcon({tabId, type: 'off'}),
-      executeScript(tabId, terminateContentScript),
+      execScript(tabId, terminateContentScript),
       new Promise(resolve => chrome.browserAction.setPopup({tabId, popup: path}, resolve)),
     ]);
   }

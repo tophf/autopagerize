@@ -3,22 +3,10 @@ export {
   loadSiteinfo,
 };
 
-import {
-  isGlobalUrl,
-  setCacheDate,
-} from '/util/common.js';
-
-import {
-  calcRuleKey,
-} from './bg-util.js';
-
-import {
-  cache,
-  cacheKeys,
-  globalRules,
-} from './bg.js';
-
+import {isGlobalUrl, setCacheDate} from '/util/common.js';
 import * as idb from '/util/storage-idb.js';
+import {calcRuleKey} from './bg-util.js';
+import {cache, cacheKeys, globalRules} from './bg.js';
 
 async function loadBuiltinSiteinfo() {
   const [si] = await Promise.all([
