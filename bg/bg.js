@@ -14,6 +14,10 @@ export {
 };
 
 import {
+  endpoints,
+} from './bg-api.js';
+
+import {
   isUrlExcluded,
   calcUrlCacheKey,
 } from './bg-util.js';
@@ -23,6 +27,7 @@ import {
   getCacheDate,
   getLocal,
   getSettings,
+  executeScript,
   isGloballyEnabled,
 } from '/util/common.js';
 
@@ -49,6 +54,8 @@ async function maybeProcess({tabId, frameId, url}) {
       _settings = await getSettings();
     if (!isUrlExcluded(url))
       await maybeLaunch(tabId, url);
+    else if (await executeScript(tabId, needsDisabling) === true)
+      await endpoints().setIcon({tabId, type: 'off'});
     processing.delete(tabId);
     maybeKeepAlive();
   }
@@ -82,4 +89,10 @@ function maybeKeepAlive() {
     document.body.appendChild(document.createElement('iframe')).src = '/bg/bg-iframe.html';
   if (!enabled && iframe)
     iframe.remove();
+}
+
+function needsDisabling() {
+  const {launched} = window;
+  delete window.launched;
+  return launched;
 }

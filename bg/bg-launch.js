@@ -65,6 +65,7 @@ const CONTENT_SCRIPT_CODE = {
   doRun: function (settings) {
     // eslint-disable-next-line no-undef
     window.run({rules, matchedRule, settings});
+    window.launched = true;
     delete window.rules;
     delete window.matchedRule;
   },
