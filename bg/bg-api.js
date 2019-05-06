@@ -11,6 +11,7 @@ import {
 } from './bg.js';
 
 let _endpoints;
+/** @return EndPoints */
 export const endpoints = () => _endpoints || initEndpoints();
 
 chrome.contextMenus.create({
@@ -57,7 +58,8 @@ function onRuntimeMessage(msg, sender, sendResponse) {
 }
 
 function initEndpoints() {
-  _endpoints = Object.assign(Object.create(null), {
+  /** @typedef EndPoints */
+  const EndPoints = {
 
     launched: (_, sender) => {
       const tabId = sender.tab.id;
@@ -101,6 +103,7 @@ function initEndpoints() {
     setIcon: async cfg => {
       await (await import('./bg-icon.js')).setIcon(cfg);
     },
-  });
-  return _endpoints;
+  };
+  Object.setPrototypeOf(EndPoints, null);
+  return (_endpoints = EndPoints);
 }
