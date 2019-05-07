@@ -38,21 +38,22 @@ async function deactivate() {
   chrome.webNavigation.onHistoryStateUpdated.removeListener(onNavigation);
   chrome.webNavigation.onReferenceFragmentUpdated.removeListener(onNavigation);
 
-  const code = `(${runTerminateInContentScript})()`;
+  const runTerminate = {
+    code: `(${() => {
+      if (typeof run === 'function')
+        window.run({terminate: true});
+    }})()`,
+  };
   const bgIcon = await import('./bg-icon.js');
+
   for (const {id: tabId} of await queryTabs()) {
     bgIcon.setIcon({tabId, type: 'off'});
-    execScript(tabId, {code});
+    execScript(tabId, runTerminate);
     if (stopIt) {
       stopIt = false;
       return;
     }
   }
-}
-
-function runTerminateInContentScript() {
-  if (typeof run === 'function')
-    window.run({terminate: true});
 }
 
 function queryTabs() {

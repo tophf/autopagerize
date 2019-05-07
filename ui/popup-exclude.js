@@ -22,10 +22,17 @@ async function exclude(e) {
   if (!path.startsWith('/'))
     path = '/' + path;
 
+  const runTerminate = {
+    code: `(${() => {
+      if (typeof run === 'function')
+        window.run({terminate: true});
+    }})()`,
+  };
+
   for (const {id: tabId} of await findExcludedTabs(pattern)) {
     await Promise.all([
       inBG.setIcon({tabId, type: 'off'}),
-      execScript(tabId, terminateContentScript),
+      execScript(tabId, runTerminate),
       new Promise(resolve => chrome.browserAction.setPopup({tabId, popup: path}, resolve)),
     ]);
   }
@@ -58,10 +65,4 @@ function findExcludedTabs(pattern) {
         : tabs.filter(t => t.url === url);
       resolve(tabs);
     }));
-}
-
-function terminateContentScript() {
-  window.launched = false;
-  if (typeof run === 'function')
-    window.run({terminate: true});
 }
