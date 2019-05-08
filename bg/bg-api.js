@@ -3,7 +3,7 @@ export {
 };
 
 import {DEFAULTS, execScript, ignoreLastError, isAppEnabled} from '/util/common.js';
-import {onNavigation, settings} from './bg.js';
+import {lastAliveTime, onNavigation, settings} from './bg.js';
 
 let _endpoints;
 
@@ -78,13 +78,7 @@ function initEndpoints() {
       await (await import('./bg-switch.js')).switchGlobalState(state);
     },
 
-    keepAlive: () => {
-      const {unloadAfter = DEFAULTS.unloadAfter} = settings();
-      const minutes = unloadAfter < 0 ? 24 * 60 :
-        // subtracting the native 5 second timeout as the browser will wait that long anyway
-        Math.max(.25, unloadAfter - 5 / 60);
-      return new Promise(resolve => setTimeout(resolve, minutes * 60e3));
-    },
+    keepAlive: () => new Promise(keepAlive),
 
     reinject: () => new Promise(resolve => {
       chrome.tabs.query({active: true, currentWindow: true}, ([{id, url}]) => {
@@ -104,4 +98,16 @@ function initEndpoints() {
 /** @return EndPoints */
 function endpoints() {
   return _endpoints || initEndpoints();
+}
+
+function keepAlive(resolve) {
+  const {unloadAfter = DEFAULTS.unloadAfter} = settings();
+  const minutes = unloadAfter < 0 ? 24 * 60 :
+    // subtracting the native 5 second timeout as the browser will wait that long anyway
+    Math.max(.25, unloadAfter - 5 / 60);
+  const msToSnooze = lastAliveTime + minutes * 60e3 - Date.now();
+  if (msToSnooze > 0)
+    setTimeout(keepAlive, msToSnooze, resolve);
+  else
+    resolve();
 }

@@ -1,6 +1,7 @@
 export const CACHE_DURATION = 24 * 60 * 60 * 1000;
 export const cache = new Map();
 export const cacheKeys = new Map();
+export let lastAliveTime;
 export {
   globalRules,
   onNavigation,
@@ -74,6 +75,7 @@ async function maybeLaunch(tabId, url) {
 }
 
 function maybeKeepAlive() {
+  lastAliveTime = Date.now();
   const {unloadAfter = DEFAULTS.unloadAfter} = _settings;
   const enabled = unloadAfter === -1 || unloadAfter > 0;
   const iframe = document.getElementsByTagName('iframe')[0];
