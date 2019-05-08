@@ -31,6 +31,12 @@ if (getCacheDate() + CACHE_DURATION < Date.now())
 if (isAppEnabled())
   observeNavigation();
 
+if (!localStorage.orphanMessageId)
+  fetch('/manifest.json', {method: 'HEAD'}).then(r => {
+    const etag = r.headers.get('ETag').replace(/\W/g, '');
+    localStorage.orphanMessageId = chrome.runtime.id + ':' + etag;
+  });
+
 function globalRules(v) {
   return v ? (_globalRules = v) : _globalRules;
 }

@@ -28,6 +28,8 @@
     pagesRemaining: 0,
     /** @type Number */
     requestInterval: 2000,
+    /** @type string */
+    orphanMessageId: '',
   };
 
   const status = {
@@ -38,9 +40,6 @@
     /** @type Number */
     timer: 0,
   };
-
-  const EXTENSION_ID = chrome.runtime.id;
-  dispatchEvent(new Event(EXTENSION_ID));
 
   window.run = cfg => {
     if (cfg.settings)
@@ -87,7 +86,7 @@
     app.loadedURLs.add(location.href);
 
     addScrollListener();
-    addEventListener(EXTENSION_ID, terminate);
+    addEventListener(app.orphanMessageId, terminate);
     chrome.runtime.sendMessage({action: 'launched'});
 
     const {scrollHeight} = document.scrollingElement;
@@ -222,10 +221,10 @@
     delete window.run;
     delete window.xpather;
     removeScrollListener();
-    removeEventListener(EXTENSION_ID, terminate);
+    removeEventListener(app.orphanMessageId, terminate);
     statusRemove(1500);
-    if (e.type === EXTENSION_ID)
-      dispatchEvent(new Event(EXTENSION_ID + 'terminated'));
+    if (e.type === app.orphanMessageId)
+      dispatchEvent(new Event(app.orphanMessageId + ':terminated'));
   }
 
   function doLoadMore(num) {
@@ -353,6 +352,10 @@
   function loadSettings(ss) {
     app.requestInterval = ss.requestInterval * 1000 || app.requestInterval;
     status.enabled = notFalse(ss.showStatus);
+    if (ss.orphanMessageId) {
+      app.orphanMessageId = ss.orphanMessageId;
+      dispatchEvent(new Event(app.orphanMessageId));
+    }
   }
 
   function important(cssString) {

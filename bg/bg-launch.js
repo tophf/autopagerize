@@ -28,6 +28,7 @@ async function launch({tabId, rules, lastTry}) {
   await poke(tabId).doRun({
     showStatus: settings().showStatus,
     requestInterval: settings().requestInterval,
+    orphanMessageId: localStorage.orphanMessageId,
   });
 }
 
