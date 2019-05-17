@@ -148,4 +148,8 @@ details .done {
     border: 1px solid #000;
     color: #eee;
   }
+  #failure {
+    color: #caa794;
+    background-color: #f802;
+  }
 }
