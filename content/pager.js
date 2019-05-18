@@ -263,16 +263,7 @@
   function statusCreate() {
     if (status.element && document.contains(status.element))
       return;
-    status.element = Object.assign(document.createElement('iframe'), {
-      srcdoc: `
-        <body style="${important(`
-          margin: 0;
-          padding: 0;
-          color: white;
-          background: black;
-          font: bold 12px/24px sans-serif;
-          text-align: center;
-        `)}">${chrome.i18n.getMessage('loading')}...</body>`,
+    status.element = Object.assign(document.createElement('div'), {
       id: 'autopagerize_message_bar',
       style: important(`
         display: none;
@@ -284,7 +275,14 @@
         border: none;
         opacity: .7;
         z-index: 1000;
+        margin: 0;
+        padding: 0;
+        color: white;
+        background: black;
+        font: bold 12px/24px sans-serif;
+        text-align: center;
       `),
+      textContent: chrome.i18n.getMessage('loading') + '...',
     });
     document.body.appendChild(status.element);
   }
@@ -308,20 +306,14 @@
         statusCreate();
       else if (!status.enabled)
         return;
+      status.element.style.setProperty('background', 'black', 'important');
 
     } else if (error !== undefined) {
       show = true;
       statusCreate();
       statusRemove(3000);
-      status.element.srcdoc = `
-        <body style="${important(`
-          margin: 0;
-          padding: 0;
-          color: white;
-          background: maroon;
-          font: bold 12px/24px sans-serif;
-          text-align: center;
-        `)}">${chrome.i18n.getMessage('error')}: ${error}</body>`;
+      status.element.style.setProperty('background', 'maroon', 'important');
+      status.element.textContent = `${chrome.i18n.getMessage('error')}: ${error}`;
       removeScrollListener();
 
     } else
