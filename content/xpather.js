@@ -21,6 +21,8 @@ window.xpather = {
 
   getElements(expr, node) {
     const x = xpather.evaluate(expr, node, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
+    if (!x)
+      return [];
     const nodes = [];
     for (let node; (node = x.iterateNext());)
       nodes.push(node);
@@ -28,7 +30,8 @@ window.xpather = {
   },
 
   getFirstElement(expr, node) {
-    return xpather.evaluate(expr, node, XPathResult.FIRST_ORDERED_NODE_TYPE).singleNodeValue;
+    const x = xpather.evaluate(expr, node, XPathResult.FIRST_ORDERED_NODE_TYPE);
+    return x && x.singleNodeValue;
   },
 
   evaluate(expr, node = document, resultType) {
@@ -45,7 +48,11 @@ window.xpather = {
           defaultNS :
           defaultResolver.lookupNamespaceURI(prefix);
     }
-    return doc.evaluate(expr, node, resolver, resultType, null);
+    try {
+      return doc.evaluate(expr, node, resolver, resultType, null);
+    } catch (e) {
+      console.debug(e);
+    }
   },
 
   TOKEN_PATTERN: RegExp(
