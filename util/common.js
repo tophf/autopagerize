@@ -20,6 +20,8 @@ export const DEFAULTS = Object.freeze({
   rules: [],
   /** @type string[] */
   exclusions: [],
+  /** @type number - pixels */
+  pageHeightThreshold: 400,
 });
 
 export function getSettings() {

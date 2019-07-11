@@ -3,8 +3,6 @@
 
 // IIFE simplifies complete unregistering for garbage collection
 (() => {
-  const BASE_REMAIN_HEIGHT = 400;
-
   const app = {
     /** @type Object */
     rule: null,
@@ -28,6 +26,8 @@
     pagesRemaining: 0,
     /** @type Number */
     requestInterval: 2000,
+    /** @type Number */
+    pageHeightThreshold: 400,
     /** @type string */
     orphanMessageId: '',
   };
@@ -100,7 +100,7 @@
     }
     if (!bottom)
       bottom = Math.round(scrollHeight * 0.8);
-    app.remainHeight = scrollHeight - bottom + BASE_REMAIN_HEIGHT;
+    app.remainHeight = scrollHeight - bottom + app.pageHeightThreshold;
     app.requestTime = Date.now();
 
     onScroll();
@@ -348,6 +348,8 @@
       app.orphanMessageId = ss.orphanMessageId;
       dispatchEvent(new Event(app.orphanMessageId));
     }
+    if (ss.pageHeightThreshold)
+      app.pageHeightThreshold = ss.pageHeightThreshold;
   }
 
   function important(cssString) {

@@ -50,6 +50,9 @@ function renderSettings(ss) {
 
   el = $.unloadAfter;
   el.value = el.savedValue = String(ss.unloadAfter || DEFAULTS.unloadAfter);
+
+  el = $.pageHeightThreshold;
+  el.value = el.savedValue = String(ss.pageHeightThreshold || DEFAULTS.pageHeightThreshold);
 }
 
 function renderSiteinfoStats(numRules, date) {
@@ -95,6 +98,7 @@ async function save() {
   $.darkTheme.savedValue = ss.darkTheme;
   $.requestInterval.savedValue = String(ss.requestInterval);
   $.unloadAfter.savedValue = String(ss.unloadAfter);
+  $.pageHeightThreshold.savedValue = String(ss.pageHeightThreshold);
 
   changedElements.forEach(el => el.classList.remove('changed'));
   changedElements.clear();
@@ -134,6 +138,7 @@ function collectSettings() {
     darkTheme: $.darkTheme.checked,
     requestInterval: $.requestInterval.valueAsNumber || DEFAULTS.requestInterval,
     unloadAfter: $.unloadAfter.valueAsNumber || DEFAULTS.unloadAfter,
+    pageHeightThreshold: $.pageHeightThreshold.valueAsNumber || DEFAULTS.pageHeightThreshold,
   };
 }
 

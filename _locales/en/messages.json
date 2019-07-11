@@ -98,6 +98,12 @@
   "page": {
     "message": "Page:"
   },
+  "pageHeightThreshold": {
+    "message": "Remaining page height (in pixels)"
+  },
+  "pageHeightThresholdInfo": {
+    "message": "A bigger value means that prefetching starts earlier while you scroll the current page, and a really big value would start prefetching immediately"
+  },
   "regexp": {
     "message": "regexp"
   },
