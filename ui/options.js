@@ -7,6 +7,32 @@ import {arrayOrDummy, DEFAULTS, getCacheDate, getSettings, inBG} from '/util/com
 import {$, onDomLoaded} from '/util/dom.js';
 import {collectRules, loadRules} from './options-rules.js';
 
+const ValueTransform = {
+  // params: (value, element)
+  render: {
+    exclusions: (v, el) => {
+      // set rows if first time init
+      if (el._data.savedValue === undefined)
+        el.rows = Math.max(2, Math.min(20, arrayOrDummy(v).length + 1));
+      return arrayOrDummy(v).join('\n');
+    },
+    showStatus: v => v !== false,
+    $boolean: v => v === true,
+    $any: (v, el) => String(v !== undefined ? v : DEFAULTS[el._data.name]),
+  },
+  // params: (element)
+  parse: {
+    rules: () => collectRules(),
+    exclusions: el => el.value.trim().split(/\s+/),
+    $boolean: el => el.checked,
+    $number: el => el.valueAsNumber || DEFAULTS[el._data.name],
+  },
+  find: (transforms, name, defaultValue) =>
+    transforms[name] ||
+    transforms['$' + typeof defaultValue] ||
+    transforms.$any,
+};
+
 const changedElements = new Set();
 
 Promise.all([
@@ -33,26 +59,20 @@ Promise.all([
 });
 
 function renderSettings(ss) {
-  let el;
-
-  el = $.exclusions;
-  el.value = el.savedValue = arrayOrDummy(ss.exclusions).join('\n');
-  el.rows = Math.max(2, Math.min(20, arrayOrDummy(ss.exclusions).length + 1));
-
-  el = $.showStatus;
-  el.checked = el.savedValue = ss.showStatus !== false;
-
-  el = $.darkTheme;
-  el.checked = el.savedValue = ss.darkTheme === true;
-
-  el = $.requestInterval;
-  el.value = el.savedValue = String(ss.requestInterval || DEFAULTS.requestInterval);
-
-  el = $.unloadAfter;
-  el.value = el.savedValue = String(ss.unloadAfter || DEFAULTS.unloadAfter);
-
-  el = $.pageHeightThreshold;
-  el.value = el.savedValue = String(ss.pageHeightThreshold || DEFAULTS.pageHeightThreshold);
+  for (const [k, defaultValue] of Object.entries(DEFAULTS)) {
+    const el = document.getElementById(k);
+    if (!el)
+      continue;
+    const firstInit = !el._data;
+    // el._data.name is used when transforming so it should be defined beforehand
+    if (firstInit)
+      el._data = {name: k};
+    const v = ss[k] !== undefined ? ss[k] : defaultValue;
+    const renderedValue = ValueTransform.find(ValueTransform.render, k, defaultValue)(v, el);
+    if (firstInit)
+      el[el.type === 'checkbox' ? 'checked' : 'value'] = renderedValue;
+    el._data.savedValue = renderedValue;
+  }
 }
 
 function renderSiteinfoStats(numRules, date) {
@@ -93,17 +113,12 @@ async function save() {
     return;
   }
 
-  $.exclusions.savedValue = ss.exclusions.join('\n');
-  $.showStatus.savedValue = ss.showStatus;
-  $.darkTheme.savedValue = ss.darkTheme;
-  $.requestInterval.savedValue = String(ss.requestInterval);
-  $.unloadAfter.savedValue = String(ss.unloadAfter);
-  $.pageHeightThreshold.savedValue = String(ss.pageHeightThreshold);
+  renderSettings(ss);
 
   changedElements.forEach(el => el.classList.remove('changed'));
   changedElements.clear();
   for (const el of $.rules.getElementsByClassName('deleted'))
-    el.savedValue = !el.savedValue;
+    el._data.savedValue = !el._data.savedValue;
 
   $.btnSaveWrapper.hidden = true;
 }
@@ -131,22 +146,20 @@ async function update() {
 }
 
 function collectSettings() {
-  return {
-    rules: collectRules(),
-    exclusions: $.exclusions.value.trim().split(/\s+/),
-    showStatus: $.showStatus.checked,
-    darkTheme: $.darkTheme.checked,
-    requestInterval: $.requestInterval.valueAsNumber || DEFAULTS.requestInterval,
-    unloadAfter: $.unloadAfter.valueAsNumber || DEFAULTS.unloadAfter,
-    pageHeightThreshold: $.pageHeightThreshold.valueAsNumber || DEFAULTS.pageHeightThreshold,
-  };
+  const ss = {};
+  for (const [k, defaultValue] of Object.entries(DEFAULTS)) {
+    const el = document.getElementById(k);
+    if (el)
+      ss[k] = ValueTransform.find(ValueTransform.parse, k, defaultValue)(el);
+  }
+  return ss;
 }
 
 function onChange({target: el}) {
   if (el.closest('.ignore-changes'))
     return;
   const value = el[el.type === 'checkbox' ? 'checked' : 'value'];
-  const changed = value !== el.savedValue;
+  const changed = value !== el._data.savedValue;
   if (changed)
     changedElements.add(el);
   else

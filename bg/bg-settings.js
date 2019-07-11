@@ -2,13 +2,8 @@ export {
   writeSettings,
 };
 
-import {getSettings, ignoreLastError} from '/util/common.js';
+import {PROPS_TO_NOTIFY, getSettings, ignoreLastError} from '/util/common.js';
 import {settings} from './bg.js';
-
-const PROPS_TO_NOTIFY = [
-  'showStatus',
-  'requestInterval',
-];
 
 async function writeSettings(ss) {
   const all = settings() || await getSettings();

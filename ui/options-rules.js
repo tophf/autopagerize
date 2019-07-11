@@ -38,7 +38,7 @@ function collectRules(elements) {
     for (const m of r.getElementsByClassName('rule-member')) {
       const el = m.getElementsByTagName('textarea')[0];
       const value = el.value.trim();
-      const v = el.savedValue = value;
+      const v = el._data.savedValue = value;
       if (!v)
         continue;
       if (isDummy && v !== (DUMMY_RULE[el.dataset.type] || ''))
@@ -62,14 +62,15 @@ function addRules(rules) {
   for (const rule of rules) {
     if (rule) {
       const el = tplRule.cloneNode(true);
-      el.savedValue = false;
+      el._data = {savedValue: false};
       for (const k of KEYS) {
         memberName.nodeValue = k;
         memberTitle.nodeValue = k;
         clone = tplMember.cloneNode(true);
         const area = clone.getElementsByTagName('textarea')[0];
         const v = rule[k] || '';
-        area.value = area.savedValue = v;
+        area._data = {};
+        area.value = area._data.savedValue = v;
         area.dataset.type = k;
         if (!v)
           area.classList.add('empty');
@@ -145,7 +146,7 @@ function deleteRule(base) {
                        $.rules.children[1] &&
                        rulesEqual(collectRules([base]), [DUMMY_RULE]);
   if (isDisposable)
-    base.value = base.savedValue = 'canDelete';
+    base.value = base._data.savedValue = 'canDelete';
   base.dispatchEvent(new Event('change', {bubbles: true}));
   if (base.value === 'canDelete')
     base.remove();

@@ -24,6 +24,13 @@ export const DEFAULTS = Object.freeze({
   pageHeightThreshold: 400,
 });
 
+// content scripts should be notified when these options are changed
+export const PROPS_TO_NOTIFY = [
+  'showStatus',
+  'requestInterval',
+  'pageHeightThreshold',
+];
+
 export function getSettings() {
   return new Promise(resolve => {
     chrome.storage.sync.get('settings', data => {

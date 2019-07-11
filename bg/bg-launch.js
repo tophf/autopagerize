@@ -2,7 +2,7 @@ export {
   launch,
 };
 
-import {execScript} from '/util/common.js';
+import {PROPS_TO_NOTIFY, execScript} from '/util/common.js';
 import {settings} from './bg.js';
 
 const RETRY_TIMEOUT = 2000;
@@ -25,11 +25,10 @@ async function launch({tabId, rules, lastTry}) {
   if (!rr.hasRun)
     await poke(tabId, {file: '/content/pager.js'});
 
-  await poke(tabId).doRun({
-    showStatus: settings().showStatus,
-    requestInterval: settings().requestInterval,
-    orphanMessageId: localStorage.orphanMessageId,
-  });
+  const ss = {orphanMessageId: localStorage.orphanMessageId};
+  for (const name of PROPS_TO_NOTIFY)
+    ss[name] = settings()[name];
+  await poke(tabId).doRun(ss);
 }
 
 function retry(resolve, cfg) {
