@@ -14,7 +14,8 @@ window.run({
       const [, /*quote*/, dataUrl, /*quote*/, id] = m;
       const el = doc.getElementById(id);
       if (el)
-        el.src = dataUrl.replace(/\\x[0-9a-f]{2}/gi, s => String.fromCharCode('0' + s.slice(1)));
+        el.src = dataUrl.replace(/\\x([0-9a-f]{2})/gi, (_, code) =>
+          String.fromCharCode(parseInt(code, 16)));
     }
   },
 });
