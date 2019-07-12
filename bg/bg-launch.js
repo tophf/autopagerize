@@ -7,7 +7,7 @@ import {settings} from './bg.js';
 
 const RETRY_TIMEOUT = 2000;
 
-async function launch({tabId, rules, lastTry}) {
+async function launch({tabId, url, rules, lastTry}) {
   if (!await poke(tabId).checkDeps()) {
     // no deps while retrying means the tab got navigated away
     // and already being handled in another event
@@ -24,6 +24,17 @@ async function launch({tabId, rules, lastTry}) {
 
   if (!rr.hasRun)
     await poke(tabId, {file: '/content/pager.js'});
+
+  if (url.includes('google.') &&
+      url.includes('tbm=nws') &&
+      /^https?:\/\/(www\.)?google(\.com?)?(\.\w\w)?\/search.*?[?&]tbm=nws/.test(url))
+    await execScript(tabId, {file: '/content/fix-google-news.js'});
+
+  if (url.startsWith('https://www.youtube.com/results'))
+    await execScript(tabId, {file: '/content/fix-youtube.js'});
+
+  if (url.startsWith('https://news.search.yahoo.co'))
+    await execScript(tabId, {file: '/content/fix-yahoo.js'});
 
   const ss = {orphanMessageId: localStorage.orphanMessageId};
   for (const name of PROPS_TO_NOTIFY)

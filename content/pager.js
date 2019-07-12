@@ -41,9 +41,13 @@
     timer: 0,
   };
 
+  const filters = new Map();
+
   window.run = cfg => {
     if (cfg.settings)
       loadSettings(cfg.settings);
+    if (cfg.filter)
+      filters.set(cfg.filterName, cfg.filter);
     if (cfg.rules && !maybeInit(cfg.rules, cfg.matchedRule))
       setTimeout(maybeInit, 2000, cfg.rules);
     if (cfg.loadMore)
@@ -146,14 +150,19 @@
    * @return boolean - true if there are more pages
    */
   function addPage(event) {
+    const url = app.requestURL;
     const doc = event.target.response;
+
+    // we may need to process <script> here so we run it be before sanitizing
+    filters.forEach(f => f(doc, url));
+
     for (const el of doc.getElementsByTagName('script'))
       el.remove();
 
     let pages, nextUrl;
     try {
       pages = xpather.getElements(app.rule.pageElement, doc);
-      nextUrl = getNextURL(app.rule.nextLink, doc, app.requestURL);
+      nextUrl = getNextURL(app.rule.nextLink, doc, url);
     } catch (e) {
       statusShow({error: chrome.i18n.getMessage('errorExtractInfo')});
       return;
@@ -177,7 +186,7 @@
     const p = $create('p', {className: 'autopagerize_page_info'}, [
       chrome.i18n.getMessage('page') + ' ',
       $create('a', {
-        href: app.requestURL,
+        href: url,
         className: 'autopagerize_link',
         textContent: ++app.pageNum,
       }),
@@ -200,7 +209,7 @@
     pages.forEach(p => bin.appendChild(p));
     parent.insertBefore(bin, app.insertPoint);
 
-    app.loadedURLs.add(app.requestURL);
+    app.loadedURLs.add(url);
     app.requestURL = nextUrl;
 
     statusShow({loading: false});

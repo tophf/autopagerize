@@ -77,7 +77,7 @@ async function maybeLaunch(tabId, url) {
     await (await import('./bg-filter.js')).filterCache(url, key, packedRules);
   rules.push(..._globalRules || await loadGlobalRules());
   if (rules.length)
-    await (await import('./bg-launch.js')).launch({tabId, rules});
+    await (await import('./bg-launch.js')).launch({tabId, url, rules});
 }
 
 function maybeKeepAlive() {
