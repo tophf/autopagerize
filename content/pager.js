@@ -153,7 +153,7 @@
     const url = app.requestURL;
     const doc = event.target.response;
 
-    // we may need to process <script> here so we run it be before sanitizing
+    // SHOULD PRECEDE stripping of stripts since a filter may need to process one
     filters.forEach(f => f(doc, url));
 
     for (const el of doc.getElementsByTagName('script'))
