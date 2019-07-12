@@ -52,6 +52,8 @@
       terminate();
   };
 
+  document.dispatchEvent(new Event('GM_AutoPagerizeLoaded', {bubbles: true}));
+
   function maybeInit(rules, rule) {
     if (app.loadedURLs.has(location.href))
       return true;
@@ -203,6 +205,8 @@
 
     statusShow({loading: false});
     onScroll();
+
+    document.dispatchEvent(new Event('GM_AutoPagerizeNextPageLoaded', {bubbles: true}));
 
     if (nextUrl)
       return true;
