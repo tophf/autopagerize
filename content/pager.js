@@ -183,7 +183,7 @@
       }),
     ]);
 
-    if (!pages.length || pages[0].tagName !== 'TR') {
+    if (pages[0].tagName !== 'TR') {
       bin.appendChild($create('hr', {className: 'autopagerize_page_separator'}));
       bin.appendChild(p);
     } else {
