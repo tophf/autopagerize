@@ -161,9 +161,6 @@
       return;
     }
 
-    app.loadedURLs.add(app.requestURL);
-    app.requestURL = nextUrl;
-
     if (app.insertPoint.ownerDocument !== document) {
       const lastPage = xpather.getElements(app.rule.pageElement).pop();
       if (lastPage) {
@@ -200,6 +197,9 @@
 
     pages.forEach(p => bin.appendChild(p));
     parent.insertBefore(bin, app.insertPoint);
+
+    app.loadedURLs.add(app.requestURL);
+    app.requestURL = nextUrl;
 
     statusShow({loading: false});
     onScroll();
