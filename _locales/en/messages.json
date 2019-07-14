@@ -128,6 +128,18 @@
   "status": {
     "message": "Status"
   },
+  "statusStyle": {
+    "message": "Status bar custom CSS"
+  },
+  "statusStyleLabel": {
+    "message": "Standard"
+  },
+  "statusStyleErrorLabel": {
+    "message": "Error"
+  },
+  "statusStyleInfo": {
+    "message": "Leave empty and save to use the defaults"
+  },
   "stop": {
     "message": "Stop"
   },

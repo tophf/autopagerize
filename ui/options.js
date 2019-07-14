@@ -5,7 +5,7 @@ export {
 
 import {arrayOrDummy, DEFAULTS, getCacheDate, getSettings, inBG} from '/util/common.js';
 import {$, onDomLoaded} from '/util/dom.js';
-import {collectRules, loadRules} from './options-rules.js';
+import {collectRules, loadRules, resizeArea} from './options-rules.js';
 
 const ValueTransform = {
   // params: (value, element)
@@ -17,6 +17,16 @@ const ValueTransform = {
       return arrayOrDummy(v).join('\n');
     },
     showStatus: v => v !== false,
+    statusStyle: (v, el) => {
+      const defaultValue = DEFAULTS[el._data.name];
+      el.placeholder = defaultValue;
+      el.closest('details').open |= Boolean(v);
+      el.addEventListener('focusin', resizeArea);
+      el.addEventListener('focusout', resizeArea);
+      el.addEventListener('input', resizeArea);
+      return v || defaultValue;
+    },
+    statusStyleError: (...args) => ValueTransform.render.statusStyle(...args),
     $boolean: v => v === true,
     $any: (v, el) => String(v !== undefined ? v : DEFAULTS[el._data.name]),
   },
@@ -26,6 +36,7 @@ const ValueTransform = {
     exclusions: el => el.value.trim().split(/\s+/),
     $boolean: el => el.checked,
     $number: el => el.valueAsNumber || DEFAULTS[el._data.name],
+    $string: el => el.value !== DEFAULTS[el._data.name] ? el.value : '',
   },
   find: (transforms, name, defaultValue) =>
     transforms[name] ||

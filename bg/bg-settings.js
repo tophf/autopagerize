@@ -13,7 +13,9 @@ async function writeSettings(ss) {
     const iframe = document.getElementsByTagName('iframe')[0];
     iframe && iframe.remove();
   }
-  const shouldNotify = PROPS_TO_NOTIFY.some(k => notFalse(all[k]) !== notFalse(ss[k]));
+  // showStatus defaults to |true| so both |undefined| and |true| mean the same
+  const shouldNotify = (all.showStatus !== false) !== (ss.showStatus !== false) ||
+                       PROPS_TO_NOTIFY.some(k => all[k] !== ss[k]);
   Object.assign(all, ss);
   chrome.storage.sync.set({settings: all});
   settings(all);
@@ -42,8 +44,4 @@ function notify(ss = settings()) {
 function passSettingsToContentScript(settings) {
   if (typeof run === 'function')
     window.run({settings});
-}
-
-function notFalse(val) {
-  return val !== false;
 }

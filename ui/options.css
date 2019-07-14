@@ -165,6 +165,12 @@ input[type="number"] {
   display: block;
   margin: .25em 0;
 }
+#styles label {
+  display: flex;
+}
+#styles label span {
+  min-width: 5em;
+}
 
 @media (prefers-color-scheme: dark) {
   body {

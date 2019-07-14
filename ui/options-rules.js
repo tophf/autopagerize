@@ -1,6 +1,7 @@
 export {
   collectRules,
   loadRules,
+  resizeArea,
   rulesEqual,
 };
 
@@ -14,8 +15,9 @@ let defaultAreaHeight;
 function loadRules(rules) {
 
   const rulesContainer = $.rules;
-  rulesContainer.addEventListener('focusin', expandArea);
-  rulesContainer.addEventListener('focusout', shrinkArea);
+  rulesContainer.addEventListener('focusin', resizeArea);
+  rulesContainer.addEventListener('focusout', resizeArea);
+  rulesContainer.addEventListener('input', resizeArea);
   rulesContainer.addEventListener('input', onInput);
   rulesContainer.addEventListener('click', onClick);
 
@@ -84,22 +86,32 @@ function addRules(rules) {
   return bin;
 }
 
-function expandArea(e) {
+function resizeArea(e) {
   const el = e.target;
   if (el.localName !== 'textarea')
     return;
   if (!defaultAreaHeight)
     defaultAreaHeight = el.offsetHeight;
-  const sh = el.scrollHeight;
-  if (sh > defaultAreaHeight * 1.5)
-    el.style.height = sh + 'px';
-}
-
-function shrinkArea(e) {
-  const el = e.target;
-  if (el.localName !== 'textarea' || !el.style.height)
-    return;
-  el.style.height = '';
+  switch (e.type) {
+    case 'focusin': {
+      const sh = el.scrollHeight;
+      if (sh > defaultAreaHeight * 1.5)
+        el.style.height = sh + 'px';
+      break;
+    }
+    case 'focusout': {
+      if (el.style.height)
+        el.style.height = '';
+      break;
+    }
+    case 'input': {
+      const sh = el.scrollHeight;
+      const oh = el.offsetHeight;
+      if (sh > oh + defaultAreaHeight / 2 || sh < oh)
+        el.style.height = sh > defaultAreaHeight ? sh + 'px' : '';
+      break;
+    }
+  }
 }
 
 function validateArea(el) {
@@ -126,13 +138,8 @@ function validateArea(el) {
 }
 
 function onInput({target: el}) {
-  if (el.localName !== 'textarea')
-    return;
-  validateArea(el);
-  const sh = el.scrollHeight;
-  const oh = el.offsetHeight;
-  if (sh > oh + defaultAreaHeight / 2 || sh < oh)
-    el.style.height = sh > defaultAreaHeight ? sh + 'px' : '';
+  if (el.localName === 'textarea')
+    validateArea(el);
 }
 
 function addRule(base) {

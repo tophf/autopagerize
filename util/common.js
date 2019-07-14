@@ -7,6 +7,22 @@ export const inBG = new Proxy({}, {
   },
 });
 
+const STATUS_STYLE = `
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 24px;
+  border: none;
+  opacity: .7;
+  z-index: 1000;
+  margin: 0;
+  padding: 0;
+  color: white;
+  font: bold 12px/24px sans-serif;
+  text-align: center;
+`.replace(/\n\s+/g, '\n').trim();
+
 export const DEFAULTS = Object.freeze({
   /** @type boolean */
   showStatus: true,
@@ -22,11 +38,17 @@ export const DEFAULTS = Object.freeze({
   exclusions: [],
   /** @type number - pixels */
   pageHeightThreshold: 400,
+  /** @type string */
+  statusStyle: STATUS_STYLE + '\nbackground: black;',
+  /** @type string */
+  statusStyleError: STATUS_STYLE + '\nbackground: maroon;',
 });
 
 // content scripts should be notified when these options are changed
 export const PROPS_TO_NOTIFY = [
   'showStatus',
+  'statusStyle',
+  'statusStyleError',
   'requestInterval',
   'pageHeightThreshold',
 ];

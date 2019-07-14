@@ -2,7 +2,7 @@ export {
   launch,
 };
 
-import {PROPS_TO_NOTIFY, execScript} from '/util/common.js';
+import {DEFAULTS, PROPS_TO_NOTIFY, execScript} from '/util/common.js';
 import {settings} from './bg.js';
 
 const RETRY_TIMEOUT = 2000;
@@ -37,8 +37,11 @@ async function launch({tabId, url, rules, lastTry}) {
     await execScript(tabId, {file: '/content/fix-yahoo.js'});
 
   const ss = {orphanMessageId: localStorage.orphanMessageId};
-  for (const name of PROPS_TO_NOTIFY)
-    ss[name] = settings()[name];
+  for (const name of PROPS_TO_NOTIFY) {
+    const v = settings()[name];
+    const def = DEFAULTS[name];
+    ss[name] = typeof def === 'string' ? v || def : v;
+  }
   await poke(tabId).doRun(ss);
 }
 

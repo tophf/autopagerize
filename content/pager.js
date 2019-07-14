@@ -39,6 +39,10 @@
     element: null,
     /** @type Number */
     timer: 0,
+    /** @type String */
+    style: '',
+    /** @type String */
+    styleError: '',
   };
 
   const filters = new Map();
@@ -273,28 +277,18 @@
     return el.getBoundingClientRect().bottom;
   }
 
+  function getStatusStyle(css = status.style) {
+    // strip all '!important', collapse ;; into ; and ensure ; at the end
+    return (css.replace(/[;\s]+$|!important/g, '').replace(/;{2,}/g, ';') + ';')
+      .replace(/;/g, '!important;');
+  }
+
   function statusCreate() {
     if (status.element && document.contains(status.element))
       return;
     status.element = Object.assign(document.createElement('div'), {
       id: 'autopagerize_message_bar',
-      style: important(`
-        display: none;
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        height: 24px;
-        border: none;
-        opacity: .7;
-        z-index: 1000;
-        margin: 0;
-        padding: 0;
-        color: white;
-        background: black;
-        font: bold 12px/24px sans-serif;
-        text-align: center;
-      `),
+      style: getStatusStyle() + 'display: none !important',
       textContent: chrome.i18n.getMessage('loading') + '...',
     });
     document.body.appendChild(status.element);
@@ -319,13 +313,13 @@
         statusCreate();
       else if (!status.enabled)
         return;
-      status.element.style.setProperty('background', 'black', 'important');
+      status.element.style = getStatusStyle();
 
     } else if (error !== undefined) {
       show = true;
       statusCreate();
       statusRemove(3000);
-      status.element.style.setProperty('background', 'maroon', 'important');
+      status.element.style = getStatusStyle(status.styleError);
       status.element.textContent = `${chrome.i18n.getMessage('error')}: ${error}`;
       removeScrollListener();
 
@@ -356,20 +350,16 @@
 
   function loadSettings(ss) {
     app.requestInterval = ss.requestInterval * 1000 || app.requestInterval;
-    status.enabled = notFalse(ss.showStatus);
+    status.enabled = ss.showStatus !== false;
     if (ss.orphanMessageId) {
       app.orphanMessageId = ss.orphanMessageId;
       dispatchEvent(new Event(app.orphanMessageId));
     }
     if (ss.pageHeightThreshold)
       app.pageHeightThreshold = ss.pageHeightThreshold;
-  }
-
-  function important(cssString) {
-    return cssString.replace(/;/g, '!important;');
-  }
-
-  function notFalse(val) {
-    return val !== false;
+    if (ss.statusStyle)
+      status.style = ss.statusStyle;
+    if (ss.statusStyleError)
+      status.styleError = ss.statusStyleError;
   }
 })();
