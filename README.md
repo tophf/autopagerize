@@ -31,11 +31,11 @@ New features in popup:
 * Load 1-100 more pages
 * Exclude current page URL/prefix/domain
 
-New features in options:
+New options:
 
-* Custom rules in options
-* Import/export of settings
-* Customizable page request interval
-* Dark theme
+* Custom rules
+* Ability to start the database update manually
+* Customizable internal parameters 
+* Import/export
 
-![options-dark](https://i.imgur.com/tHkuMmM.png)
+![options-dark](https://i.imgur.com/4GNQkYw.png)
