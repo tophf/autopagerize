@@ -9,9 +9,9 @@ export function onDomLoaded() {
 }
 
 if ('darkTheme' in localStorage) {
-  const link = [...document.getElementsByTagName('link')]
-    .filter(el => el.relList.contains('stylesheet'))
-    .pop();
+  // look for the theme in a css file named the same as the current page
+  const cssName = location.href.split('/').pop().replace(/html$/, 'css');
+  const link = document.querySelector(`link[href$="${cssName}"]`);
   link.onload = function () {
     this.onload = null;
     for (const rule of link.sheet.cssRules) {
