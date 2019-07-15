@@ -9,10 +9,12 @@ export function onDomLoaded() {
 }
 
 if ('darkTheme' in localStorage) {
-  const sheet = document.styleSheets[document.styleSheets.length - 1];
-  sheet.ownerNode.onload = function () {
+  const link = [...document.getElementsByTagName('link')]
+    .filter(el => el.relList.contains('stylesheet'))
+    .pop();
+  link.onload = function () {
     this.onload = null;
-    for (const rule of sheet.cssRules) {
+    for (const rule of link.sheet.cssRules) {
       if (rule.media && rule.media.mediaText === 'not all') {
         rule.media.deleteMedium(rule.media[0]);
         rule.media.appendMedium('screen');
@@ -20,6 +22,6 @@ if ('darkTheme' in localStorage) {
       }
     }
   };
-  if (sheet.cssRules.length)
-    sheet.ownerNode.onload();
+  if (link.sheet && link.sheet.cssRules.length)
+    link.onload();
 }
