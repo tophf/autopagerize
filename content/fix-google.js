@@ -2,13 +2,13 @@
 
 // show missing images in google news pages
 window.run({
-  filterName: 'fix-google-news',
+  filterName: 'fix-google',
   filter: doc => {
     const script = [...doc.getElementsByTagName('script')]
       .find(el => el.text.includes('_setImagesSrc'));
     if (!script)
       return;
-    const re = /(["'])(data:image.*?)\1[\s\S]*?(["'])(news-thumbnail-image-.*?)\3/g;
+    const re = /(["'])(data:image.*?)\1[\s\S]*?(["'])([\w-]+)\3\W+_setImagesSrc/g;
     let m;
     while ((m = re.exec(script.text))) {
       const [, /*quote*/, dataUrl, /*quote*/, id] = m;

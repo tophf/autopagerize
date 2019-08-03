@@ -26,9 +26,8 @@ async function launch({tabId, url, rules, lastTry}) {
     await poke(tabId, {file: '/content/pager.js'});
 
   if (url.includes('google.') &&
-      url.includes('tbm=nws') &&
-      /^https?:\/\/(www\.)?google(\.com?)?(\.\w\w)?\/search.*?[?&]tbm=nws/.test(url))
-    await execScript(tabId, {file: '/content/fix-google-news.js'});
+      /^https?:\/\/(www\.)?google(\.com?)?(\.\w\w)?\/.*?[?&#]q=[^&]+/.test(url))
+    await execScript(tabId, {file: '/content/fix-google.js'});
 
   if (url.startsWith('https://www.youtube.com/results'))
     await execScript(tabId, {file: '/content/fix-youtube.js'});
