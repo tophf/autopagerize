@@ -63,6 +63,9 @@
   document.dispatchEvent(new Event('GM_AutoPagerizeLoaded', {bubbles: true}));
 
   function maybeInit(rules, rule) {
+    // content scripts may get unloaded during setTimeout
+    if (!window.xpather)
+      return;
     if (app.loadedURLs.has(location.href))
       return true;
     if (!rule)
