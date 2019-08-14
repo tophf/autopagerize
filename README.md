@@ -1,4 +1,6 @@
-A fork of [Autopagerize for Chrome](https://github.com/swdyh/autopagerize_for_chrome), fully reworked to reduce memory consumption and increase performance:
+### A fork of [Autopagerize for Chrome](https://github.com/swdyh/autopagerize_for_chrome)
+ 
+Fully reworked to reduce memory consumption and increase performance:
 
 * the background page now auto-unloads when inactive
 * the content script is added to a web page only if its URL has a matching rule
@@ -16,7 +18,7 @@ A fork of [Autopagerize for Chrome](https://github.com/swdyh/autopagerize_for_ch
   * `*.foo.com/bar` - URLs that end in `foo.com/bar`
   * `*://*.foo.com/bar*` - URLs that contain `foo.com/bar` anywhere
 
-New features:
+### New features:
 
 * Configurable hotkeys chrome://extensions/shortcuts:
   * On/Off switch
@@ -26,12 +28,12 @@ New features:
 
 ![popup](https://i.imgur.com/8tqVUxs.png) ![popup-dark](https://i.imgur.com/aV2cyw8.png)
 
-New features in popup:
+### New features in popup:
 
 * Load 1-100 more pages
 * Exclude current page URL/prefix/domain
 
-New options:
+### New options:
 
 * Custom rules
 * Ability to start the database update manually
@@ -39,3 +41,24 @@ New options:
 * Import/export
 
 ![options-dark](https://i.imgur.com/4GNQkYw.png)
+
+### Permissions:
+
+* `wedata.net` - used to update the database of pagination rules from http://wedata.net/databases/AutoPagerize/items_all.json which is stripped of everything except XPath selectors for the page elements and RegExp for the page URL
+* `<all_urls>` - required to paginate while you browse according to the database of rules (technically, to find the "next page" and "page body" elements)
+* `webNavigation` - to schedule a pagination check when you navigate to a new URL
+* `contextMenus` - to add an "On/off" item to the context menu of the extension icon in the browser toolbar 
+* `storage` - to store the options of the extension
+* `tabs` - most notably to restart the paging functionality on extension update, also to notify the tabs that match the URL that you've just manually excluded in the popup  
+
+### How to limit the site permissions 
+
+Chrome allows you to easily limit the extension so it can access only a few sites:
+
+1. right-click the extension icon in the toolbar (or browser menu) and click "Manage" - it'll open `chrome://extensions` details page for this extension 
+2. click "On specific sites"
+3. enter the URL you want to allow
+4. to add more sites click "Add a new page"
+5. add `http://wedata.net` to keep the database of rules up-to-date. 
+
+![limit UI](https://i.imgur.com/F2nqVdL.png)
