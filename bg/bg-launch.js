@@ -66,7 +66,8 @@ const CONTENT_SCRIPT_CODE = {
       };
     } else {
       window.retryTimer = setTimeout(() => {
-        delete window.xpather;
+        if (typeof run !== 'function')
+          delete window.xpather;
       }, retryTimeout * 1.5);
     }
   },
