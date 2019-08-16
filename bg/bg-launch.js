@@ -54,6 +54,8 @@ const CONTENT_SCRIPT_CODE = {
     return typeof (window.xpather || {}).getMatchingRule === 'function';
   },
   checkRules: function (rules, retryTimeout) {
+    if (typeof (window.xpather || {}).getMatchingRule !== 'function')
+      return;
     const r = window.xpather.getMatchingRule(rules);
     if (r) {
       clearTimeout(window.retryTimer);
