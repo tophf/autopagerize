@@ -54,14 +54,27 @@ function initEndpoints() {
   /** @typedef EndPoints */
   const EndPoints = {
 
+    keepAlive: () => new Promise(keepAlive),
+
     launched: (_, sender) => {
       const tabId = sender.tab.id;
       chrome.browserAction.setPopup({tabId, popup: '/ui/popup.html'});
       import('./bg-icon.js').then(m => m.setIcon({tabId}));
     },
 
-    writeSettings: async ss => {
-      await (await import('./bg-settings.js')).writeSettings(ss);
+    reinject: () => new Promise(resolve => {
+      chrome.tabs.query({active: true, currentWindow: true}, ([{id, url}]) => {
+        onNavigation({url, tabId: id, frameId: 0})
+          .then(resolve);
+      });
+    }),
+
+    setIcon: async cfg => {
+      await (await import('./bg-icon.js')).setIcon(cfg);
+    },
+
+    switchGlobalState: async state => {
+      await (await import('./bg-switch.js')).switchGlobalState(state);
     },
 
     updateSiteinfo: async portName => {
@@ -74,21 +87,8 @@ function initEndpoints() {
       return result >= 0 ? result : String(result);
     },
 
-    switchGlobalState: async state => {
-      await (await import('./bg-switch.js')).switchGlobalState(state);
-    },
-
-    keepAlive: () => new Promise(keepAlive),
-
-    reinject: () => new Promise(resolve => {
-      chrome.tabs.query({active: true, currentWindow: true}, ([{id, url}]) => {
-        onNavigation({url, tabId: id, frameId: 0})
-          .then(resolve);
-      });
-    }),
-
-    setIcon: async cfg => {
-      await (await import('./bg-icon.js')).setIcon(cfg);
+    writeSettings: async ss => {
+      await (await import('./bg-settings.js')).writeSettings(ss);
     },
   };
   Object.setPrototypeOf(EndPoints, null);
