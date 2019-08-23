@@ -3,7 +3,7 @@ export {
 };
 
 import {DEFAULTS, execScript, ignoreLastError, isAppEnabled} from '/util/common.js';
-import {lastAliveTime, onNavigation, settings} from './bg.js';
+import {globalRules, lastAliveTime, loadGlobalRules, onNavigation, settings} from './bg.js';
 
 let _endpoints;
 
@@ -54,6 +54,9 @@ function initEndpoints() {
   /** @typedef EndPoints */
   const EndPoints = {
 
+    isUrlExcluded: async (url, list) =>
+      (await import('/bg/bg-util.js')).isUrlExcluded(url, list),
+
     keepAlive: () => new Promise(keepAlive),
 
     launched: (_, sender) => {
@@ -76,6 +79,13 @@ function initEndpoints() {
     switchGlobalState: async state => {
       await (await import('./bg-switch.js')).switchGlobalState(state);
     },
+
+    tryGenericRules: async tab =>
+      (await import('./bg-launch.js')).launch({
+        ...tab,
+        rules: globalRules() || await loadGlobalRules(),
+        lastTry: 'genericRules',
+      }),
 
     updateSiteinfo: async portName => {
       const port = chrome.runtime.connect({name: portName});

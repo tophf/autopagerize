@@ -2,6 +2,7 @@ export {
   calcRuleKey,
   calcUrlCacheKey,
   isUrlExcluded,
+  isUrlMatched,
   ruleKeyToUrl,
 };
 
@@ -15,12 +16,17 @@ import {settings} from './bg.js';
 
 // N.B. requires 'settings' to be already loaded when no 'exclusions' were supplied
 function isUrlExcluded(url, exclusions) {
-  if (url.startsWith('https://mail.google.com/') ||
-      url.startsWith('http://b.hatena.ne.jp/') ||
-      url.startsWith('https://www.facebook.com/plugins/like.php') ||
-      url.startsWith('http://api.tweetmeme.com/button.js'))
-    return true;
-  for (const entry of arrayOrDummy(exclusions || settings().exclusions)) {
+  return (
+    url.startsWith('https://mail.google.com/') ||
+    url.startsWith('http://b.hatena.ne.jp/') ||
+    url.startsWith('https://www.facebook.com/plugins/like.php') ||
+    url.startsWith('http://api.tweetmeme.com/button.js') ||
+    isUrlMatched(url, exclusions || settings().exclusions)
+  );
+}
+
+function isUrlMatched(url, patterns) {
+  for (const entry of arrayOrDummy(patterns)) {
     const isRegexp = entry.startsWith('/') && entry.endsWith('/');
     if (!isRegexp) {
       if (url === entry || url.endsWith('/') && url === entry + '/')
@@ -32,12 +38,12 @@ function isUrlExcluded(url, exclusions) {
         return true;
     }
     const rx = str2rx.get(entry);
-    if (rx !== null && (rx || compileExclusion(entry, isRegexp)).test(url))
+    if (rx !== null && (rx || compilePattern(entry, isRegexp)).test(url))
       return true;
   }
 }
 
-function compileExclusion(str, isRegexp) {
+function compilePattern(str, isRegexp) {
   let rx;
   try {
     const rxStr = isRegexp

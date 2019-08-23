@@ -2,11 +2,13 @@ export {
   launch,
 };
 
-import {DEFAULTS, PROPS_TO_NOTIFY, execScript} from '/util/common.js';
+import {DEFAULTS, PROPS_TO_NOTIFY, RETRY_TIMEOUT, execScript} from '/util/common.js';
 import {settings} from './bg.js';
 
-const RETRY_TIMEOUT = 2000;
-
+/**
+ * @return {Promise<boolean?>}
+ * true if there's an applicable rule (used by lastTry='genericRules' mode)
+ */
 async function launch({tabId, url, rules, lastTry}) {
   if (!await poke(tabId).checkDeps()) {
     // no deps while retrying means the tab got navigated away
@@ -19,8 +21,8 @@ async function launch({tabId, url, rules, lastTry}) {
   const rr = await poke(tabId).checkRules(rules, !lastTry && RETRY_TIMEOUT) || {};
   if (!rr.hasRule && !lastTry)
     return new Promise(r => setTimeout(retry, RETRY_TIMEOUT, r, arguments[0]));
-  if (!rr.hasRule)
-    return;
+  if (!rr.hasRule || lastTry === 'genericRules')
+    return rr.hasRule;
 
   if (!rr.hasRun)
     await poke(tabId, {file: '/content/pager.js'});

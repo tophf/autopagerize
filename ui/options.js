@@ -10,12 +10,6 @@ import {collectRules, loadRules, resizeArea} from './options-rules.js';
 const ValueTransform = {
   // params: (value, element)
   render: {
-    exclusions: (v, el) => {
-      // set rows if first time init
-      if (el._data.savedValue === undefined)
-        el.rows = Math.max(2, Math.min(20, arrayOrDummy(v).length + 1));
-      return arrayOrDummy(v).join('\n');
-    },
     showStatus: v => v !== false,
     statusStyle: (v, el) => {
       const defaultValue = DEFAULTS[el._data.name];
@@ -27,20 +21,26 @@ const ValueTransform = {
       return v || defaultValue;
     },
     statusStyleError: (...args) => ValueTransform.render.statusStyle(...args),
+    $array: (v, el) => {
+      // set rows if first time init
+      if (el._data.savedValue === undefined)
+        el.rows = Math.max(2, Math.min(20, arrayOrDummy(v).length + 1));
+      return arrayOrDummy(v).join('\n').trim();
+    },
     $boolean: v => v === true,
     $any: (v, el) => String(v !== undefined ? v : DEFAULTS[el._data.name]),
   },
   // params: (element)
   parse: {
     rules: () => collectRules(),
-    exclusions: el => el.value.trim().split(/\s+/),
+    $array: el => el.value.trim().split(/\s+/),
     $boolean: el => el.checked,
     $number: el => el.valueAsNumber || DEFAULTS[el._data.name],
     $string: el => el.value !== DEFAULTS[el._data.name] ? el.value : '',
   },
   find: (transforms, name, defaultValue) =>
     transforms[name] ||
-    transforms['$' + typeof defaultValue] ||
+    transforms[`$${Array.isArray(defaultValue) ? 'array' : typeof defaultValue}`] ||
     transforms.$any,
 };
 

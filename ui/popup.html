@@ -25,11 +25,17 @@
   <section class="hide-when-failed full-width" id="excludeSection">
     <details>
       <summary tl>exclude</summary>
-      <ul>
+      <ul id="specificity">
         <li><a tl href="#" data-type="url">excludeUrl</a></li>
         <li><a tl href="#" data-type="prefix">excludeUrlPrefix</a></li>
         <li><a tl href="#" data-type="domain">excludeDomain</a></li>
       </ul>
+    </details>
+  </section>
+  <section class="full-width" id="genericRulesSection" disabled hidden>
+    <details>
+      <summary tl>genericRules</summary>
+      <span id="grSlot"></span><!--copied from exclusions-->
     </details>
   </section>
   <section class="hide-when-failed full-width" id="loadMoreSection">

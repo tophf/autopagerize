@@ -39,14 +39,17 @@ function renderStatus() {
 }
 
 async function renderFailure() {
-  let msg;
-  if (!tab.url.startsWith('http'))
-    msg = 'failedUnsupported';
-  else {
-    const [{exclusions}, bgUtil] = await Promise.all([getSettings(), import('/bg/bg-util.js')]);
-    msg = await bgUtil.isUrlExcluded(tab.url, exclusions) ? 'failedExcluded' : 'failedUnpageable';
-  }
-  $.failure.textContent = i18n(msg);
+  const url = tab.url;
+  const isWebUrl = url.startsWith('http');
+  if (isWebUrl)
+    inBG.tryGenericRules({tabId: tab.id, url}).then(ok =>
+      ok && import('./popup-generic-rules.js'));
+  $.failure.textContent = i18n(
+    !isWebUrl ?
+      'failedUnsupported' :
+      await inBG.isUrlExcluded(url, (await getSettings()).exclusions) ?
+        'failedExcluded' :
+        'failedUnpageable');
 }
 
 function toggled() {

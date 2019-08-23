@@ -4,6 +4,7 @@ export const cacheKeys = new Map();
 export let lastAliveTime;
 export {
   globalRules,
+  loadGlobalRules,
   onNavigation,
   observeNavigation,
   settings,
@@ -18,10 +19,11 @@ import {
   isAppEnabled,
 } from '/util/common.js';
 import {endpoints} from './bg-api.js';
-import {calcUrlCacheKey, isUrlExcluded} from './bg-util.js';
+import {calcUrlCacheKey, isUrlExcluded, isUrlMatched} from './bg-util.js';
 
 const processing = new Map();
 let _globalRules = null;
+/** @type Settings */
 let _settings = null;
 
 if (getCacheDate() + CACHE_DURATION < Date.now())
@@ -75,7 +77,8 @@ async function maybeLaunch(tabId, url) {
   const rules =
     packedRules && await (await import('./bg-unpack.js')).unpackRules(packedRules) ||
     await (await import('./bg-filter.js')).filterCache(url, key, packedRules);
-  rules.push(..._globalRules || await loadGlobalRules());
+  if (_settings.genericRulesEnabled && isUrlMatched(url, _settings.genericSites))
+    rules.push(..._globalRules || await loadGlobalRules());
   if (rules.length)
     await (await import('./bg-launch.js')).launch({tabId, url, rules});
 }

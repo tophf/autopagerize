@@ -1,5 +1,7 @@
 // inline 'export' keyword is used since everything in this module is expected to be exported
 
+export const RETRY_TIMEOUT = 2000;
+
 export const inBG = new Proxy({}, {
   get(_, action) {
     return data =>
@@ -23,24 +25,31 @@ const STATUS_STYLE = `
   text-align: center;
 `.replace(/\n\s+/g, '\n').trim();
 
+/**
+ @typedef Settings
+ @property {boolean} showStatus
+ @property {boolean} darkTheme
+ @property {number} requestInterval - seconds
+ @property {number} unloadAfter - minutes
+ @property {Object[]} rules
+ @property {boolean} genericRulesEnabled
+ @property {string[]} genericSites
+ @property {string[]} exclusions
+ @property {number} pageHeightThreshold - pixels
+ @property {string} statusStyle
+ @property {string} statusStyleError
+ */
 export const DEFAULTS = Object.freeze({
-  /** @type boolean */
   showStatus: true,
-  /** @type boolean */
   darkTheme: false,
-  /** @type number - seconds */
   requestInterval: 2,
-  /** @type number - minutes */
   unloadAfter: 1,
-  /** @type object[] */
   rules: [],
-  /** @type string[] */
+  genericRulesEnabled: false,
+  genericSites: ['*'],
   exclusions: [],
-  /** @type number - pixels */
   pageHeightThreshold: 400,
-  /** @type string */
   statusStyle: STATUS_STYLE + '\nbackground: black;',
-  /** @type string */
   statusStyleError: STATUS_STYLE + '\nbackground: maroon;',
 });
 
@@ -53,6 +62,7 @@ export const PROPS_TO_NOTIFY = [
   'pageHeightThreshold',
 ];
 
+/** @return Promise<Settings> */
 export function getSettings() {
   return new Promise(resolve => {
     chrome.storage.sync.get('settings', data => {

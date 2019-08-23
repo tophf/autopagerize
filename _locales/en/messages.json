@@ -65,6 +65,18 @@
   "failedUnsupported": {
     "message": "Browser UI or extension pages aren't supported"
   },
+  "genericRules": {
+    "message": "Generic rules"
+  },
+  "genericRulesEnableHint": {
+    "message": "Enable it in the options first, please"
+  },
+  "genericRulesEnabled": {
+    "message": "Enable generic rules on sites/patterns"
+  },
+  "genericRulesInfo": {
+    "message": "<*> means all, other examples are under the excluded pages below"
+  },
   "hotkeys": {
     "message": "Hotkeys"
   },

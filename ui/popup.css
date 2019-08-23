@@ -48,6 +48,11 @@ a:hover {
   white-space: nowrap;
 }
 
+#genericRulesSection[disabled] #grSlot::after {
+  content: "__MSG_genericRulesEnableHint__";
+  opacity: .5;
+}
+
 #loadMoreSection.disabled #loadStop {
   display: initial;
 }

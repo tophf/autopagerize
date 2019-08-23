@@ -1,26 +1,19 @@
+export {
+  applyPerSite,
+  updateSpecificity,
+};
+
 import {arrayOrDummy, execScript, getSettings, inBG} from '/util/common.js';
 import {$} from '/util/dom.js';
 import * as popup from './popup.js';
 
-if (popup.tab.url)
-  updateTitles();
-else
-  addEventListener('gotTab', updateTitles, {once: true});
+$.excludeSection.addEventListener('click', updateSpecificity, {once: true});
 
 async function exclude(e) {
   e.preventDefault();
 
-  const ss = await getSettings();
   const pattern = e.target.title;
-  const exclusions = arrayOrDummy(ss.exclusions);
-  if (!exclusions.includes(pattern)) {
-    exclusions.push(pattern);
-    inBG.writeSettings({exclusions});
-  }
-
-  let path = chrome.runtime.getManifest().browser_action.default_popup;
-  if (!path.startsWith('/'))
-    path = '/' + path;
+  await applyPerSite(pattern);
 
   const runTerminate = {
     code: `(${() => {
@@ -28,6 +21,10 @@ async function exclude(e) {
         window.run({terminate: true});
     }})()`,
   };
+
+  let path = chrome.runtime.getManifest().browser_action.default_popup;
+  if (!path.startsWith('/'))
+    path = '/' + path;
 
   for (const {id: tabId} of await findExcludedTabs(pattern)) {
     await Promise.all([
@@ -40,9 +37,18 @@ async function exclude(e) {
   location.assign(path);
 }
 
-function updateTitles() {
+async function applyPerSite(pattern, listType = 'exclusions') {
+  const ss = await getSettings();
+  const list = arrayOrDummy(ss[listType]);
+  if (!list.includes(pattern)) {
+    list.push(pattern);
+    inBG.writeSettings({[listType]: list});
+  }
+}
+
+function updateSpecificity() {
   const {url} = popup.tab;
-  for (const el of $.excludeSection.querySelectorAll('a')) {
+  for (const el of $.specificity.querySelectorAll('a')) {
     const {type} = el.dataset;
     el.title =
       type === 'url' ? url :
@@ -50,6 +56,7 @@ function updateTitles() {
           type === 'domain' ? new URL(url).origin + '/*' : '';
     el.onclick = exclude;
   }
+  $.specificity.dataset.ready = '';
 }
 
 function findExcludedTabs(pattern) {
