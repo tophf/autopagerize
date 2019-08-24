@@ -1,17 +1,17 @@
 export {
-  buildGlobalRules,
+  buildGenericRules,
 };
 
-import {isGlobalUrl} from '/util/common.js';
-import {cache, cacheKeys, globalRules} from './bg.js';
+import {isGenericUrl} from '/util/common.js';
+import {cache, cacheKeys, genericRules} from './bg.js';
 
-async function buildGlobalRules() {
+async function buildGenericRules() {
   if (!cacheKeys.size)
     await (await import('./bg-filter.js')).loadCacheKeys();
   const toRead = [];
   const rules = [];
   for (const key of cacheKeys.values()) {
-    if (isGlobalUrl(key.url)) {
+    if (isGenericUrl(key.url)) {
       const rule = cache.get(key.id);
       if (!rule)
         toRead.push([rules.length, key.id]);
@@ -20,6 +20,6 @@ async function buildGlobalRules() {
   }
   if (toRead.length)
     await (await import('./bg-unpack.js')).readMissingRules(rules, toRead);
-  chrome.storage.local.set({globalRules: rules});
-  return globalRules(rules);
+  chrome.storage.local.set({genericRules: rules});
+  return genericRules(rules);
 }

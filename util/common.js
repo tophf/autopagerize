@@ -90,7 +90,7 @@ export function setCacheDate(d = Date.now()) {
   localStorage.cacheDate = d;
 }
 
-export function isGlobalUrl(url) {
+export function isGenericUrl(url) {
   return url === '^https?://.' ||
          url === '^https?://.+';
 }

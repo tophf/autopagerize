@@ -3,8 +3,8 @@ export const cache = new Map();
 export const cacheKeys = new Map();
 export let lastAliveTime;
 export {
-  globalRules,
-  loadGlobalRules,
+  genericRules,
+  loadGenericRules,
   onNavigation,
   observeNavigation,
   settings,
@@ -22,7 +22,7 @@ import {endpoints} from './bg-api.js';
 import {calcUrlCacheKey, isUrlExcluded, isUrlMatched} from './bg-util.js';
 
 const processing = new Map();
-let _globalRules = null;
+let _genericRules = null;
 /** @type Settings */
 let _settings = null;
 
@@ -39,8 +39,8 @@ if (!localStorage.orphanMessageId)
     localStorage.orphanMessageId = chrome.runtime.id + ':' + etag;
   });
 
-function globalRules(v) {
-  return v ? (_globalRules = v) : _globalRules;
+function genericRules(v) {
+  return v ? (_genericRules = v) : _genericRules;
 }
 
 function settings(v) {
@@ -78,7 +78,7 @@ async function maybeLaunch(tabId, url) {
     packedRules && await (await import('./bg-unpack.js')).unpackRules(packedRules) ||
     await (await import('./bg-filter.js')).filterCache(url, key, packedRules);
   if (_settings.genericRulesEnabled && isUrlMatched(url, _settings.genericSites))
-    rules.push(..._globalRules || await loadGlobalRules());
+    rules.push(..._genericRules || await loadGenericRules());
   if (rules.length)
     await (await import('./bg-launch.js')).launch({tabId, url, rules});
 }
@@ -94,10 +94,10 @@ function maybeKeepAlive() {
     iframe.remove();
 }
 
-async function loadGlobalRules() {
-  return globalRules(
-    await getLocal('globalRules') ||
-    await (await import('./bg-global-rules.js')).buildGlobalRules());
+async function loadGenericRules() {
+  return genericRules(
+    await getLocal('genericRules') ||
+    await (await import('./bg-generic-rules.js')).buildGenericRules());
 }
 
 function tabNeedsDisabling() {

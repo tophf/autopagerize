@@ -3,7 +3,7 @@ export {
   loadCacheKeys,
 };
 
-import {arrayOrDummy, isGlobalUrl} from '/util/common.js';
+import {arrayOrDummy, isGenericUrl} from '/util/common.js';
 import * as idb from '/util/storage-idb.js';
 import {ruleKeyToUrl, str2rx} from './bg-util.js';
 import {cache, cacheKeys, settings} from './bg.js';
@@ -30,7 +30,7 @@ async function filterCache(url, urlCacheKey, packedRules) {
   }
   for (const key of cacheKeys.values()) {
     const {rx} = key;
-    if (!isGlobalUrl(key.url) && rx &&
+    if (!isGenericUrl(key.url) && rx &&
         (!rx.txt
           ? rx.test(url)
           : (rx.atStart ? url.startsWith(rx.txt) : url.includes(rx.txt)) ||

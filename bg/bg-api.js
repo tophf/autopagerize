@@ -3,7 +3,7 @@ export {
 };
 
 import {DEFAULTS, execScript, ignoreLastError, isAppEnabled} from '/util/common.js';
-import {globalRules, lastAliveTime, loadGlobalRules, onNavigation, settings} from './bg.js';
+import {genericRules, lastAliveTime, loadGenericRules, onNavigation, settings} from './bg.js';
 
 let _endpoints;
 
@@ -83,7 +83,7 @@ function initEndpoints() {
     tryGenericRules: async tab =>
       (await import('./bg-launch.js')).launch({
         ...tab,
-        rules: globalRules() || await loadGlobalRules(),
+        rules: genericRules() || await loadGenericRules(),
         lastTry: 'genericRules',
       }),
 
