@@ -25,19 +25,6 @@ export function onDomLoaded() {
 }
 
 if ('darkTheme' in localStorage) {
-  // look for the theme in a css file named the same as the current page
-  const cssName = location.href.split('/').pop().replace(/html$/, 'css');
-  const link = document.querySelector(`link[href$="${cssName}"]`);
-  link.onload = function () {
-    this.onload = null;
-    for (const rule of link.sheet.cssRules) {
-      if (rule.media && rule.media.mediaText === 'not all') {
-        rule.media.deleteMedium(rule.media[0]);
-        rule.media.appendMedium('screen');
-        return;
-      }
-    }
-  };
-  if (link.sheet && link.sheet.cssRules.length)
-    link.onload();
+  for (const el of $$('link[media*="prefers-color-scheme: dark"]'))
+    el.media = 'screen';
 }

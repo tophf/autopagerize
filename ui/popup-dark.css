@@ -1,0 +1,32 @@
+body {
+  background-color: #333;
+  color: #aaa;
+}
+a {
+  color: skyblue;
+}
+select {
+  color: #bbb;
+  background-color: #222;
+  border-color: #111;
+}
+section[data-status="true"] {
+  background-color: seagreen;
+  color: #fff;
+}
+section[data-status="false"] {
+  background-color: #555;
+  color: #fff;
+}
+section:nth-child(n + 3) {
+  border-color: #222;
+}
+button {
+  background: linear-gradient(-15deg, #333, #666);
+  border: 1px solid #000;
+  color: #eee;
+}
+#failure {
+  color: #caa794;
+  background-color: #f802;
+}

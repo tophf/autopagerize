@@ -1,0 +1,34 @@
+body {
+  background-color: #222;
+  color: #999;
+}
+code,
+.desc pre,
+#size,
+#date {
+  color: darkseagreen;
+}
+button {
+  background: linear-gradient(-10deg, #333, #555);
+  border: 1px solid #181818;
+  border-radius: 3px;
+  color: #eee;
+  padding: .4em 1em .35em;
+  box-shadow: 1px 1px 3px #0003;
+}
+summary {
+  color: #bbb;
+}
+input[type="text"],
+input[type="number"],
+textarea {
+  color: #aaa;
+  background-color: #181818;
+  border-color: #333;
+}
+textarea:focus {
+  color: #ddd;
+}
+.rule:not(:last-child) {
+  border-bottom-color: #444;
+}
