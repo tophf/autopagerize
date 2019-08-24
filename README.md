@@ -1,5 +1,7 @@
 ### A fork of [Autopagerize for Chrome](https://github.com/swdyh/autopagerize_for_chrome)
  
+<img align="right" src="https://i.imgur.com/6wWETeo.png">
+
 Fully reworked to reduce memory consumption and increase performance:
 
 * the background page now auto-unloads when inactive
@@ -10,8 +12,9 @@ Fully reworked to reduce memory consumption and increase performance:
 * IndexedDB is used to store the data objects directly whereas the previously used localStorage serialized them into a string 
 * Simple one-time messaging and in-place code execution is used when needed instead of the persistent communication ports that were created for all the browser tabs
 
-<img align="right" src="https://i.imgur.com/6wWETeo.png">Differences to the original:
+### Differences to the original:
 
+* Generic rules are disabled by default and can be re-enabled per site/pattern (a `*` pattern that matches all sites may be used to restore the old behavior) in the options or the popup. This is because these rules (currently there are three) seem to be useless as the popular sites all have a custom rule, while breaking the page layout on less popular sites a bit too often.
 * Exclusions are matched to the full URL now unless there's a `*` at the end. The original extension has been incorrectly treating all non-regexp URLs as prefixes.
   * `http://foo.com/bar` - this exact URL
   * `http://foo.com/bar*` - URLs that start with `http://foo.com/bar`
@@ -32,6 +35,7 @@ Fully reworked to reduce memory consumption and increase performance:
 
 * Load 1-100 more pages
 * Exclude current page URL/prefix/domain
+* Enable generic rules for current page URL/prefix/domain
 
 ### New options:
 
