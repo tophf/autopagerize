@@ -2,7 +2,7 @@ export {
   writeSettings,
 };
 
-import {PROPS_TO_NOTIFY, getSettings, ignoreLastError} from '/util/common.js';
+import {getSettings, ignoreLastError, PROPS_TO_NOTIFY} from '/util/common.js';
 import {settings} from './bg.js';
 
 async function writeSettings(ss) {
@@ -16,8 +16,12 @@ async function writeSettings(ss) {
   // showStatus defaults to |true| so both |undefined| and |true| mean the same
   const shouldNotify = (all.showStatus !== false) !== (ss.showStatus !== false) ||
                        PROPS_TO_NOTIFY.some(k => all[k] !== ss[k]);
+  const toWrite = {};
+  for (const k in ss)
+    if (!deepEqual(ss[k], all[k]))
+      toWrite[k] = ss[k];
+  chrome.storage.sync.set(toWrite);
   Object.assign(all, ss);
-  chrome.storage.sync.set({settings: all});
   settings(all);
   mirrorThemePreference();
   if (shouldNotify)
@@ -44,4 +48,18 @@ function notify(ss = settings()) {
 function passSettingsToContentScript(settings) {
   if (typeof run === 'function')
     window.run({settings});
+}
+
+function deepEqual(a, b) {
+  if (typeof a !== typeof b)
+    return false;
+  if (!a || !b || typeof a !== 'object')
+    return a === b;
+  if (Array.isArray(a))
+    return Array.isArray(b) &&
+           a.length === b.length &&
+           a.every((v, i) => deepEqual(v, b[i]));
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length &&
+         keys.every(k => deepEqual(a[k], b[k]));
 }

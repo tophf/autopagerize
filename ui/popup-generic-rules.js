@@ -5,7 +5,7 @@ import * as popup from './popup.js';
 
 $('#genericRulesSection').hidden = false;
 $('#genericRulesSection').addEventListener('click', async () => {
-  if ((await getSettings()).genericRulesEnabled) {
+  if (await getSettings('genericRulesEnabled')) {
     $('#genericRulesSection').removeAttribute('disabled');
     if (!$('#specificity').dataset.ready)
       updateSpecificity();

@@ -118,7 +118,7 @@ function renderDate(date) {
 async function save() {
   const settings = await getSettings();
   const ss = collectSettings();
-  const task = inBG.writeSettings({...settings, ...ss});
+  const task = inBG.writeSettings(ss);
   if (ss.darkTheme !== settings.darkTheme) {
     await task;
     location.reload();

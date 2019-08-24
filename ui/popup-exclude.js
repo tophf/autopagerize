@@ -38,8 +38,7 @@ async function exclude(e) {
 }
 
 async function applyPerSite(pattern, listType = 'exclusions') {
-  const ss = await getSettings();
-  const list = arrayOrDummy(ss[listType]);
+  const list = arrayOrDummy(await getSettings(listType));
   if (!list.includes(pattern)) {
     list.push(pattern);
     inBG.writeSettings({[listType]: list});

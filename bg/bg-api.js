@@ -18,6 +18,7 @@ chrome.contextMenus.create({
 chrome.contextMenus.onClicked.addListener(onChromeMenu);
 chrome.commands.onCommand.addListener(onChromeCommand);
 chrome.runtime.onMessage.addListener(onRuntimeMessage);
+chrome.runtime.onInstalled.addListener(onInstalled);
 
 function onChromeMenu(info) {
   endpoints().switchGlobalState(info.checked);
@@ -48,6 +49,22 @@ function onRuntimeMessage(msg, sender, sendResponse) {
   }
   if (result !== undefined)
     sendResponse(result);
+}
+
+function onInstalled(info) {
+  if (info.reason === 'update') {
+    chrome.storage.sync.get('settings', ({settings}) => {
+      if (settings !== undefined) {
+        chrome.storage.sync.remove('settings');
+        if (settings) {
+          const toWrite = {};
+          for (const k in DEFAULTS)
+            toWrite[k] = settings[k];
+          chrome.storage.sync.set(toWrite);
+        }
+      }
+    });
+  }
 }
 
 function initEndpoints() {

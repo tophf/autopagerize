@@ -62,12 +62,14 @@ export const PROPS_TO_NOTIFY = [
   'pageHeightThreshold',
 ];
 
-/** @return Promise<Settings> */
-export function getSettings() {
+/**
+ * @param {string|string[]} key
+ * @return Promise<any|Settings>
+ */
+export function getSettings(key = Object.keys(DEFAULTS)) {
   return new Promise(resolve => {
-    chrome.storage.sync.get('settings', data => {
-      const v = data.settings;
-      resolve(v && typeof v === 'object' ? v : {});
+    chrome.storage.sync.get(key, ss => {
+      resolve(Array.isArray(key) ? ss : ss[key]);
     });
   });
 }

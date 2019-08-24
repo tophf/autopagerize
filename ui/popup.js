@@ -53,7 +53,7 @@ async function renderFailure() {
   $('#failure').textContent = i18n(
     !isWebUrl ?
       'failedUnsupported' :
-      await inBG.isUrlExcluded(url, (await getSettings()).exclusions) ?
+      await inBG.isUrlExcluded(url, await getSettings('exclusions')) ?
         'failedExcluded' :
         'failedUnpageable');
 }
