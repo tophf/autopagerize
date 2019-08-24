@@ -8,21 +8,27 @@ import {i18n} from '/util/locale.js';
 chrome.tabs.query({active: true, currentWindow: true}, tabs => {
   tab = tabs[0];
   dispatchEvent(new Event('gotTab'));
-  if (window.failedPage && $.failure)
+  if (window.failedPage && $('#failure'))
     renderFailure();
 });
 
 onDomLoaded().then(() => {
-  $.status.checked = isAppEnabled();
-  $.status.onchange = toggled;
-  $.hotkeys.onclick = function (e) {
-    chrome.tabs.create({url: this.href});
-    e.preventDefault();
-  };
-  $.openOptions.onclick = e => {
-    chrome.runtime.openOptionsPage();
-    e.preventDefault();
-  };
+  Object.assign($('#status'), {
+    checked: isAppEnabled(),
+    onchange: toggled,
+  });
+  Object.assign($('#hotkeys'), {
+    onclick(e) {
+      chrome.tabs.create({url: this.href});
+      e.preventDefault();
+    },
+  });
+  Object.assign($('#openOptions'), {
+    onclick(e) {
+      chrome.runtime.openOptionsPage();
+      e.preventDefault();
+    },
+  });
   renderStatus();
   if (window.failedPage && tab.url) {
     renderFailure();
@@ -33,9 +39,9 @@ onDomLoaded().then(() => {
 });
 
 function renderStatus() {
-  const enabled = $.status.checked;
-  $.status.closest('[data-status]').dataset.status = enabled;
-  $.statusText.textContent = i18n(enabled ? 'on' : 'off');
+  const enabled = $('#status').checked;
+  $('#status').closest('[data-status]').dataset.status = enabled;
+  $('#statusText').textContent = i18n(enabled ? 'on' : 'off');
 }
 
 async function renderFailure() {
@@ -44,7 +50,7 @@ async function renderFailure() {
   if (isWebUrl)
     inBG.tryGenericRules({tabId: tab.id, url}).then(ok =>
       ok && import('./popup-generic-rules.js'));
-  $.failure.textContent = i18n(
+  $('#failure').textContent = i18n(
     !isWebUrl ?
       'failedUnsupported' :
       await inBG.isUrlExcluded(url, (await getSettings()).exclusions) ?
@@ -53,6 +59,6 @@ async function renderFailure() {
 }
 
 function toggled() {
-  inBG.switchGlobalState($.status.checked);
+  inBG.switchGlobalState($('#status').checked);
   renderStatus();
 }

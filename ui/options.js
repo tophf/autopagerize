@@ -4,7 +4,7 @@ export {
 };
 
 import {arrayOrDummy, DEFAULTS, getCacheDate, getSettings, inBG} from '/util/common.js';
-import {$, onDomLoaded} from '/util/dom.js';
+import {$, $$, onDomLoaded} from '/util/dom.js';
 import {collectRules, loadRules, resizeArea} from './options-rules.js';
 
 const ValueTransform = {
@@ -57,9 +57,9 @@ Promise.all([
   renderSettings(settings);
   loadRules(settings.rules);
 
-  $.btnSave.onclick = save;
-  $.btnUpdate.onclick = update;
-  $.backup.oninput = ({target: el}) => ($.importWrapper.disabled = !el.value.trim());
+  $('#btnSave').onclick = save;
+  $('#btnUpdate').onclick = update;
+  $('#backup').oninput = ({target: el}) => ($('#importWrapper').disabled = !el.value.trim());
   addEventListener('input', onChange, {passive: true});
   addEventListener('change', onChange, {passive: true});
 
@@ -87,11 +87,12 @@ function renderSettings(ss) {
 }
 
 function renderSiteinfoStats(numRules, date) {
-  $.size.textContent = numRules;
+  $('#size').textContent = numRules;
   date = date > 0 ? new Date(date) : '';
-  $.date.dateTime = date;
-  $.date.textContent = date ? renderDate(date) : 'N/A';
-  $.date.title = date && date.toLocaleString();
+  const elDate = $('#date');
+  elDate.dateTime = date;
+  elDate.textContent = date ? renderDate(date) : 'N/A';
+  elDate.title = date && date.toLocaleString();
 }
 
 function renderDate(date) {
@@ -128,14 +129,14 @@ async function save() {
 
   changedElements.forEach(el => el.classList.remove('changed'));
   changedElements.clear();
-  for (const el of $.rules.getElementsByClassName('deleted'))
+  for (const el of $$('#rules .deleted'))
     el._data.savedValue = !el._data.savedValue;
 
-  $.btnSaveWrapper.hidden = true;
+  $('#btnSaveWrapper').hidden = true;
 }
 
 async function update() {
-  const btn = $.btnUpdate;
+  const btn = $('#btnUpdate');
   const label = btn.textContent;
   btn.disabled = true;
 
@@ -178,7 +179,7 @@ function onChange({target: el}) {
   if (changed !== el.classList.contains('changed'))
     el.classList.toggle('changed', changed);
   const unsalvageable = !changedElements.size || (el.checkValidity && !el.checkValidity());
-  const btn = $.btnSaveWrapper;
+  const btn = $('#btnSaveWrapper');
   if (btn.hidden !== unsalvageable)
     btn.hidden = unsalvageable;
 }

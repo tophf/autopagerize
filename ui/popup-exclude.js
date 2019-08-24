@@ -4,10 +4,10 @@ export {
 };
 
 import {arrayOrDummy, execScript, getSettings, inBG} from '/util/common.js';
-import {$} from '/util/dom.js';
+import {$, $$} from '/util/dom.js';
 import * as popup from './popup.js';
 
-$.excludeSection.addEventListener('click', updateSpecificity, {once: true});
+$('#excludeSection').addEventListener('click', updateSpecificity, {once: true});
 
 async function exclude(e) {
   e.preventDefault();
@@ -48,7 +48,7 @@ async function applyPerSite(pattern, listType = 'exclusions') {
 
 function updateSpecificity() {
   const {url} = popup.tab;
-  for (const el of $.specificity.querySelectorAll('a')) {
+  for (const el of $$('#specificity a')) {
     const {type} = el.dataset;
     el.title =
       type === 'url' ? url :
@@ -56,7 +56,7 @@ function updateSpecificity() {
           type === 'domain' ? new URL(url).origin + '/*' : '';
     el.onclick = exclude;
   }
-  $.specificity.dataset.ready = '';
+  $('#specificity').dataset.ready = '';
 }
 
 function findExcludedTabs(pattern) {

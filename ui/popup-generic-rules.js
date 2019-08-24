@@ -3,13 +3,13 @@ import {$} from '/util/dom.js';
 import {applyPerSite, updateSpecificity} from './popup-exclude.js';
 import * as popup from './popup.js';
 
-$.genericRulesSection.hidden = false;
-$.genericRulesSection.addEventListener('click', async () => {
+$('#genericRulesSection').hidden = false;
+$('#genericRulesSection').addEventListener('click', async () => {
   if ((await getSettings()).genericRulesEnabled) {
-    $.genericRulesSection.removeAttribute('disabled');
-    if (!$.specificity.dataset.ready)
+    $('#genericRulesSection').removeAttribute('disabled');
+    if (!$('#specificity').dataset.ready)
       updateSpecificity();
-    $.grSlot.replaceWith(Object.assign($.specificity.cloneNode(true), {
+    $('#grSlot').replaceWith(Object.assign($('#specificity').cloneNode(true), {
       id: '',
       async onclick(e) {
         e.preventDefault();

@@ -6,7 +6,7 @@ export {
 };
 
 import {arrayOrDummy} from '/util/common.js';
-import {$} from '/util/dom.js';
+import {$, $$} from '/util/dom.js';
 import {i18n} from '/util/locale.js';
 
 const DUMMY_RULE = {url: '^https?://www\\.'};
@@ -14,7 +14,7 @@ let defaultAreaHeight;
 
 function loadRules(rules) {
 
-  const rulesContainer = $.rules;
+  const rulesContainer = $('#rules');
   rulesContainer.addEventListener('focusin', resizeArea);
   rulesContainer.addEventListener('focusout', resizeArea);
   rulesContainer.addEventListener('input', resizeArea);
@@ -32,20 +32,20 @@ function loadRules(rules) {
 
 function collectRules(elements) {
   const rules = [];
-  for (const r of elements || $.rules.getElementsByClassName('rule')) {
+  for (const r of elements || $$('#rules .rule')) {
     if (r.classList.contains('deleted'))
       continue;
     const rule = {};
     let isDummy = true;
-    for (const m of r.getElementsByClassName('rule-member')) {
-      const el = m.getElementsByTagName('textarea')[0];
+    for (const m of $$('.rule-member', r)) {
+      const el = $('textarea', m);
       const value = el.value.trim();
       const v = el._data.savedValue = value;
       if (!v)
         continue;
       if (isDummy && v !== (DUMMY_RULE[el.dataset.type] || ''))
         isDummy = false;
-      rule[m.querySelector('.rule-member-name').textContent] = v;
+      rule[$('.rule-member-name', m).textContent] = v;
     }
     if (!isDummy)
       rules.push(rule);
@@ -55,9 +55,9 @@ function collectRules(elements) {
 
 function addRules(rules) {
   const bin = document.createDocumentFragment();
-  const tplRule = $['tpl:rule'].content.firstElementChild;
-  const tplMember = $['tpl:ruleMember'].content.firstElementChild;
-  const memberName = tplMember.querySelector('.rule-member-name').firstChild;
+  const tplRule = $('#tplRule').content.firstElementChild;
+  const tplMember = $('#tplRuleMember').content.firstElementChild;
+  const memberName = $('.rule-member-name', tplMember).firstChild;
   const memberTitle = memberName.parentNode.attributes.title;
   const KEYS = ['url', 'pageElement', 'nextLink', 'insertBefore'];
   let clone;
@@ -150,7 +150,7 @@ function deleteRule(base) {
   base.classList.toggle('deleted');
   base.value = !base.value;
   const isDisposable = base.value &&
-                       $.rules.children[1] &&
+                       $('#rules').children[1] &&
                        rulesEqual(collectRules([base]), [DUMMY_RULE]);
   if (isDisposable)
     base.value = base._data.savedValue = 'canDelete';
@@ -158,7 +158,7 @@ function deleteRule(base) {
   if (base.value === 'canDelete')
     base.remove();
   else
-    base.querySelector('[data-action="delete"]').textContent =
+    $('[data-action="delete"]', base).textContent =
       i18n(base.value ? 'restore' : 'delete');
 }
 

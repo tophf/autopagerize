@@ -1,6 +1,22 @@
-export const $ = new Proxy({}, {
-  get: (_, id) => document.getElementById(id),
-});
+/**
+ * @param {string} sel
+ * @param {Element|Document} base
+ * @return {?Element}
+ */
+export function $(sel, base = document) {
+  return sel.startsWith('#') && !sel.includes(' ') && /^#[\w\\]+$/.test(sel) ?
+    base.getElementById(sel.slice(1)) :
+    base.querySelector(sel);
+}
+
+/**
+ * @param {string} sel
+ * @param {Element|Document} base
+ * @return {NodeList}
+ */
+export function $$(sel, base = document) {
+  return base.querySelectorAll(sel);
+}
 
 export function onDomLoaded() {
   return document.readyState !== 'loading'
