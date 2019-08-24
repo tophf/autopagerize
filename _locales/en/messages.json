@@ -60,7 +60,7 @@
     "message": "The page URL is excluded in options"
   },
   "failedUnpageable": {
-    "message": "No pageable content found, try reloading the page"
+    "message": "No pageable content found"
   },
   "failedUnsupported": {
     "message": "Browser UI or extension pages aren't supported"
