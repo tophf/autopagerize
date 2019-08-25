@@ -60,7 +60,10 @@ function onInstalled(info) {
           const toWrite = {};
           for (const k in DEFAULTS)
             toWrite[k] = settings[k];
-          chrome.storage.sync.set(toWrite);
+          import('./bg-settings.js').then(async m => {
+            await m.packSettings(toWrite);
+            chrome.storage.sync.set(toWrite);
+          });
         }
       }
     });

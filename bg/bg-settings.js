@@ -2,7 +2,7 @@ export {
   writeSettings,
 };
 
-import {getSettings, ignoreLastError, PROPS_TO_NOTIFY} from '/util/common.js';
+import {getSettings, ignoreLastError, packSettings, PROPS_TO_NOTIFY} from '/util/common.js';
 import {settings} from './bg.js';
 
 async function writeSettings(ss) {
@@ -20,6 +20,7 @@ async function writeSettings(ss) {
   for (const k in ss)
     if (!deepEqual(ss[k], all[k]))
       toWrite[k] = ss[k];
+  await packSettings(toWrite);
   chrome.storage.sync.set(toWrite);
   Object.assign(all, ss);
   settings(all);

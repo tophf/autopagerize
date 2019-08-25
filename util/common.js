@@ -68,9 +68,55 @@ export const PROPS_TO_NOTIFY = [
  */
 export function getSettings(key = Object.keys(DEFAULTS)) {
   return new Promise(resolve => {
-    chrome.storage.sync.get(key, ss => {
-      resolve(Array.isArray(key) ? ss : ss[key]);
+    chrome.storage.sync.get(key, async ss => {
+      const isKeyArray = Array.isArray(key);
+      if (isKeyArray ? key.some(isLZSetting) : isLZSetting(key))
+        await unpackSettings(ss);
+      resolve(isKeyArray ? ss : ss[key]);
     });
+  });
+}
+
+export async function packSettings(ss) {
+  for (const k in ss) {
+    const lz = isLZSetting(k);
+    if (lz) {
+      const LZString = window.LZString || await loadLZString();
+      const v = lz === 'json' ? JSON.stringify(ss[k]) : ss[k];
+      // empty strings are stored as is because LZString increases them to 2 chars
+      ss[k] = v ? LZString.compressToUTF16(v) : '';
+    }
+  }
+}
+
+export async function unpackSettings(ss) {
+  for (const k in ss) {
+    const lz = isLZSetting(k);
+    if (lz) {
+      try {
+        const LZString = window.LZString || await loadLZString();
+        // empty strings are stored as is because LZString increases them to 2 chars
+        // (un-lzipping an empty string produces null)
+        const v = LZString.decompressFromUTF16(ss[k]) || '';
+        ss[k] = lz === 'json' ? JSON.parse(v) : v;
+      } catch (e) {
+        console.error('Cannot unpack', k, ss[k]);
+      }
+    }
+  }
+}
+
+export function isLZSetting(key) {
+  const v = DEFAULTS[key];
+  return typeof v === 'string' || Array.isArray(v) && 'json';
+}
+
+export function loadLZString() {
+  return new Promise(resolve => {
+    const el = document.createElement('script');
+    el.src = '/vendor/lz-string-unsafe/lz-string.min.js';
+    el.addEventListener('load', () => resolve(window.LZString), {once: true});
+    document.head.appendChild(el);
   });
 }
 
