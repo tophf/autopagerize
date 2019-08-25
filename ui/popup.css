@@ -48,6 +48,10 @@ a:hover {
   white-space: nowrap;
 }
 
+#linksSection a:not(:last-child) {
+  margin-right: 1rem;
+}
+
 #genericRulesSection[disabled] #grSlot::after {
   content: "__MSG_genericRulesEnableHint__";
   opacity: .5;
@@ -111,13 +115,13 @@ details .done {
 }
 .full-width {
   padding-left: 0;
-  padding-right: 0;
 }
 .full-width details {
-  padding: 0 1rem;
+  padding-left: 1rem;
 }
 .full-width summary {
-  margin: 0 -1rem;
+  margin-left: -1rem;
+  margin-right: -.5rem;
 }
 .full-width details ul {
   margin-left: 0;

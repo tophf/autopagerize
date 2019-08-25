@@ -19,7 +19,7 @@
       </span>
     </label>
   </section>
-  <section>
+  <section id="linksSection">
     <a id="openOptions" href="options.html" tl>options</a>
     <a id="hotkeys" href="chrome://extensions/shortcuts" tl>hotkeys</a>
   </section>
@@ -31,12 +31,6 @@
         <li><a tl href="#" data-type="prefix">excludeUrlPrefix</a></li>
         <li><a tl href="#" data-type="domain">excludeDomain</a></li>
       </ul>
-    </details>
-  </section>
-  <section class="full-width" id="genericRulesSection" disabled hidden>
-    <details>
-      <summary tl>genericRules</summary>
-      <span id="grSlot"></span><!--copied from exclusions-->
     </details>
   </section>
   <section class="hide-when-failed full-width" id="loadMoreSection">
@@ -56,5 +50,11 @@
     </details>
   </section>
   <footer id="failure" hidden></footer>
+  <section class="full-width" id="genericRulesSection" disabled hidden>
+    <details>
+      <summary tl>genericRules</summary>
+      <span id="grSlot"></span><!--copied from exclusions-->
+    </details>
+  </section>
 </body>
 </html>

@@ -66,7 +66,7 @@
     "message": "Browser UI or extension pages aren't supported"
   },
   "genericRules": {
-    "message": "Generic rules"
+    "message": "Try generic rules"
   },
   "genericRulesEnableHint": {
     "message": "Enable it in the options first, please"
