@@ -72,6 +72,9 @@ export function getSettings(key = Object.keys(DEFAULTS)) {
       const isKeyArray = Array.isArray(key);
       if (isKeyArray ? key.some(isLZSetting) : isLZSetting(key))
         await unpackSettings(ss);
+      for (const k of isKeyArray ? key : [key])
+        if (ss[k] === undefined)
+          ss[k] = DEFAULTS[k];
       resolve(isKeyArray ? ss : ss[key]);
     });
   });

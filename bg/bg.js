@@ -85,7 +85,7 @@ async function maybeLaunch(tabId, url) {
 
 function maybeKeepAlive() {
   lastAliveTime = Date.now();
-  const {unloadAfter = DEFAULTS.unloadAfter} = _settings;
+  const {unloadAfter} = _settings;
   const enabled = unloadAfter === -1 || unloadAfter > 0;
   const iframe = document.getElementsByTagName('iframe')[0];
   if (enabled && !iframe)
