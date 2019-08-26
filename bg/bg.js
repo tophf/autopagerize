@@ -10,14 +10,7 @@ export {
   settings,
 };
 
-import {
-  DEFAULTS,
-  execScript,
-  getCacheDate,
-  getLocal,
-  getSettings,
-  isAppEnabled,
-} from '/util/common.js';
+import {execScript, getCacheDate, getSettings, isAppEnabled} from '/util/common.js';
 import {endpoints} from './bg-api.js';
 import {calcUrlCacheKey, isUrlExcluded, isUrlMatched} from './bg-util.js';
 
@@ -95,9 +88,10 @@ function maybeKeepAlive() {
 }
 
 async function loadGenericRules() {
-  return genericRules(
-    await getLocal('genericRules') ||
-    await (await import('./bg-generic-rules.js')).buildGenericRules());
+  _genericRules =
+    await new Promise(r => chrome.storage.local.get('genericRules', _ => r(_.genericRules))) ||
+    await (await import('./bg-generic-rules.js')).buildGenericRules();
+  return _genericRules;
 }
 
 function tabNeedsDisabling() {
