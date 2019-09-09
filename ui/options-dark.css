@@ -8,6 +8,12 @@ code,
 #date {
   color: darkseagreen;
 }
+a {
+  color: deepskyblue;
+}
+a:visited {
+  color: mediumpurple;
+}
 button {
   background: linear-gradient(-10deg, #333, #555);
   border: 1px solid #181818;

@@ -101,6 +101,9 @@
   "onOff": {
     "message": "On/off"
   },
+  "optionalRare": {
+    "message": "(optional, very rare)"
+  },
   "options": {
     "message": "Options"
   },

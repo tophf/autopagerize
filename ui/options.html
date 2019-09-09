@@ -74,7 +74,7 @@
       <summary tl>excludedPages</summary>
       <div class="details-body">
         <textarea id="exclusions" rows="7" spellcheck="false"></textarea>
-        <table class="desc" style="border-spacing: 0">
+        <table class="desc">
           <tr>
             <td><span tl>example</span> (<span tl>singleURL</span>):</td>
             <td><code>http://www.example.com/foo</code></td>
@@ -96,6 +96,27 @@
     <details>
       <summary tl>customRules</summary>
       <div id="rules" class="details-body"></div>
+      <table class="desc">
+        <tr><td colspan="2"><b tl>example</b></td></tr>
+        <tr>
+          <td>URL, <a href="https://regex101.com/" target="_blank">regexp</a></td>
+          <td><code>^https://github\.com/[^/]+/[^/]+/(?:issues|pulls)</code></td>
+        </tr>
+        <tr>
+          <td>pageElement, <a href="http://xpather.com/" target="_blank">XPath</a></td>
+          <td><code>//div[starts-with(@id,'issue_')]</code></td>
+        </tr>
+        <tr>
+          <td>nextLink, <a href="http://xpather.com/" target="_blank">XPath</a></td>
+          <td><code>//a[@class='next_page']</code></td>
+        </tr>
+        <tr>
+          <td>insertBefore,
+            <a href="http://xpather.com/" target="_blank">XPath</a>
+          </td>
+          <td><code>//footer</code> <span tl>optionalRare</span></td>
+        </tr>
+      </table>
     </details>
   </section>
 
