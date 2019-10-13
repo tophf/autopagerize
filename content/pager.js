@@ -163,11 +163,10 @@
     // SHOULD PRECEDE stripping of stripts since a filter may need to process one
     filters.forEach(f => f(doc, url));
 
-    for (const el of doc.getElementsByTagName('script'))
-      el.remove();
-
     let pages, nextUrl;
     try {
+      for (const el of doc.getElementsByTagName('script'))
+        el.remove();
       pages = xpather.getElements(app.rule.pageElement, doc);
       nextUrl = getNextURL(app.rule.nextLink, doc, url);
     } catch (e) {
