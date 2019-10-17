@@ -37,8 +37,8 @@ async function importSettings() {
 function exportSettings() {
   const elBackup = $('#backup');
   elBackup.focus();
+  elBackup.value = JSON.stringify(collectSettings(), null, '  ');
   elBackup.select();
-  document.execCommand('insertText', false, JSON.stringify(collectSettings(), null, '  '));
-  elBackup.select();
+  document.execCommand('copy');
   $('#importError').hidden = true;
 }
