@@ -18,7 +18,7 @@ async function importSettings() {
     return;
   }
   const ovr = $('#overwriteSettings').checked;
-  const settings = ovr ? DEFAULTS : collectSettings();
+  const settings = ovr ? {...DEFAULTS} : collectSettings();
   for (const [k, ref] of Object.entries(DEFAULTS)) {
     const v = imported[k];
     settings[k] =
