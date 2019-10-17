@@ -5,6 +5,8 @@ import {collectSettings, renderSettings} from './options.js';
 
 $('#btnImport').onclick = importSettings;
 $('#btnExport').onclick = exportSettings;
+$('#importExportTitle').onclick = e =>
+  setTimeout(() => e.target.parentElement.scrollIntoView({behavior: 'smooth'}));
 
 async function importSettings() {
   let imported;
