@@ -69,7 +69,7 @@ Promise.all([
   import('./options-backup.js');
 });
 
-function renderSettings(ss) {
+function renderSettings(ss, {force} = {}) {
   for (const [k, defaultValue] of Object.entries(DEFAULTS)) {
     const el = document.getElementById(k);
     if (!el)
@@ -80,7 +80,7 @@ function renderSettings(ss) {
       el._data = {name: k};
     const v = ss[k] !== undefined ? ss[k] : defaultValue;
     const renderedValue = ValueTransform.find(ValueTransform.render, k, defaultValue)(v, el);
-    if (firstInit)
+    if (firstInit || force)
       el[el.type === 'checkbox' ? 'checked' : 'value'] = renderedValue;
     el._data.savedValue = renderedValue;
   }
