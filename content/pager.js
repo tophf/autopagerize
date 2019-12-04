@@ -353,9 +353,10 @@
   function loadSettings(ss) {
     app.requestInterval = ss.requestInterval * 1000 || app.requestInterval;
     status.enabled = ss.showStatus !== false;
-    if (ss.orphanMessageId) {
-      app.orphanMessageId = ss.orphanMessageId;
-      dispatchEvent(new Event(app.orphanMessageId));
+    const msgId = ss.orphanMessageId;
+    if (msgId && msgId !== app.orphanMessageId) {
+      app.orphanMessageId = msgId;
+      dispatchEvent(new Event(msgId));
     }
     if (ss.pageHeightThreshold)
       app.pageHeightThreshold = ss.pageHeightThreshold;
