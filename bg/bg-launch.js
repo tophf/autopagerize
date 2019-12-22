@@ -28,7 +28,7 @@ async function launch({tabId, url, rules, lastTry}) {
     await poke(tabId, {file: '/content/pager.js'});
 
   if (url.includes('google.') &&
-      /^https?:\/\/(www\.)?google(\.com?)?(\.\w\w)?\/.*?[?&#]q=[^&]+/.test(url))
+      /^https?:\/\/(www\.)?google(\.com?)?(\.\w\w)?\/(search\?|.*?[?&#]q=[^&]+)/.test(url))
     await execScript(tabId, {file: '/content/fix-google.js'});
 
   if (url.startsWith('https://www.youtube.com/results'))
