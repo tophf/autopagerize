@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "minimum_chrome_version": "63",
   "name": "AutoPagerize",
   "description": "__MSG_description__",
