@@ -42,7 +42,7 @@ function onRuntimeMessage(msg, sender, sendResponse) {
   const fn = endpoints()[msg.action];
   if (!fn)
     return;
-  const result = fn(msg.data, sender);
+  const result = fn.apply(sender, msg.data);
   if (result && typeof result.then === 'function') {
     result.then(sendResponse);
     return true;
@@ -79,8 +79,9 @@ function initEndpoints() {
 
     keepAlive: () => new Promise(keepAlive),
 
-    launched: (_, sender) => {
-      const tabId = sender.tab.id;
+    /** @this chrome.runtime.MessageSender */
+    launched() {
+      const tabId = this.tab.id;
       chrome.browserAction.setPopup({tabId, popup: '/ui/popup.html'});
       import('./bg-icon.js').then(m => m.setIcon({tabId}));
     },

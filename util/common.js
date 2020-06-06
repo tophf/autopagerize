@@ -4,7 +4,7 @@ export const RETRY_TIMEOUT = 2000;
 
 export const inBG = new Proxy({}, {
   get(_, action) {
-    return data =>
+    return (...data) =>
       new Promise(r => chrome.runtime.sendMessage({action, data}, r));
   },
 });
