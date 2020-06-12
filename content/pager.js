@@ -163,21 +163,34 @@
     // SHOULD PRECEDE stripping of stripts since a filter may need to process one
     filters.forEach(f => f(doc, url));
 
-    let pages, nextUrl;
+    let elems, nextUrl;
     try {
       for (const el of doc.getElementsByTagName('script'))
         el.remove();
-      pages = xpather.getElements(app.rule.pageElement, doc);
+      elems = xpather.getElements(app.rule.pageElement, doc);
       nextUrl = getNextURL(app.rule.nextLink, doc, url);
     } catch (e) {
       statusShow({error: chrome.i18n.getMessage('errorExtractInfo')});
       return;
     }
-    if (!pages || !pages.length) {
-      terminate();
-      return;
-    }
+    if (elems.length)
+      addPageElements(url, elems);
 
+    app.loadedURLs.add(url);
+    app.requestURL = nextUrl;
+
+    statusShow({loading: false});
+    onScroll();
+
+    document.dispatchEvent(new Event('GM_AutoPagerizeNextPageLoaded', {bubbles: true}));
+
+    if (nextUrl)
+      return true;
+
+    terminate();
+  }
+
+  function addPageElements(url, elems) {
     if (app.insertPoint.ownerDocument !== document) {
       const lastPage = xpather.getElements(app.rule.pageElement).pop();
       if (lastPage) {
@@ -198,7 +211,7 @@
       }),
     ]);
 
-    if (pages[0].tagName !== 'TR') {
+    if (elems[0].tagName !== 'TR') {
       bin.appendChild($create('hr', {className: 'autopagerize_page_separator'}));
       bin.appendChild(p);
     } else {
@@ -212,21 +225,8 @@
             p)));
     }
 
-    pages.forEach(p => bin.appendChild(p));
+    elems.forEach(p => bin.appendChild(p));
     parent.insertBefore(bin, app.insertPoint);
-
-    app.loadedURLs.add(url);
-    app.requestURL = nextUrl;
-
-    statusShow({loading: false});
-    onScroll();
-
-    document.dispatchEvent(new Event('GM_AutoPagerizeNextPageLoaded', {bubbles: true}));
-
-    if (nextUrl)
-      return true;
-
-    terminate();
   }
 
   function onScroll() {
