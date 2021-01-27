@@ -288,12 +288,11 @@
   function statusCreate() {
     if (status.element && document.contains(status.element))
       return;
-    status.element = Object.assign(document.createElement('div'), {
-      id: 'autopagerize_message_bar',
-      style: getStatusStyle() + 'display: none !important',
-      textContent: chrome.i18n.getMessage('loading') + '...',
-    });
-    document.body.appendChild(status.element);
+    const el = status.element = document.createElement('div');
+    el.id = 'autopagerize_message_bar';
+    el.textContent = chrome.i18n.getMessage('loading') + '...';
+    statusSetStyle('display: none');
+    document.body.appendChild(el);
   }
 
   function statusRemove(timeout) {
@@ -306,29 +305,36 @@
     }
   }
 
+  function statusSetStyle(extra = '', main = getStatusStyle()) {
+    status.element.style.cssText = main + extra.replace(/;/g, '!important;');
+  }
+
   function statusShow({loading, error}) {
     let show;
-
+    let style;
     if (loading !== undefined) {
       show = loading && status.enabled;
       if (show)
         statusCreate();
       else if (!status.enabled)
         return;
-      status.element.style = getStatusStyle();
+      style = getStatusStyle();
 
     } else if (error !== undefined) {
       show = true;
       statusCreate();
       statusRemove(3000);
-      status.element.style = getStatusStyle(status.styleError);
+      style = getStatusStyle(status.styleError);
       status.element.textContent = `${chrome.i18n.getMessage('error')}: ${error}`;
       removeScrollListener();
 
     } else
       return;
 
-    status.element.style.setProperty('display', show ? 'block' : 'none', 'important');
+    statusSetStyle(`opacity:0; ${show ? 'display:block' : ''}`, style);
+    setTimeout(statusSetStyle,
+      show ? 0 : parseFloat(status.element.style.transitionDuration) * 1000 || 0,
+      `display: ${show ? 'block' : 'none'}`);
   }
 
   function $create(tag, props, children) {

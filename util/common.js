@@ -23,6 +23,7 @@ const STATUS_STYLE = `
   color: white;
   font: bold 12px/24px sans-serif;
   text-align: center;
+  transition: opacity 1s;
 `.replace(/\n\s+/g, '\n').trim();
 
 /**
