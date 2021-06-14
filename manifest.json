@@ -44,6 +44,12 @@
     },
     "loadMore10": {
       "description": "__MSG_loadMore__ (10)"
+    },
+    "loadMore20": {
+      "description": "__MSG_loadMore__ (20)"
+    },
+    "loadMore50": {
+      "description": "__MSG_loadMore__ (50)"
     }
   },
   "permissions": [
