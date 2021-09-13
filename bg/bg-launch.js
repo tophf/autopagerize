@@ -10,17 +10,22 @@ import {settings} from './bg.js';
  * true if there's an applicable rule (used by lastTry='genericRules' mode)
  */
 async function launch({tabId, url, rules, lastTry}) {
-  if (!await execScript(tabId, contentCheckDeps)) {
-    // no deps while retrying means the tab got navigated away
-    // and already being handled in another event
-    if (lastTry === 'setTimeout')
-      return;
-    await execScript(tabId, {file: '/content/xpather.js'});
+  let rr;
+  while (true) {
+    await new Promise(r => setTimeout(r, RETRY_TIMEOUT));
+    if (!await execScript(tabId, contentCheckDeps)) {
+      // no deps while retrying means the tab got navigated away
+      // and already being handled in another event
+      if (lastTry === 'setTimeout')
+        return;
+      await execScript(tabId, {file: '/content/xpather.js'});
+    }
+    rr = await execScript(tabId, contentCheckRules, rules, !lastTry && RETRY_TIMEOUT) || {};
+    if (rr.hasRule || lastTry)
+      break;
+    lastTry = 'setTimeout';
   }
 
-  const rr = await execScript(tabId, contentCheckRules, rules, !lastTry && RETRY_TIMEOUT) || {};
-  if (!rr.hasRule && !lastTry)
-    return new Promise(r => setTimeout(retry, RETRY_TIMEOUT, r, arguments[0]));
   if (!rr.hasRule || lastTry === 'genericRules')
     return rr.hasRule;
 
@@ -44,10 +49,6 @@ async function launch({tabId, url, rules, lastTry}) {
     ss[name] = typeof def === 'string' ? v || def : v;
   }
   await execScript(tabId, contentDoRun, ss);
-}
-
-function retry(resolve, cfg) {
-  launch({...cfg, lastTry: 'setTimeout'}).then(resolve);
 }
 
 function contentCheckDeps() {
