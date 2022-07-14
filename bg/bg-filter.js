@@ -58,7 +58,7 @@ async function loadCacheKeys() {
   for (const key of keys) {
     const rule = {
       url: ruleKeyToUrl(key),
-      id: new DataView(key.buffer || key).getUint32(0, true),
+      id: new Uint32Array(key.buffer || key, 0, 1)[0],
       rx: undefined,
     };
     cacheKeys.set(rule.id, rule);

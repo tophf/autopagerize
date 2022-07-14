@@ -70,7 +70,7 @@ async function calcUrlCacheKey(url) {
 function calcRuleKey(rule) {
   const url = utf8encoder.encode(rule.url);
   const key = new Uint8Array(url.length + 4);
-  new DataView(key.buffer).setUint32(0, rule.id, true);
+  new Uint32Array(key.buffer, 0, 1)[0] = rule.id;
   key.set(url, 4);
   return key;
 }
