@@ -53,7 +53,7 @@
     if (cfg.filter)
       filters.set(cfg.filterName, cfg.filter);
     if (cfg.rules && !maybeInit(cfg.rules, cfg.matchedRule))
-      setTimeout(maybeInit, 2000, cfg.rules);
+      setTimeout(maybeInit, app.requestInterval, cfg.rules);
     if (cfg.loadMore)
       return doLoadMore(cfg.loadMore);
     if (cfg.terminate)
