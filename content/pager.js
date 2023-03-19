@@ -3,49 +3,39 @@
 
 // IIFE simplifies complete unregistering for garbage collection
 (() => {
-  const app = {
-    /** @type Object */
-    rule: null,
-    /** @type Node */
-    insertPoint: null,
-    /** @type Number */
-    pageNum: 0,
-    /** @type Number */
-    remainHeight: 0,
-    /** @type Number */
-    requestTime: 0,
-    /** @type String */
-    requestURL: '',
-    /** @type String */
-    lastRequestURL: '',
-    /** @type Set<String> */
-    loadedURLs: new Set(),
-    /** @type function(status) */
-    onPageProcessed: null,
-    /** @type Number */
-    pagesRemaining: 0,
-    /** @type Number */
-    requestInterval: 2000,
-    /** @type Number */
-    pageHeightThreshold: 400,
-    /** @type string */
-    orphanMessageId: '',
-  };
-
   const status = {
-    /** @type Boolean */
+    /** @type {Boolean} */
     enabled: null,
-    /** @type HTMLFrameElement */
+    /** @type {HTMLFrameElement} */
     element: null,
-    /** @type Number */
+    /** @type {Number} */
     timer: 0,
-    /** @type String */
+    /** @type {String} */
     style: '',
-    /** @type String */
+    /** @type {String} */
     styleError: '',
   };
-
   const filters = new Map();
+  /** @type {Node|HTMLElement} */
+  let insertPoint;
+  let lastRequestURL = '';
+  /** @type {Record<String>} */
+  let loadedURLs = {};
+  /** @type {function(status)} */
+  let onPageProcessed;
+  let orphanMessageId = '';
+  let pageNum = 0;
+  let pagesRemaining = 0;
+  let requestInterval = 2000;
+  let requestTime = 0;
+  let requestTimer = 0;
+  let requestURL = '';
+  /** @type {Object} */
+  let rule;
+  /** @type {IntersectionObserver} */
+  let xo;
+  /** @type {?Element} */
+  let xoElem;
 
   window.run = cfg => {
     if (cfg.settings)
@@ -53,7 +43,7 @@
     if (cfg.filter)
       filters.set(cfg.filterName, cfg.filter);
     if (cfg.rules && !maybeInit(cfg.rules, cfg.matchedRule))
-      setTimeout(maybeInit, app.requestInterval, cfg.rules);
+      setTimeout(maybeInit, requestInterval, cfg.rules);
     if (cfg.loadMore)
       return doLoadMore(cfg.loadMore);
     if (cfg.terminate)
@@ -66,7 +56,7 @@
     // content scripts may get unloaded during setTimeout
     if (!window.xpather)
       return;
-    if (app.loadedURLs.has(location.href))
+    if (loadedURLs[location.href])
       return true;
     if (!rule)
       rule = xpather.getMatchingRule(rules);
@@ -76,63 +66,50 @@
     }
   }
 
-  function init(rule) {
-    app.pageNum = 1;
-    app.rule = rule;
-    app.requestURL = getNextURL(rule.nextLink, document, location.href);
-    if (!app.requestURL)
+  function init(matchedRule) {
+    pageNum = 1;
+    rule = matchedRule;
+    requestURL = getNextURL(rule.nextLink, document, location.href);
+    if (!requestURL)
       return;
-
-    if (rule.insertBefore)
-      app.insertPoint = xpather.getFirstElement(rule.insertBefore);
-    if (!app.insertPoint) {
-      const page = xpather.getElements(rule.pageElement).pop();
-      if (!page)
-        return;
-
-      if (!page.nextSibling)
-        page.parentNode.append(' ');
-      app.insertPoint = page.nextSibling;
+    let el = rule.insertBefore;
+    if (el)
+      insertPoint = xpather.getFirstElement(el);
+    if (!insertPoint) {
+      el = xpather.getElements(rule.pageElement).pop();
+      if (!el) return;
+      insertPoint = ensureNextSibling(el);
     }
-
-    app.loadedURLs.clear();
-    app.loadedURLs.add(location.href);
-
-    addScrollListener();
-    addEventListener(app.orphanMessageId, terminate);
+    loadedURLs = {[location.href]: 1};
+    requestTime = performance.now();
+    addEventListener(orphanMessageId, terminate);
     chrome.runtime.sendMessage({action: 'launched'});
-
-    const {scrollHeight} = document.scrollingElement;
-    let bottom = app.insertPoint.tagName
-      ? app.insertPoint.getBoundingClientRect().top
-      : getBottom(app.insertPoint.previousElementSibling || app.insertPoint.parentNode);
-    if (!bottom) {
-      try {
-        bottom = Math.max(...xpather.getElements(rule.pageElement).map(getBottom));
-      } catch (e) {}
-    }
-    if (!bottom)
-      bottom = Math.round(scrollHeight * 0.8);
-    app.remainHeight = scrollHeight - bottom + app.pageHeightThreshold;
-    app.requestTime = Date.now();
-
-    onScroll();
+    watchBottom();
   }
 
-  function request({force} = {}) {
-    const url = app.requestURL;
-    if (!url || url === app.lastRequestURL || app.loadedURLs.has(url))
+  function ensureNextSibling(el) {
+    return el.nextSibling || (el.after(' '), el.nextSibling);
+  }
+
+  function request({force, timer} = {}) {
+    if (timer)
+      requestTimer = 0;
+    else if (requestTimer)
+      return;
+    const url = requestURL;
+    if (!url || url === lastRequestURL || loadedURLs[url])
       return;
     if (!url.startsWith(location.origin + '/')) {
       statusShow({error: chrome.i18n.getMessage('errorOrigin')});
       return;
     }
-    if (!force && Date.now() - app.requestTime < app.requestInterval) {
-      setTimeout(onScroll, app.requestInterval);
+    const remain = requestInterval - (performance.now() - requestTime);
+    if (!force && remain > 0) {
+      requestTimer = setTimeout(request, remain, {timer: true});
       return;
     }
-    app.requestTime = Date.now();
-    app.lastRequestURL = url;
+    requestTime = performance.now();
+    lastRequestURL = url;
     statusShow({loading: true});
 
     const xhr = new XMLHttpRequest();
@@ -140,14 +117,12 @@
     xhr.responseType = 'document';
     xhr.timeout = 60e3;
     xhr.onload = e => {
-      const ok = addPage(e);
-      if (app.onPageProcessed)
-        app.onPageProcessed(ok);
+      const ok = addPage(e, force);
+      onPageProcessed?.(ok);
     };
     xhr.onerror = xhr.ontimeout = e => {
       statusShow({error: e.message || e});
-      if (app.onPageProcessed)
-        app.onPageProcessed(false);
+      onPageProcessed?.(false);
     };
     xhr.send();
     return true;
@@ -157,60 +132,48 @@
    * @return boolean - true if there are more pages
    */
   function addPage(event) {
-    const url = app.requestURL;
+    const url = requestURL;
     const doc = event.target.response;
-
     // SHOULD PRECEDE stripping of stripts since a filter may need to process one
     filters.forEach(f => f(doc, url));
-
     let elems, nextUrl;
     try {
       for (const el of doc.getElementsByTagName('script'))
         el.remove();
-      elems = xpather.getElements(app.rule.pageElement, doc);
-      nextUrl = getNextURL(app.rule.nextLink, doc, url);
+      elems = xpather.getElements(rule.pageElement, doc);
+      nextUrl = getNextURL(rule.nextLink, doc, url);
     } catch (e) {
       statusShow({error: chrome.i18n.getMessage('errorExtractInfo')});
       return;
     }
     if (elems.length)
       addPageElements(url, elems);
-
-    app.loadedURLs.add(url);
-    app.requestURL = nextUrl;
-
+    loadedURLs[url] = 1;
+    requestURL = nextUrl;
     statusShow({loading: false});
-    onScroll();
-
     document.dispatchEvent(new Event('GM_AutoPagerizeNextPageLoaded', {bubbles: true}));
-
-    if (nextUrl)
+    if (!nextUrl) {
+      terminate();
+    } else {
       return true;
-
-    terminate();
+    }
   }
 
   function addPageElements(url, elems) {
-    if (app.insertPoint.ownerDocument !== document) {
-      const lastPage = xpather.getElements(app.rule.pageElement).pop();
-      if (lastPage) {
-        app.insertPoint =
-          lastPage.nextSibling ||
-          lastPage.parentNode.appendChild(document.createTextNode(' '));
-      }
+    if (insertPoint.ownerDocument !== document) {
+      const lastPage = xpather.getElements(rule.pageElement).pop();
+      if (lastPage) insertPoint = ensureNextSibling(lastPage);
     }
-
-    const parent = app.insertPoint.parentNode;
+    const parent = insertPoint.parentNode;
     const bin = document.createDocumentFragment();
     const p = $create('p', {className: 'autopagerize_page_info'}, [
       chrome.i18n.getMessage('page') + ' ',
       $create('a', {
         href: url,
         className: 'autopagerize_link',
-        textContent: ++app.pageNum,
+        textContent: ++pageNum,
       }),
     ]);
-
     if (elems[0].tagName !== 'TR') {
       bin.appendChild($create('hr', {className: 'autopagerize_page_separator'}));
       bin.appendChild(p);
@@ -224,43 +187,51 @@
           $create('td', {colSpan: cols},
             p)));
     }
-
-    elems.forEach(p => bin.appendChild(p));
-    parent.insertBefore(bin, app.insertPoint);
+    elems.forEach(bin.appendChild, bin);
+    parent.insertBefore(bin, insertPoint);
+    watchBottom();
   }
 
-  function onScroll() {
-    const {scrollHeight} = document.scrollingElement;
-    const remain = scrollHeight - window.innerHeight - window.scrollY;
-    if (remain < app.remainHeight)
+  function watchBottom() {
+    xo.disconnect();
+    xoElem = insertPoint.tagName ? insertPoint
+      : insertPoint.previousElementSibling || insertPoint.parentNode;
+    xo.observe(xoElem);
+  }
+
+  /** @param {IntersectionObserverEntry} e */
+  function onIntersect([e]) {
+    if (e.isIntersecting) {
+      xo.disconnect();
+      xoElem = null;
       request();
+    }
   }
 
   function terminate(e = {}) {
     delete window.run;
     delete window.xpather;
-    removeScrollListener();
-    removeEventListener(app.orphanMessageId, terminate);
+    xo.disconnect();
+    xo = xoElem = null;
+    removeEventListener(orphanMessageId, terminate);
     statusRemove(1500);
-    if (e.type === app.orphanMessageId)
-      dispatchEvent(new Event(app.orphanMessageId + ':terminated'));
+    if (e.type === orphanMessageId)
+      dispatchEvent(new Event(orphanMessageId + ':terminated'));
   }
 
   function doLoadMore(num) {
     if (num === 'query')
-      return app.pagesRemaining;
-    app.pagesRemaining = --num || 0;
+      return pagesRemaining;
+    pagesRemaining = --num || 0;
     if (num >= 0 && request({force: true})) {
-      removeScrollListener();
-      app.onPageProcessed = ok => {
+      onPageProcessed = ok => {
         if (ok)
-          doLoadMore.timer = setTimeout(doLoadMore, app.requestInterval, num);
+          doLoadMore.timer = setTimeout(doLoadMore, requestInterval, num);
         chrome.runtime.connect({name: 'pagesRemaining:' + num});
       };
     } else {
-      addScrollListener();
       clearTimeout(doLoadMore.timer);
-      app.onPageProcessed = null;
+      onPageProcessed = null;
     }
   }
 
@@ -273,10 +244,6 @@
         next.setAttribute('href', next.getAttribute('action') || next.value);
       return next.href;
     }
-  }
-
-  function getBottom(el) {
-    return el.getBoundingClientRect().bottom;
   }
 
   function getStatusStyle(css = status.style) {
@@ -326,7 +293,6 @@
       statusRemove(3000);
       style = getStatusStyle(status.styleError);
       status.element.textContent = `${chrome.i18n.getMessage('error')}: ${error}`;
-      removeScrollListener();
 
     } else
       return;
@@ -348,27 +314,23 @@
     return el;
   }
 
-  function addScrollListener() {
-    window.addEventListener('scroll', onScroll, {passive: true});
-  }
-
-  function removeScrollListener() {
-    window.removeEventListener('scroll', onScroll);
-  }
-
   function loadSettings(ss) {
-    app.requestInterval = ss.requestInterval * 1000 || app.requestInterval;
-    status.enabled = ss.showStatus !== false;
-    const msgId = ss.orphanMessageId;
-    if (msgId && msgId !== app.orphanMessageId) {
-      app.orphanMessageId = msgId;
-      dispatchEvent(new Event(msgId));
+    let v;
+    if ((v = ss.requestInterval * 1000))
+      requestInterval = v;
+    if ((v = ss.orphanMessageId) && orphanMessageId !== v) {
+      orphanMessageId = v;
+      dispatchEvent(new Event(v));
     }
-    if (ss.pageHeightThreshold)
-      app.pageHeightThreshold = ss.pageHeightThreshold;
-    if (ss.statusStyle)
-      status.style = ss.statusStyle;
-    if (ss.statusStyleError)
-      status.styleError = ss.statusStyleError;
+    if ((v = ss.pageHeightThreshold) || !xo) {
+      xo?.disconnect();
+      xo = new IntersectionObserver(onIntersect, {rootMargin: v + 'px'});
+      if (xoElem) xo.observe(xoElem);
+    }
+    status.enabled = ss.showStatus !== false;
+    if ((v = ss.statusStyle))
+      status.style = v;
+    if ((v = ss.statusStyleError))
+      status.styleError = v;
   }
 })();
