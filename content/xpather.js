@@ -13,25 +13,41 @@ window.xpather = {
   getMatchingRule(rules) {
     rules.push(xpather.MICROFORMAT);
     for (const r of rules) {
-      if (xpather.getFirstElement(r.pageElement) &&
-          xpather.getFirstElement(r.nextLink))
+      if (xpather.getFirst(r.pageElement) &&
+          xpather.getFirst(r.nextLink))
         return r;
     }
   },
 
+  /**
+   * @param {string} expr
+   * @param {Node} [node]
+   * @return {(Node|Element)[]}
+   */
   getElements(expr, node) {
     const x = xpather.evaluate(expr, node, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
-    if (!x)
-      return [];
     const nodes = [];
-    for (let node; (node = x.iterateNext());)
+    for (let node; (node = x?.iterateNext());)
       nodes.push(node);
     return nodes;
   },
 
-  getFirstElement(expr, node) {
-    const x = xpather.evaluate(expr, node, XPathResult.FIRST_ORDERED_NODE_TYPE);
-    return x && x.singleNodeValue;
+  /**
+   * @param {string} expr
+   * @param {Node} [node]
+   * @return {?Node|Element}
+   */
+  getFirst(expr, node) {
+    return xpather.evaluate(expr, node, XPathResult.FIRST_ORDERED_NODE_TYPE)?.singleNodeValue;
+  },
+
+  /**
+   * @param {string} expr
+   * @param {Node} [node]
+   * @return {?Node|Element}
+   */
+  getLast(expr, node) {
+    return xpather.getFirst(`(${expr})[last()]`, node);
   },
 
   evaluate(expr, node = document, resultType) {

@@ -74,9 +74,9 @@
       return;
     let el = rule.insertBefore;
     if (el)
-      insertPoint = xpather.getFirstElement(el);
+      insertPoint = xpather.getFirst(el);
     if (!insertPoint) {
-      el = xpather.getElements(rule.pageElement).pop();
+      el = xpather.getLast(rule.pageElement);
       if (!el) return;
       insertPoint = ensureNextSibling(el);
     }
@@ -161,8 +161,8 @@
 
   function addPageElements(url, elems) {
     if (insertPoint.ownerDocument !== document) {
-      const lastPage = xpather.getElements(rule.pageElement).pop();
-      if (lastPage) insertPoint = ensureNextSibling(lastPage);
+      const el = xpather.getLast(rule.pageElement);
+      if (el) insertPoint = ensureNextSibling(el);
     }
     const parent = insertPoint.parentNode;
     const bin = document.createDocumentFragment();
@@ -236,7 +236,7 @@
   }
 
   function getNextURL(xpath, doc, url) {
-    const next = xpather.getFirstElement(xpath, doc);
+    const next = xpather.getFirst(xpath, doc);
     if (next) {
       if (doc !== document && !doc.querySelector('base[href]'))
         doc.head.appendChild(doc.createElement('base')).href = url;
