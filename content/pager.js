@@ -134,7 +134,7 @@
   function addPage(event) {
     const url = requestURL;
     const doc = event.target.response;
-    // SHOULD PRECEDE stripping of stripts since a filter may need to process one
+    // SHOULD PRECEDE stripping of scripts since a filter may need to process one
     filters.forEach(f => f(doc, url));
     let elems, nextUrl;
     try {
