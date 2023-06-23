@@ -1,5 +1,6 @@
 'use strict';
-
+// TEST-includes: google.
+// TEST-match: /^https?:\/\/(www\.)?google(\.com?)?(\.\w\w)?\/(search\?|.*?[?&#]q=[^&]+)/
 // show missing images in google news pages
 window.run({
   filterName: 'fix-google',

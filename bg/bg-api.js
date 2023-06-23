@@ -52,6 +52,25 @@ function onRuntimeMessage(msg, sender, sendResponse) {
 }
 
 function onInstalled(info) {
+  chrome.runtime.getPackageDirectoryEntry(root => {
+    root.getDirectory('content', {create: false}, dir => {
+      dir.createReader().readEntries(async entries => {
+        const fixes = [];
+        const jobs = entries.map(async e => {
+          if (e.isFile && e.name.startsWith('fix-')) {
+            const file = `/${dir.name}/${e.name}`;
+            const text = await new Promise(cb => e.file(f => cb(f.text())));
+            const rx = /\/\/\s*TEST-(\w+):\s*(.+)/g;
+            const filters = [];
+            for (let m; (m = rx.exec(text));) filters.push(m.slice(1));
+            fixes.push({file, filters});
+          }
+        });
+        await Promise.all(jobs);
+        localStorage.fixes = JSON.stringify(fixes);
+      });
+    });
+  });
   if (info.reason === 'update') {
     chrome.storage.sync.get('settings', ({settings}) => {
       if (settings !== undefined) {

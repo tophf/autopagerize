@@ -5,8 +5,10 @@ export {
 import {DEFAULTS, PROPS_TO_NOTIFY, RETRY_TIMEOUT, execScript} from '/util/common.js';
 import {settings} from './bg.js';
 
+let fixes;
+
 /**
- * @return {Promise<boolean?>}
+ * @return {Promise<?boolean>}
  * true if there's an applicable rule (used by lastTry='genericRules' mode)
  */
 async function launch({tabId, url, rules, lastTry}) {
@@ -32,15 +34,9 @@ async function launch({tabId, url, rules, lastTry}) {
   if (!rr.hasRun)
     await execScript(tabId, {file: '/content/pager.js'});
 
-  if (url.includes('google.') &&
-      /^https?:\/\/(www\.)?google(\.com?)?(\.\w\w)?\/(search\?|.*?[?&#]q=[^&]+)/.test(url))
-    await execScript(tabId, {file: '/content/fix-google.js'});
-
-  if (url.startsWith('https://www.youtube.com/results'))
-    await execScript(tabId, {file: '/content/fix-youtube.js'});
-
-  if (url.startsWith('https://news.search.yahoo.co'))
-    await execScript(tabId, {file: '/content/fix-yahoo.js'});
+  for (const f of fixes || parseFixes())
+    if (f.filters.every(f => url[f[0]](f[1])))
+      await execScript(tabId, {file: f.file});
 
   const ss = {orphanMessageId: localStorage.orphanMessageId};
   for (const name of PROPS_TO_NOTIFY) {
@@ -82,4 +78,26 @@ function contentDoRun(settings) {
   window.launched = true;
   delete window.rules;
   delete window.matchedRule;
+}
+
+function parseFixes() {
+  try {
+    fixes = JSON.parse(localStorage.fixes);
+    for (const {filters: flt} of fixes) {
+      for (let i = 0, f, val; (f = flt[i]); i++) {
+        if (f[0] === 'match' && typeof (val = f[1]) === 'string') {
+          try {
+            val = new RegExp(val.slice(1, -1));
+          } catch (e) {
+            val = /^$/;
+            console.error(e);
+          }
+          f[1] = val;
+        }
+      }
+    }
+  } catch (e) {
+    fixes = [];
+  }
+  return fixes;
 }

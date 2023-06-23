@@ -1,5 +1,5 @@
 'use strict';
-
+// TEST-startsWith: https://news.search.yahoo.co
 // show missing images in yahoo news
 window.run({
   filterName: 'fix-yahoo',
