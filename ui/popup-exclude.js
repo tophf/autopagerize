@@ -12,7 +12,7 @@ $('#excludeSection').addEventListener('click', updateSpecificity, {once: true});
 async function exclude(e) {
   e.preventDefault();
 
-  const pattern = e.target.title;
+  const pattern = e.target.url;
   await applyPerSite(pattern);
 
   const runTerminate = {
@@ -49,10 +49,11 @@ function updateSpecificity() {
   const {url} = popup.tab;
   for (const el of $$('#specificity a')) {
     const {type} = el.dataset;
-    el.title =
+    el.title = decodeURIComponent(el.url =
       type === 'url' ? url :
         type === 'prefix' ? url + '*' :
-          type === 'domain' ? new URL(url).origin + '/*' : '';
+          type === 'domain' ? new URL(url).origin + '/*' : ''
+    );
     el.onclick = exclude;
   }
   $('#specificity').dataset.ready = '';
