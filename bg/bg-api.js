@@ -52,6 +52,8 @@ function onRuntimeMessage(msg, sender, sendResponse) {
 }
 
 function onInstalled(info) {
+  if (info.reason === 'chrome_update')
+    return;
   chrome.runtime.getPackageDirectoryEntry(root => {
     root.getDirectory('content', {create: false}, dir => {
       dir.createReader().readEntries(async entries => {
