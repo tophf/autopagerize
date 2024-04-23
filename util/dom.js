@@ -18,13 +18,13 @@ export function $$(sel, base = document) {
   return base.querySelectorAll(sel);
 }
 
-export function onDomLoaded() {
-  return document.readyState !== 'loading'
-    ? Promise.resolve()
-    : new Promise(r => document.addEventListener('DOMContentLoaded', r, {once: true}));
+export function toggleDarkTheme(force = 'darkTheme' in localStorage) {
+  for (const el of $$('link[media]'))
+    el.media = force ? 'screen' : '(prefers-color-scheme: dark)';
 }
 
-if ('darkTheme' in localStorage) {
-  for (const el of $$('link[media*="prefers-color-scheme: dark"]'))
-    el.media = 'screen';
-}
+toggleDarkTheme();
+chrome.storage.sync.onChanged.addListener(ch => {
+  if ((ch = ch.darkTheme))
+    toggleDarkTheme(ch.newValue);
+});

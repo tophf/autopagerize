@@ -1,31 +1,30 @@
-export {
-  calcRuleKey,
-  calcUrlCacheKey,
-  isUrlExcluded,
-  isUrlMatched,
-  ruleKeyToUrl,
-};
-
 export const utf8encoder = new TextEncoder();
 export const utf8decoder = new TextDecoder();
-/** @type Map<String,(RegExp|null)> - null means a bad regexp */
+/** @type {Map<String,(RegExp|null)>} - null means a bad regexp */
 export const str2rx = new Map();
 
 import {arrayOrDummy} from '/util/common.js';
-import {settings} from './bg.js';
+import {g} from './bg.js';
 
-// N.B. requires 'settings' to be already loaded when no 'exclusions' were supplied
-function isUrlExcluded(url, exclusions) {
+/** content scripts should be notified when these options are changed */
+export const PROPS_TO_NOTIFY = [
+  'showStatus',
+  'statusStyle',
+  'statusStyleError',
+  'requestInterval',
+  'pageHeightThreshold',
+];
+
+// !!! Requires 'g.cfg' to be already loaded when no 'exclusions' were supplied
+export function isUrlExcluded(url) {
   return (
     url.startsWith('https://mail.google.com/') ||
     url.startsWith('http://b.hatena.ne.jp/') ||
-    url.startsWith('https://www.facebook.com/plugins/like.php') ||
-    url.startsWith('http://api.tweetmeme.com/button.js') ||
-    isUrlMatched(url, exclusions || settings().exclusions)
+    isUrlMatched(url, g.cfg.exclusions)
   );
 }
 
-function isUrlMatched(url, patterns) {
+export function isUrlMatched(url, patterns) {
   for (const entry of arrayOrDummy(patterns)) {
     const isRegexp = entry.startsWith('/') && entry.endsWith('/');
     if (!isRegexp) {
@@ -61,13 +60,13 @@ function compilePattern(str, isRegexp) {
   return rx;
 }
 
-async function calcUrlCacheKey(url) {
+export async function calcUrlCacheKey(url) {
   const bytes = utf8encoder.encode(url);
   const hash = await crypto.subtle.digest('SHA-256', bytes);
   return new Uint8Array(hash).slice(0, 16);
 }
 
-function calcRuleKey(rule) {
+export function calcRuleKey(rule) {
   const url = utf8encoder.encode(rule.url);
   const key = new Uint8Array(url.length + 4);
   new Uint32Array(key.buffer, 0, 1)[0] = rule.id;
@@ -75,6 +74,14 @@ function calcRuleKey(rule) {
   return key;
 }
 
-function ruleKeyToUrl(key) {
+export function ruleKeyToUrl(key) {
   return utf8decoder.decode(key.slice(4));
+}
+
+/** @returns {Promise<chrome.tabs.Tab[]>} array of tabs, beginning with the active tab */
+export async function queryTabs() {
+  const res = await chrome.tabs.query({url: '*://*/*'});
+  const i = res.findIndex(t => t.active);
+  res.unshift(...res.splice(i, 1));
+  return res;
 }

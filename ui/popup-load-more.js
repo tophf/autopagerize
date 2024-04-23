@@ -1,4 +1,4 @@
-import {execScript} from '/util/common.js';
+import {tabSend} from '/util/common.js';
 import {$, $$} from '/util/dom.js';
 import {i18n} from '/util/locale.js';
 import * as popup from './popup.js';
@@ -37,10 +37,7 @@ function stop(event) {
 }
 
 function inTab(data) {
-  return execScript(
-    popup.tab.id || null,
-    data => typeof run === 'function' && window.run({loadMore: data}),
-    data);
+  return tabSend(popup.tab.id, ['run', {loadMore: data}]);
 }
 
 /** @param {chrome.runtime.Port} port */

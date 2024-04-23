@@ -1,7 +1,7 @@
 # https://github.com/eslint/eslint/blob/master/docs/rules/README.md
 
 parserOptions:
-  ecmaVersion: 2021
+  ecmaVersion: 2022
   sourceType: module
 
 env:
@@ -231,6 +231,9 @@ overrides:
     - "content/*.js"
     parserOptions:
       sourceType: script
+    globals:
+      xpather: false
+      run: false
 
   - files:
     - "siteinfo-updater.js"
@@ -238,3 +241,12 @@ overrides:
       sourceType: script
     env:
       node: true
+
+  - files:
+    - "bg/bg*"
+    env:
+      browser: false
+      serviceworker: true
+    globals:
+      createImageBitmap: false
+      OffscreenCanvas: false

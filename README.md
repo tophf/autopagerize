@@ -1,16 +1,17 @@
 ### A fork of [Autopagerize for Chrome](https://github.com/swdyh/autopagerize_for_chrome)
- 
+
 <img align="right" src="https://i.imgur.com/6wWETeo.png">
 
 Fully reworked to reduce memory consumption and increase performance:
 
-* the background page now auto-unloads when inactive
+* inactivity timeout of the background script is configurable, so you can choose a shorter timeout to conserve memory (~35MB) or a longer timeout to conserve CPU due to a faster checking of URL regexps (from half a second right after start to just a few milliseconds in subsequent checks).
+* visited URL's rules are cached in IndexedDB to avoid re-checking thousands of rules
+* simple URL regexps are converted to the much faster literal string checks
+* the data is stored as-is in IndexedDB
 * the content script is added to a web page only if its URL has a matching rule
 * the content script unregisters all of its listeners when there are no more pages to load according to the paging rules - and thus it gets removed by the garbage collector (several megabytes per each tab)
-* when disabling the extension via the On/Off command all content scripts are fully unloaded 
-* the URL matching regexps are cached upon each run of the background page so subsequent checks during the run are almost 100 times faster and take just a few milliseconds (the background page unloads after approximately five seconds of no navigation activity)
-* IndexedDB is used to store the data objects directly whereas the previously used localStorage serialized them into a string 
-* Simple one-time messaging and in-place code execution is used when needed instead of the persistent communication ports that were created for all the browser tabs
+* the content script is unloaded when the extension is toggled via the On/Off command
+* simple one-time messaging is used to avoid persisting the ports for all tabs
 
 ### Differences to the original:
 
@@ -41,7 +42,7 @@ Fully reworked to reduce memory consumption and increase performance:
 
 * Custom rules
 * Ability to start the database update manually
-* Customizable internal parameters 
+* Customizable internal parameters
 * Import/export
 
 ![options-dark](https://i.imgur.com/4GNQkYw.png)
@@ -51,18 +52,18 @@ Fully reworked to reduce memory consumption and increase performance:
 * `wedata.net` - used to update the database of pagination rules from http://wedata.net/databases/AutoPagerize/items_all.json which is stripped of everything except XPath selectors for the page elements and RegExp for the page URL
 * `<all_urls>` - required to paginate while you browse according to the database of rules (technically, to find the "next page" and "page body" elements)
 * `webNavigation` - to schedule a pagination check when you navigate to a new URL
-* `contextMenus` - to add an "On/off" item to the context menu of the extension icon in the browser toolbar 
+* `contextMenus` - to add an "On/off" item to the context menu of the extension icon in the browser toolbar
 * `storage` - to store the options of the extension
-* `tabs` - most notably to restart the paging functionality on extension update, also to notify the tabs that match the URL that you've just manually excluded in the popup  
+* `tabs` - most notably to restart the paging functionality on extension update, also to notify the tabs that match the URL that you've just manually excluded in the popup
 
-### How to limit the site permissions 
+### How to limit the site permissions
 
 Chrome allows you to easily limit the extension so it can access only a few sites:
 
-1. right-click the extension icon in the toolbar (or browser menu) and click "Manage" - it'll open `chrome://extensions` details page for this extension 
+1. right-click the extension icon in the toolbar (or browser menu) and click "Manage" - it'll open `chrome://extensions` details page for this extension
 2. click "On specific sites"
 3. enter the URL you want to allow
 4. to add more sites click "Add a new page"
-5. add `http://wedata.net` to keep the database of rules up-to-date. 
+5. add `http://wedata.net` to keep the database of rules up-to-date.
 
 ![limit UI](https://i.imgur.com/F2nqVdL.png)

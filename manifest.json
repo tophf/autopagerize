@@ -1,14 +1,14 @@
 {
-  "manifest_version": 2,
-  "version": "1.0.6",
-  "minimum_chrome_version": "63",
+  "manifest_version": 3,
+  "version": "2.0.0",
+  "minimum_chrome_version": "120",
   "name": "AutoPagerize",
   "description": "__MSG_description__",
   "homepage_url": "https://github.com/tophf/autopagerize",
   "default_locale": "en",
   "background": {
-    "page": "bg/bg.html",
-    "persistent": false
+    "service_worker": "bg/bg.js",
+    "type": "module"
   },
   "icons": {
     "16": "icons/16.png",
@@ -17,11 +17,10 @@
     "128": "icons/128.png"
   },
   "options_ui": {
-    "page": "ui/options.html",
-    "chrome_style": false
+    "page": "ui/options.html"
   },
-  "browser_action": {
-    "default_popup": "ui/popup-fail.html",
+  "action": {
+    "default_popup": "ui/popup.html?fail",
     "default_icon": {
       "16": "icons/off/16.png",
       "32": "icons/off/32.png",
@@ -29,7 +28,7 @@
     }
   },
   "commands": {
-    "_execute_browser_action": {},
+    "_execute_action": {},
     "onOff": {
       "description": "__MSG_onOff__"
     },
@@ -53,12 +52,16 @@
     }
   },
   "permissions": [
-    "*://wedata.net/",
-    "<all_urls>",
-    "webNavigation",
+    "alarms",
     "contextMenus",
+    "offscreen",
+    "scripting",
     "storage",
-    "tabs"
+    "tabs",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "<all_urls>"
   ],
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu7D4uoQ0hsOZMY5sdv66oBA6Cy7SUWUVb80TQs6wUTv6kGTqRMB+hzW2AHHzxiYpmzIq0tpwUsb5NQpMAvmO/4tSiFXRgyesR3TaITWM7B9FDcHUAAnlOgBHM08MnjO6Ur4dR3djfJKpXKMAvygcU0yrlnSarUg7vkXH+36OTDqOWuG07lyBszYbRDTSYOSSaApXTb736mSjxshM4n77ToB+n4x+v+GuVaIWcu1No2YA7NTatCg8Nt3sF+dP/ZiBglJ0Bo5/1P1A/0OzsC6CpKpqOmmSGGIjWJDf39W3ZFgTrZoPxn3Swkaub0qLgZwVa+94Yax+FbTmkJtGdQ2XiwIDAQAB"
 }

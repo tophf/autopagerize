@@ -1,21 +1,36 @@
-export {
-  filterCache,
-  loadCacheKeys,
-};
-
 import {arrayOrDummy, isGenericUrl} from '/util/common.js';
-import * as idb from '/util/storage-idb.js';
-import {ruleKeyToUrl, str2rx} from './bg-util.js';
-import {cache, cacheKeys, settings} from './bg.js';
+import {dbExec} from '/util/storage-idb.js';
+import {readMissingRules} from './bg-unpack.js';
+import {calcRuleKey, ruleKeyToUrl, str2rx} from './bg-util.js';
+import {cache, cacheKeys, g} from './bg.js';
 
-async function filterCache(url, urlCacheKey, packedRules) {
+export function buildGenericRules() {
+  return buildGenericRulesImpl.busy || (buildGenericRulesImpl.busy = buildGenericRulesImpl());
+}
+
+async function buildGenericRulesImpl() {
   if (!cacheKeys.size)
-    await loadCacheKeys();
+    await (loadCacheKeys.busy || (loadCacheKeys.busy = loadCacheKeys()));
+  const rules = [];
+  const toRead = [];
+  for (const key of cacheKeys.values())
+    if (isGenericUrl(key.url))
+      rules.push(cache.get(key.id) || toRead.push([rules.length, key.id]));
+  if (toRead.length)
+    await readMissingRules(rules, toRead);
+  dbExec({store: 'data'}).put(rules, 'genericRules');
+  buildGenericRulesImpl.busy = null;
+  return rules;
+}
+
+export async function filterCache(url, urlCacheKey, packedRules) {
   if (!cacheKeys.size)
-    await (await import('./bg-load-siteinfo.js')).loadBuiltinSiteinfo();
+    await (loadCacheKeys.busy || (loadCacheKeys.busy = loadCacheKeys()));
+  if (!cacheKeys.size)
+    await (buildSiteinfo.busy || (buildSiteinfo.busy = loadBuiltinSiteinfo()));
   if (cacheKeys.values().next().value.rx === undefined)
     regexpifyCache();
-  const customRules = arrayOrDummy(settings().rules);
+  const customRules = arrayOrDummy(g.cfg.rules);
   if (customRules.length && !customRules[0].hasOwnProperty('rx'))
     regexpifyCustomRules();
   const toUse = [];
@@ -44,14 +59,14 @@ async function filterCache(url, urlCacheKey, packedRules) {
     }
   }
   if (toRead.length)
-    await (await import('./bg-unpack.js')).readMissingRules(toUse, toRead);
+    await readMissingRules(toUse, toRead);
   if (urlCacheKey && `${toWrite}` !== `${packedRules}`)
-    idb.execRW({store: 'urlCache'}).put(new Int32Array(toWrite), urlCacheKey);
+    dbExec({store: 'urlCache'}).put(new Int32Array(toWrite), urlCacheKey);
   return toUse;
 }
 
 async function loadCacheKeys() {
-  const keys = arrayOrDummy(await idb.exec().getAllKeys());
+  const keys = arrayOrDummy(await dbExec.getAllKeys());
   // currently URLs don't have weird characters so the length delta in UTF8 is same as in UTF16
   keys.sort((a, b) => b.length - a.length);
   cacheKeys.clear();
@@ -63,6 +78,7 @@ async function loadCacheKeys() {
     };
     cacheKeys.set(rule.id, rule);
   }
+  loadCacheKeys.busy = null;
 }
 
 function regexpifyCache() {
@@ -93,7 +109,7 @@ function regexpifyCache() {
 }
 
 function regexpifyCustomRules() {
-  for (const r of settings().rules) {
+  for (const r of g.cfg.rules) {
     const {url} = r;
     let rx = str2rx.get(url);
     if (rx === null)
@@ -108,4 +124,41 @@ function regexpifyCustomRules() {
     }
     Object.defineProperty(r, 'rx', {value: rx});
   }
+}
+
+async function loadBuiltinSiteinfo() {
+  const [si] = await Promise.all([
+    (await fetch('/siteinfo.json')).json(),
+    dbExec.clear(),
+    dbExec({store: 'urlCache'}).clear(),
+  ]);
+  return buildSiteinfo(si);
+}
+
+export async function buildSiteinfo(si, fnCanWrite) {
+  cache.clear();
+  cacheKeys.clear();
+  const gr = [];
+  let /** @type IDBObjectStore */ store, op;
+  for (const rule of si) {
+    const {id, url} = rule;
+    cache.set(id, rule);
+    cacheKeys.set(id, rule);
+    if (isGenericUrl(url))
+      gr.push(rule);
+    if (!fnCanWrite || fnCanWrite(rule)) {
+      if (!store)
+        store = await dbExec.WRITE;
+      op = store.put({
+        ...rule,
+        url: calcRuleKey(rule),
+      });
+      op.onerror = console.error;
+    }
+  }
+  g.genericRules = gr;
+  store = await dbExec({store: 'data'}).WRITE;
+  store.put(new Date(), 'cacheDate');
+  store.put(gr, 'genericRules');
+  buildSiteinfo.busy = null;
 }

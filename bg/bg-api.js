@@ -1,45 +1,58 @@
-export {
-  endpoints,
+import {getActiveTab, ignoreLastError, tabSend} from '/util/common.js';
+import {dbExec} from '/util/storage-idb.js';
+import {buildGenericRules} from './bg-filter.js';
+import {setIcon} from './bg-icon.js';
+import {launch} from './bg-launch.js';
+import {writeSettings} from './bg-settings.js';
+import {switchGlobalState} from './bg-switch.js';
+import {updateSiteinfo} from './bg-update.js';
+import {isUrlExcluded} from './bg-util.js';
+import {g, getGenericRules, onNavigation} from './bg.js';
+import {offscreen} from './bg-offscreen.js';
+
+let POPUP;
+
+const api = {
+  __proto__: null,
+  isUrlExcluded: url => g.cfg instanceof Promise
+    ? g.cfg.then(() => isUrlExcluded(url))
+    : isUrlExcluded(url),
+  /** @this {chrome.runtime.MessageSender} */
+  launched() {
+    const tabId = this.tab.id;
+    if (!POPUP) POPUP = chrome.runtime.getManifest().action.default_popup.split('?')[0];
+    chrome.action.setPopup({tabId, popup: POPUP});
+    setIcon({tabId});
+  },
+  reinject: opts => onNavigation({...opts, frameId: 0}, true),
+  setIcon,
+  switchGlobalState,
+  tryGenericRules: async tabId => launch(tabId, await getGenericRules(), {lastTry: 'genericRules'}),
+  updateSiteinfo,
+  writeSettings,
 };
-
-import {DEFAULTS, execScript, ignoreLastError, isAppEnabled} from '/util/common.js';
-import {genericRules, lastAliveTime, loadGenericRules, onNavigation, settings} from './bg.js';
-
-let _endpoints;
-
-chrome.contextMenus.create({
-  id: 'onOff',
-  type: 'checkbox',
-  contexts: ['page_action', 'browser_action'],
-  title: chrome.i18n.getMessage('onOff'),
-  checked: isAppEnabled(),
-}, ignoreLastError);
 
 chrome.contextMenus.onClicked.addListener(onChromeMenu);
 chrome.commands.onCommand.addListener(onChromeCommand);
 chrome.runtime.onMessage.addListener(onRuntimeMessage);
-chrome.runtime.onInstalled.addListener(onInstalled);
+
 
 function onChromeMenu(info) {
-  endpoints().switchGlobalState(info.checked);
+  switchGlobalState(info.checked);
 }
 
-function onChromeCommand(cmd) {
+async function onChromeCommand(cmd) {
   if (cmd === 'onOff') {
-    endpoints().switchGlobalState(!isAppEnabled());
-    return;
+    await g.cfg;
+    return switchGlobalState(!g.cfg.enabled);
   }
   if (cmd.startsWith('loadMore')) {
-    execScript(
-      null,
-      num => typeof run === 'function' && window.run({loadMore: num}),
-      Number(cmd.slice(-2)));
-    return;
+    return tabSend((await getActiveTab()).id, ['run', {loadMore: +cmd.slice(-2)}]);
   }
 }
 
 function onRuntimeMessage(msg, sender, sendResponse) {
-  const fn = endpoints()[msg.action];
+  const fn = api[msg.action];
   if (!fn)
     return;
   const result = fn.apply(sender, msg.data);
@@ -51,115 +64,35 @@ function onRuntimeMessage(msg, sender, sendResponse) {
     sendResponse(result);
 }
 
-function onInstalled(info) {
-  if (info.reason === 'chrome_update')
+chrome.runtime.onInstalled.addListener(async info => {
+  if (info.reason !== 'update' && info.reason !== 'install')
     return;
-  chrome.runtime.getPackageDirectoryEntry(root => {
-    root.getDirectory('content', {create: false}, dir => {
-      dir.createReader().readEntries(async entries => {
-        const fixes = [];
-        const jobs = entries.map(async e => {
-          if (e.isFile && e.name.startsWith('fix-')) {
-            const file = `/${dir.name}/${e.name}`;
-            const text = await new Promise(cb => e.file(f => cb(f.text())));
-            const rx = /\/\/\s*TEST-(\w+):\s*(.+)/g;
-            const filters = [];
-            for (let m; (m = rx.exec(text));) filters.push(m.slice(1));
-            fixes.push({file, filters});
-          }
-        });
-        await Promise.all(jobs);
-        localStorage.fixes = JSON.stringify(fixes);
-      });
-    });
+
+  chrome.alarms.get('update', a => {
+    const p = 24 * 60; // 1 day
+    if (!a || a.periodInMinutes !== p)
+      chrome.alarms.create('update', {periodInMinutes: p});
   });
-  if (info.reason === 'update') {
-    chrome.storage.sync.get('settings', ({settings}) => {
-      if (settings !== undefined) {
-        chrome.storage.sync.remove('settings');
-        if (settings) {
-          const toWrite = {};
-          for (const k in DEFAULTS)
-            toWrite[k] = settings[k];
-          import('./bg-settings.js').then(async m => {
-            await m.packSettings(toWrite);
-            chrome.storage.sync.set(toWrite);
-          });
-        }
-      }
-    });
+
+  chrome.contextMenus.create({
+    id: 'onOff',
+    type: 'checkbox',
+    contexts: ['action'],
+    title: chrome.i18n.getMessage('onOff'),
+  }, ignoreLastError);
+
+  if (info.previousVersion <= '1.0.6') {
+    buildGenericRules();
+    chrome.storage.local.clear();
+    const keys = ['cacheDate', 'enabled'];
+    const {cacheDate, enabled} = await offscreen.localStorageGet(keys);
+    const cd = new Date(+cacheDate);
+    keys.push('fixes', 'orphanMessageId');
+    offscreen.localStorageSet(Object.fromEntries(keys.map(k => [k])));
+    dbExec({store: 'data'}).put(+cd ? cd : new Date(), 'cacheDate');
+    if (enabled === 'false')
+      return;
   }
-}
 
-function initEndpoints() {
-  /** @typedef EndPoints */
-  const EndPoints = {
-
-    isUrlExcluded: async (url, list) =>
-      (await import('/bg/bg-util.js')).isUrlExcluded(url, list),
-
-    keepAlive: () => new Promise(keepAlive),
-
-    /** @this chrome.runtime.MessageSender */
-    launched() {
-      const tabId = this.tab.id;
-      chrome.browserAction.setPopup({tabId, popup: '/ui/popup.html'});
-      import('./bg-icon.js').then(m => m.setIcon({tabId}));
-    },
-
-    reinject: () => new Promise(resolve => {
-      chrome.tabs.query({active: true, currentWindow: true}, ([{id, url}]) => {
-        onNavigation({url, tabId: id, frameId: 0})
-          .then(resolve);
-      });
-    }),
-
-    setIcon: async cfg => {
-      await (await import('./bg-icon.js')).setIcon(cfg);
-    },
-
-    switchGlobalState: async state => {
-      await (await import('./bg-switch.js')).switchGlobalState(state);
-    },
-
-    tryGenericRules: async tab =>
-      (await import('./bg-launch.js')).launch({
-        ...tab,
-        rules: genericRules() || await loadGenericRules(),
-        lastTry: 'genericRules',
-      }),
-
-    updateSiteinfo: async portName => {
-      const port = chrome.runtime.connect({name: portName});
-      const result = await (await import('./bg-update.js')).updateSiteinfo({
-        force: true,
-        onprogress: e => port.postMessage(e.loaded),
-      });
-      port.disconnect();
-      return result >= 0 ? result : String(result);
-    },
-
-    writeSettings: async ss => {
-      await (await import('./bg-settings.js')).writeSettings(ss);
-    },
-  };
-  Object.setPrototypeOf(EndPoints, null);
-  return (_endpoints = EndPoints);
-}
-
-/** @return EndPoints */
-function endpoints() {
-  return _endpoints || initEndpoints();
-}
-
-function keepAlive(resolve) {
-  const {unloadAfter = DEFAULTS.unloadAfter} = settings();
-  const minutes = unloadAfter < 0 ? 24 * 60 :
-    // subtracting the native 5 second timeout as the browser will wait that long anyway
-    Math.max(.25, unloadAfter - 5 / 60);
-  const msToSnooze = lastAliveTime + minutes * 60e3 - Date.now();
-  if (msToSnooze > 0)
-    setTimeout(keepAlive, msToSnooze, resolve);
-  else
-    resolve();
-}
+  switchGlobalState(true);
+});

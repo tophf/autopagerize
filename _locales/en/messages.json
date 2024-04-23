@@ -162,7 +162,7 @@
     "message": "Inactivity timeout before unloading (in minutes)"
   },
   "unloadAfterInfo": {
-    "message": "unloading the background script saves memory but stresses CPU to compile thousands of rules on each subsequent restart, <-1> = <1440> = maximum (one day), <0> = native behavior (five seconds), <1> = default"
+    "message": "unloading the background script saves memory but stresses CPU to compile thousands of rules on each subsequent restart, <-1> = <1440> = maximum (one day), <0> = native behavior (30 seconds), <1> = default"
   },
   "updateSiteinfo": {
     "message": "Update siteinfo"

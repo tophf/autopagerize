@@ -1,4 +1,3 @@
-/* global xpather */
 'use strict';
 
 window.xpather = {
@@ -107,4 +106,61 @@ window.xpather = {
       return token;
     });
   },
+
+  onmessage([cmd, arg, arg2], sender, sendResponse) {
+    let res;
+    switch (cmd) {
+
+      case 'ping':
+        res = true;
+        break;
+
+      case 'checkRules':
+        res = self.xpather?.getMatchingRule;
+        if (!res)
+          break;
+        if ((res = res(arg))) {
+          clearTimeout(self.retryTimer);
+          delete self.retryTimer;
+          self.rules = arg;
+          self.matchedRule = res;
+          res = {
+            hasRule: true,
+            hasRun: typeof run === 'function',
+          };
+        } else {
+          self.retryTimer = setTimeout(() => {
+            if (typeof run !== 'function')
+              delete self.xpather;
+          }, arg2 * 1.5);
+        }
+        break;
+
+      case 'launch':
+        if (typeof run !== 'function')
+          break;
+        if (!arg2)
+          self.dispatchEvent(new Event(chrome.runtime.id));
+        // eslint-disable-next-line no-undef
+        run({rules, matchedRule, settings: arg});
+        self.launched = 1;
+        delete self.rules;
+        delete self.matchedRule;
+        break;
+
+      case 'launched':
+        res = self[cmd] === 1;
+        delete self[cmd];
+
+      // fallthrough
+      case 'run':
+        if (typeof run === 'function')
+          run(arg);
+        break;
+    }
+    sendResponse(res ?? null);
+  },
 };
+
+chrome.runtime.onMessage.addListener(xpather.onmessage);
+dispatchEvent(new Event(chrome.runtime.id));

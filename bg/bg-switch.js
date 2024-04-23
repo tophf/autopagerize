@@ -1,61 +1,36 @@
-export {
-  switchGlobalState,
-};
-
-import {execScript} from '/util/common.js';
-import {observeNavigation, onNavigation} from './bg.js';
+import {tabSend} from '/util/common.js';
+import {setIcon} from './bg-icon.js';
+import {onNavigation, toggleNav} from './bg.js';
+import {queryTabs} from './bg-util.js';
 
 let busy, stopIt;
 
-async function switchGlobalState(state) {
-  if (busy) {
-    stopIt = true;
-    while (stopIt)
-      await new Promise(setTimeout);
-  }
+export async function switchGlobalState(state) {
+  if (busy)
+    await (stopIt = Promise.withResolvers()).promise;
   busy = true;
   stopIt = false;
   chrome.contextMenus.update('onOff', {checked: state});
+  toggleNav(state);
   await (state ? activate() : deactivate());
   busy = false;
 }
 
 async function activate() {
-  localStorage.enabled = '';
-  observeNavigation();
+  chrome.storage.sync.remove('enabled');
   for (const {id, url} of await queryTabs()) {
     await onNavigation({url, tabId: id, frameId: 0});
-    if (stopIt) {
-      stopIt = false;
-      return;
-    }
+    if (stopIt) return stopIt.resolve();
   }
 }
 
 async function deactivate() {
-  localStorage.enabled = 'false';
-  chrome.webNavigation.onCompleted.removeListener(onNavigation);
-  chrome.webNavigation.onHistoryStateUpdated.removeListener(onNavigation);
-  chrome.webNavigation.onReferenceFragmentUpdated.removeListener(onNavigation);
-
-  const runTerminate = {
-    code: `(${() => {
-      if (typeof run === 'function')
-        window.run({terminate: true});
-    }})()`,
-  };
-  const bgIcon = await import('./bg-icon.js');
-
-  for (const {id: tabId} of await queryTabs()) {
-    bgIcon.setIcon({tabId, type: 'off'});
-    execScript(tabId, runTerminate);
-    if (stopIt) {
-      stopIt = false;
-      return;
-    }
+  chrome.storage.sync.set({enabled: false});
+  for (const t of await queryTabs()) {
+    await setIcon({tabId: t.id, type: 'off'});
+    if (!t.discarded)
+      await tabSend(t.id, ['run', {terminate: true}]);
+    if (stopIt)
+      return stopIt.resolve();
   }
-}
-
-function queryTabs() {
-  return new Promise(r => chrome.tabs.query({url: '*://*/*'}, r));
 }

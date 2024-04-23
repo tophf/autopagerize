@@ -1,101 +1,100 @@
-export const CACHE_DURATION = 24 * 60 * 60 * 1000;
+import {delay, loadSettings, NOP, tabSend} from '/util/common.js';
+import {dbExec} from '/util/storage-idb.js';
+import {buildGenericRules, filterCache} from './bg-filter.js';
+import {setIcon} from './bg-icon.js';
+import {launch} from './bg-launch.js';
+import {unpackRules} from './bg-unpack.js';
+import {calcUrlCacheKey, isUrlExcluded, isUrlMatched} from './bg-util.js';
+import './bg-api.js';
+
 export const cache = new Map();
 export const cacheKeys = new Map();
-export let lastAliveTime;
-export {
-  genericRules,
-  loadGenericRules,
-  onNavigation,
-  observeNavigation,
-  settings,
+export const g = {
+  genericRules: null,
+  /** @type {Settings|Promise<Settings>} */
+  cfg: loadSettings(),
 };
-
-import {execScript, getCacheDate, getSettings, isAppEnabled} from '/util/common.js';
-import {endpoints} from './bg-api.js';
-import {calcUrlCacheKey, isUrlExcluded, isUrlMatched} from './bg-util.js';
-
 const processing = new Map();
-let _genericRules = null;
-/** @type Settings */
-let _settings = null;
+let alive, lastAlive;
 
-if (getCacheDate() + CACHE_DURATION < Date.now())
-  import('./bg-update.js').then(m =>
-    m.updateSiteinfo({force: true}));
+toggleNav(true);
 
-if (isAppEnabled())
-  observeNavigation();
+g.cfg.then(ss => {
+  g.cfg = ss;
+  if (ss.unloadAfter)
+    alive = setInterval(alivePulse, 25e3);
+  if (!ss.enabled)
+    toggleNav(false);
+});
 
-if (!localStorage.orphanMessageId)
-  fetch('/manifest.json', {method: 'HEAD'}).then(r => {
-    const etag = r.headers.get('ETag').replace(/\W/g, '');
-    localStorage.orphanMessageId = chrome.runtime.id + ':' + etag;
-  });
-
-function genericRules(v) {
-  return v ? (_genericRules = v) : _genericRules;
+export function getGenericRules() {
+  return g.genericRules || (
+    g.genericRules = dbExec({store: 'data'}).get('genericRules').then(async res => (
+      g.genericRules = res || await buildGenericRules()
+    ))
+  );
 }
 
-function settings(v) {
-  return v ? (_settings = v) : _settings;
+export function toggleNav(on) {
+  const args = on ? [{url: [{urlPrefix: 'http'}]}] : [];
+  const fn = on ? 'addListener' : 'removeListener';
+  chrome.webNavigation.onDOMContentLoaded[fn](onDomLoaded, ...args);
+  chrome.webNavigation.onHistoryStateUpdated[fn](onNavigation, ...args);
+  chrome.webNavigation.onReferenceFragmentUpdated[fn](onNavigation, ...args);
 }
 
-function observeNavigation() {
-  const filter = {url: [{schemes: ['http', 'https']}]};
-  chrome.webNavigation.onCompleted.addListener(onNavigation, filter);
-  chrome.webNavigation.onHistoryStateUpdated.addListener(onNavigation, filter);
-  chrome.webNavigation.onReferenceFragmentUpdated.addListener(onNavigation, filter);
+function onDomLoaded(evt) {
+  return onNavigation(evt, true);
 }
 
-async function onNavigation({tabId, frameId, url}) {
-  if (!frameId && processing.get(tabId) !== url) {
-    processing.set(tabId, url);
-    if (!_settings)
-      _settings = await getSettings();
-    if (!isUrlExcluded(url))
-      await maybeLaunch(tabId, url);
-    else if (await execScript(tabId, tabNeedsDisabling) === true)
-      await endpoints().setIcon({tabId, type: 'off'});
+/**
+ * @param evt
+ * @param [first]
+ */
+export async function onNavigation(evt, first) {
+  if (evt.frameId)
+    return;
+  const {tabId, url, timeStamp: ts} = evt;
+  const p = processing.get(tabId);
+  if (!first && p?.url === url)
+    return;
+  const tab = await chrome.tabs.get(tabId).catch(NOP);
+  if (!tab?.url) // skipping pre-rendered tabs
+    return;
+  processing.set(tabId, {url, ts});
+  if (g.cfg instanceof Promise)
+    g.cfg = await g.cfg;
+  if (!isUrlExcluded(url))
+    await maybeLaunch(tabId, url, first);
+  else if (await tabSend(tabId, ['launched', {terminate: true}]))
+    setIcon({tabId, type: 'off'});
+  lastAlive = performance.now();
+  await delay(Math.max(g.cfg.requestInterval / 2, .5));
+  if (processing.get(tabId)?.ts === ts)
     processing.delete(tabId);
-    maybeKeepAlive();
-  }
 }
 
-async function maybeLaunch(tabId, url) {
-  const [idb, key] = await Promise.all([
-    import('/util/storage-idb.js'),
-    calcUrlCacheKey(url),
-  ]);
-  const packedRules = await idb.exec({store: 'urlCache'}).get(key);
+async function maybeLaunch(tabId, url, first) {
+  const key = await calcUrlCacheKey(url);
+  const packedRules = await dbExec({store: 'urlCache'}).get(key);
   const rules =
-    packedRules && await (await import('./bg-unpack.js')).unpackRules(packedRules) ||
-    await (await import('./bg-filter.js')).filterCache(url, key, packedRules);
-  if (_settings.genericRulesEnabled && isUrlMatched(url, _settings.genericSites))
-    rules.push(..._genericRules || await loadGenericRules());
+    packedRules?.length && await unpackRules(packedRules) ||
+    await filterCache(url, key, packedRules);
+  if (g.cfg.genericRulesEnabled && isUrlMatched(url, g.cfg.genericSites)) {
+    const t = getGenericRules();
+    rules.push(...t.then ? await t : t);
+  }
   if (rules.length)
-    await (await import('./bg-launch.js')).launch({tabId, url, rules});
+    await launch(tabId, rules, {first});
 }
 
-function maybeKeepAlive() {
-  lastAliveTime = Date.now();
-  const {unloadAfter} = _settings;
-  const enabled = unloadAfter === -1 || unloadAfter > 0;
-  const iframe = document.getElementsByTagName('iframe')[0];
-  if (enabled && !iframe)
-    document.body.appendChild(document.createElement('iframe')).src = '/bg/bg-iframe.html';
-  if (!enabled && iframe)
-    iframe.remove();
-}
-
-async function loadGenericRules() {
-  _genericRules =
-    await new Promise(r => chrome.storage.local.get('genericRules', _ => r(_.genericRules))) ||
-    await (await import('./bg-generic-rules.js')).buildGenericRules();
-  return _genericRules;
-}
-
-function tabNeedsDisabling() {
-  const {launched} = window;
-  delete window.launched;
-  return launched;
+function alivePulse() {
+  let t;
+  if (alive
+  && performance.now() - lastAlive < 60e3 * ((t = g.cfg.unloadAfter) < 0 ? 1440 : t)) {
+    chrome.runtime.getPlatformInfo();
+  } else {
+    clearInterval(alive);
+    alive = 0;
+  }
 }

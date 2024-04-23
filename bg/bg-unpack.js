@@ -1,16 +1,11 @@
-export {
-  readMissingRules,
-  unpackRules,
-};
-
 import {arrayOrDummy} from '/util/common.js';
-import * as idb from '/util/storage-idb.js';
+import {dbExec} from '/util/storage-idb.js';
 import {ruleKeyToUrl} from './bg-util.js';
-import {cache, cacheKeys, settings} from './bg.js';
+import {cache, cacheKeys, g} from './bg.js';
 
-// (!) needs `settings` to be already loaded
-async function unpackRules(packedRules) {
-  const customRules = arrayOrDummy(settings().rules);
+// (!) `cfg` must be already loaded
+export async function unpackRules(packedRules) {
+  const customRules = arrayOrDummy(g.cfg.rules);
   const unpackedRules = [];
   const toRead = [];
   for (const id of packedRules) {
@@ -30,24 +25,24 @@ async function unpackRules(packedRules) {
     : unpackedRules;
 }
 
-async function readMissingRules(rules, toRead) {
-  const index = /** @type IDBIndex */ await idb.exec({index: 'id'}).RAW;
+export async function readMissingRules(rules, toRead) {
+  const pr = Promise.withResolvers();
+  const index = await dbExec({index: 'id'}).READ;
   index.__rules = rules;
-  let op;
+  let /** @type Req */ op;
   for (const [arrayPos, id] of toRead) {
     op = index.get(id);
     op.__arrayPos = arrayPos;
     op.onsuccess = readRule;
     op.onerror = console.error;
   }
-  return new Promise(resolve => {
-    op.__resolve = resolve;
-    op.onerror = () => resolve(false);
-  });
+  op.__resolve = pr.resolve;
+  op.onerror = () => pr.resolve(false);
+  return pr.promise;
 }
 
 function readRule(e) {
-  const op = /** @type IDBRequest */ e.target;
+  const op = /** @type Req */ e.target;
   const r = op.result;
   if (!r) {
     op.transaction.abort();
@@ -65,3 +60,11 @@ function readRule(e) {
   if (op.__resolve)
     op.__resolve(op.source.__rules);
 }
+
+/**
+ * @typedef {IDBRequest & {
+ *   __resolve: function,
+ *   __arrayPos: number,
+ *   source: IDBIndex & {__rules: {}},
+ * }} Req
+ */

@@ -1,4 +1,3 @@
-/* global xpather */
 'use strict';
 
 // IIFE simplifies complete unregistering for garbage collection
@@ -15,7 +14,7 @@
     /** @type {String} */
     styleError: '',
   };
-  const filters = new Map();
+  const orphanMessageId = chrome.runtime.id;
   /** @type {Node|HTMLElement} */
   let insertPoint;
   let lastRequestURL = '';
@@ -23,7 +22,6 @@
   let loadedURLs = {};
   /** @type {function(status)} */
   let onPageProcessed;
-  let orphanMessageId = '';
   let pageNum = 0;
   let pagesRemaining = 0;
   let requestInterval = 2000;
@@ -38,14 +36,13 @@
   let xoElem;
 
   window.run = cfg => {
-    if (cfg.settings)
-      loadSettings(cfg.settings);
-    if (cfg.filter)
-      filters.set(cfg.filterName, cfg.filter);
-    if (cfg.rules && !maybeInit(cfg.rules, cfg.matchedRule))
-      setTimeout(maybeInit, requestInterval, cfg.rules);
-    if (cfg.loadMore)
-      return doLoadMore(cfg.loadMore);
+    let v;
+    if ((v = cfg.settings))
+      loadSettings(v);
+    if ((v = cfg.rules) && !maybeInit(v, cfg.matchedRule))
+      setTimeout(maybeInit, requestInterval, v);
+    if ((v = cfg.loadMore))
+      return doLoadMore(v);
     if (cfg.terminate)
       terminate();
   };
@@ -54,8 +51,8 @@
 
   function maybeInit(rules, rule) {
     // content scripts may get unloaded during setTimeout
-    if (!window.xpather)
-      return;
+    if (!self.xpather?.MICROFORMAT)
+      return terminate();
     if (loadedURLs[location.href])
       return true;
     if (!rule)
@@ -134,12 +131,10 @@
   function addPage(event) {
     const url = requestURL;
     const doc = event.target.response;
-    // SHOULD PRECEDE stripping of scripts since a filter may need to process one
-    filters.forEach(f => f(doc, url));
     let elems, nextUrl;
     try {
       for (const el of doc.getElementsByTagName('script'))
-        el.remove();
+        el.inert = true;
       elems = xpather.getElements(rule.pageElement, doc);
       nextUrl = getNextURL(rule.nextLink, doc, url);
     } catch (e) {
@@ -208,14 +203,17 @@
     }
   }
 
-  function terminate(e = {}) {
+  function terminate(e) {
+    if (e && chrome.runtime.id)
+      return;
+    chrome.runtime.onMessage.removeListener(xpather.onmessage);
+    removeEventListener(orphanMessageId, terminate);
     delete window.run;
     delete window.xpather;
     xo.disconnect();
     xo = xoElem = null;
-    removeEventListener(orphanMessageId, terminate);
     statusRemove(1500);
-    if (e.type === orphanMessageId)
+    if (e)
       dispatchEvent(new Event(orphanMessageId + ':terminated'));
   }
 
@@ -227,7 +225,8 @@
       onPageProcessed = ok => {
         if (ok)
           doLoadMore.timer = setTimeout(doLoadMore, requestInterval, num);
-        chrome.runtime.connect({name: 'pagesRemaining:' + num});
+        chrome.runtime.connect({name: 'pagesRemaining:' + num})
+          .onDisconnect.addListener(() => chrome.runtime.lastError);
       };
     } else {
       clearTimeout(doLoadMore.timer);
@@ -318,10 +317,6 @@
     let v;
     if ((v = ss.requestInterval * 1000))
       requestInterval = v;
-    if ((v = ss.orphanMessageId) && orphanMessageId !== v) {
-      orphanMessageId = v;
-      dispatchEvent(new Event(v));
-    }
     if ((v = ss.pageHeightThreshold) || !xo) {
       xo?.disconnect();
       xo = new IntersectionObserver(onIntersect, {rootMargin: v + 'px'});

@@ -1,66 +1,47 @@
-export {
-  writeSettings,
-};
+import {DEFAULTS, ignoreLastError, getLZ} from '/util/common.js';
+import {trimUrlCache} from './bg-trim.js';
+import {PROPS_TO_NOTIFY, queryTabs} from './bg-util.js';
+import {offscreen} from './bg-offscreen.js';
+import {g} from './bg.js';
 
-import {getSettings, ignoreLastError, packSettings, PROPS_TO_NOTIFY} from '/util/common.js';
-import {settings} from './bg.js';
-
-async function writeSettings(ss) {
-  const all = settings() || await getSettings();
+export async function writeSettings(ss) {
+  const all = g.cfg instanceof Promise ? await g.cfg : g.cfg;
   if (ss.rules)
-    (await import('./bg-trim.js')).trimUrlCache(all.rules, ss.rules, {main: false});
-  if (ss.unloadAfter !== all.unloadAfter) {
-    const iframe = document.getElementsByTagName('iframe')[0];
-    iframe && iframe.remove();
-  }
-  // showStatus defaults to |true| so both |undefined| and |true| mean the same
-  const shouldNotify = (all.showStatus !== false) !== (ss.showStatus !== false) ||
-                       PROPS_TO_NOTIFY.some(k => all[k] !== ss[k]);
+    trimUrlCache(all.rules, ss.rules, {main: false});
   const toWrite = {};
-  for (const k in ss)
-    if (!deepEqual(ss[k], all[k]))
-      toWrite[k] = ss[k];
-  await packSettings(toWrite);
+  let toNotify;
+  for (const k in ss) {
+    const v = ss[k] ?? DEFAULTS[k];
+    if (v !== all[k]) {
+      all[k] = v;
+      toWrite[k] = v && getLZ(k, v, true);
+      if (!toNotify) toNotify = PROPS_TO_NOTIFY.includes(k);
+    }
+  }
   chrome.storage.sync.set(toWrite);
-  Object.assign(all, ss);
-  settings(all);
-  mirrorThemePreference();
-  if (shouldNotify)
+  localStorageMirror(toWrite, 'darkTheme');
+  if (toNotify)
     notify(all);
 }
 
-function mirrorThemePreference() {
-  const enabled = Boolean(settings().darkTheme);
-  const stored = localStorage.hasOwnProperty('darkTheme');
-  if (enabled && !stored)
-    localStorage.darkTheme = '';
-  else if (!enabled && stored)
-    delete localStorage.darkTheme;
+async function localStorageMirror(ss, key) {
+  const val = ss[key];
+  const stored = val != null && await offscreen.localStorageGet(key) != null;
+  if (val ? !stored : stored)
+    await offscreen.localStorageSet({[key]: val ? '' : null});
 }
 
-function notify(ss = settings()) {
-  const props = PROPS_TO_NOTIFY.map(p => p + ':' + JSON.stringify(ss[p])).join(',');
-  const code = `(${passSettingsToContentScript})({${props}})`;
-  chrome.tabs.query({url: '*://*/*'}, tabs =>
-    tabs.forEach(tab =>
-      chrome.tabs.executeScript(tab.id, {code}, ignoreLastError)));
-}
-
-function passSettingsToContentScript(settings) {
-  if (typeof run === 'function')
-    window.run({settings});
-}
-
-function deepEqual(a, b) {
-  if (typeof a !== typeof b)
-    return false;
-  if (!a || !b || typeof a !== 'object')
-    return a === b;
-  if (Array.isArray(a))
-    return Array.isArray(b) &&
-           a.length === b.length &&
-           a.every((v, i) => deepEqual(v, b[i]));
-  const keys = Object.keys(a);
-  return keys.length === Object.keys(b).length &&
-         keys.every(k => deepEqual(a[k], b[k]));
+async function notify(ss = g.cfg) {
+  const a1 = {};
+  const opts = {
+    target: {tabId: 0},
+    func: settings => typeof run === 'function' && self.run({settings}),
+    args: [a1],
+  };
+  for (const p of PROPS_TO_NOTIFY)
+    a1[p] = ss[p];
+  for (const tab of await queryTabs()) {
+    opts.target.tabId = tab.id;
+    chrome.scripting.executeScript(opts, ignoreLastError);
+  }
 }

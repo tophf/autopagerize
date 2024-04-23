@@ -1,14 +1,9 @@
-export {
-  convertToMap,
-  trimUrlCache,
-};
-
 import {arrayOrDummy} from '/util/common.js';
-import * as idb from '/util/storage-idb.js';
+import {dbExec} from '/util/storage-idb.js';
 
 let state;
 
-async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
+export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
   if (state)
     return;
   state = {
@@ -16,21 +11,21 @@ async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
     old: convertToMap(oldRules),
     new: convertToMap(newRules),
   };
-  const store = idb.execRW({store: 'urlCache'});
+  const store = await dbExec({store: 'urlCache'}).WRITE;
   if (someUrlChanged()) {
     await store.clear();
   } else {
-    const op = (await store.RAW).openCursor();
-    await new Promise((resolve, reject) => {
-      op.onsuccess = processCursor;
-      op.onerror = reject;
-      op.__resolve = resolve;
-    });
+    const op = store.openCursor();
+    const pr = Promise.withResolvers();
+    op.onsuccess = processCursor;
+    op.onerror = pr.reject;
+    op.__resolve = pr.resolve;
+    await pr.promise;
   }
   state = null;
 }
 
-function convertToMap(obj) {
+export function convertToMap(obj) {
   return obj instanceof Map ? obj : new Map(arrayOrDummy(obj).map(x => [x.id, x]));
 }
 

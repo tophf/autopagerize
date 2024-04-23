@@ -1,11 +1,12 @@
-import {getSettings, ignoreLastError, RETRY_TIMEOUT} from '/util/common.js';
+import {delay, ignoreLastError, RETRY_TIMEOUT} from '/util/common.js';
 import {$} from '/util/dom.js';
 import {applyPerSite, updateSpecificity} from './popup-exclude.js';
 import * as popup from './popup.js';
 
 $('#genericRulesSection').hidden = false;
 $('#genericRulesSection').addEventListener('click', async () => {
-  if (await getSettings('genericRulesEnabled')) {
+  const GRE = 'genericRulesEnabled';
+  if ((await chrome.storage.sync.get(GRE))[GRE]) {
     $('#genericRulesSection').removeAttribute('disabled');
     if (!$('#specificity').dataset.ready)
       updateSpecificity();
@@ -17,7 +18,7 @@ $('#genericRulesSection').addEventListener('click', async () => {
         await applyPerSite(e.target.title, 'genericSites');
         chrome.tabs.reload(tabId, ignoreLastError);
         await waitForTabLoad(popup.tab);
-        await new Promise(resolve => setTimeout(resolve, RETRY_TIMEOUT));
+        await delay(RETRY_TIMEOUT);
         location.search = '';
       },
     }));

@@ -1,11 +1,15 @@
+import {offscreen} from './bg-offscreen.js';
+
 export {
   updateSiteinfo,
 };
 
 import {arrayOrDummy} from '/util/common.js';
-import * as idb from '/util/storage-idb.js';
+import {dbExec} from '/util/storage-idb.js';
+import {buildGenericRules, buildSiteinfo} from './bg-filter.js';
+import {trimUrlCache} from './bg-trim.js';
 import {calcRuleKey, ruleKeyToUrl} from './bg-util.js';
-import {cache, cacheKeys, genericRules} from './bg.js';
+import {cache, cacheKeys} from './bg.js';
 
 const DATA_URL = 'http://wedata.net/databases/AutoPagerize/items_all.json';
 const KNOWN_KEYS = [
@@ -15,54 +19,42 @@ const KNOWN_KEYS = [
   'pageElement',
 ];
 
-/**
- * @param {object} [_]
- * @param {boolean} [_.force]
- * @param {function(ProgressEvent)} [_.onprogress]
- */
-async function updateSiteinfo({force, onprogress} = {}) {
-  if (!force && await idb.exec().count())
-    return;
-  const bgTrim = await import('./bg-trim.js');
+async function updateSiteinfo(portName) {
   try {
+    /** @type {Map[]} */
     const [old, fresh] = await Promise.all([
       getCacheIndexedById(),
-      download(onprogress).then(sanitize).then(bgTrim.convertToMap),
+      offscreen.xhr(DATA_URL, {
+        headers: {'Cache-Control': 'no-cache'},
+        timeout: 60e3,
+        portName,
+      }).then(sanitize),
     ]);
     if (!fresh.size)
       return 0;
     await removeObsoleteRules(old, fresh);
-    await bgTrim.trimUrlCache(old, fresh);
-    await (await import('./bg-load-siteinfo.js'))
-      .loadSiteinfo(fresh.values(), rule => !shallowEqual(rule, old.get(rule.id)));
-    chrome.storage.local.remove('genericRules');
-    genericRules(null);
+    await trimUrlCache(old, fresh);
+    await buildSiteinfo.busy;
+    await buildSiteinfo(fresh.values(), rule => !shallowEqual(rule, old.get(rule.id)));
+    buildGenericRules();
     return fresh.size;
   } catch (e) {
-    return (e.target || {}).error || e;
+    return `${e.target?.error || e}`;
   }
 }
 
-function download(onprogress) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', DATA_URL);
-    xhr.setRequestHeader('Cache-Control', 'no-cache');
-    xhr.responseType = 'json';
-    xhr.onprogress = onprogress;
-    xhr.timeout = 60e3;
-    xhr.onload = () => resolve(xhr.response);
-    xhr.onerror = reject;
-    xhr.ontimeout = reject;
-    xhr.send();
-  });
-}
-
 function sanitize(data) {
-  return arrayOrDummy(data)
-    .map(x => x && x.data && x.data.url && pickKnownKeys(x.data, x.resource_url))
-    .filter(Boolean)
-    .sort((a, b) => a.id - b.id);
+  data = arrayOrDummy(JSON.parse(data));
+  const map = new Map();
+  let len = 0;
+  for (let i = 0, v; i < data.length; i++) {
+    v = data[i];
+    if (v?.data?.url) data[len++] = pickKnownKeys(v.data, v.resource_url);
+  }
+  data.length = len;
+  data.sort((a, b) => a.id - b.id);
+  for (const v of data) map.set(v.id, v);
+  return map;
 }
 
 function pickKnownKeys(entry, resourceUrl) {
@@ -85,7 +77,7 @@ function pickKnownKeys(entry, resourceUrl) {
 async function getCacheIndexedById() {
   if (cache.size && cache.size === cacheKeys.size)
     return cache;
-  const all = await idb.exec().getAll();
+  const all = await dbExec.getAll();
   const byId = new Map();
   for (const r of all) {
     r.url = ruleKeyToUrl(r.url);
@@ -101,14 +93,15 @@ async function removeObsoleteRules(old, fresh) {
     if (b && b.url === a.url)
       continue;
     if (!store)
-      store = await idb.execRW().RAW;
+      store = await dbExec.WRITE;
     op = store.delete(calcRuleKey(a));
   }
-  if (op)
-    await new Promise((resolve, reject) => {
-      op.onsuccess = resolve;
-      op.onerror = reject;
-    });
+  if (op) {
+    const pr = Promise.withResolvers();
+    op.onsuccess = pr.resolve;
+    op.onerror = pr.reject;
+    await pr.promise;
+  }
 }
 
 function shallowEqual(a, b) {

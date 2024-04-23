@@ -3,8 +3,9 @@ export {
   renderSettings,
 };
 
-import {arrayOrDummy, DEFAULTS, getCacheDate, getSettings, inBG} from '/util/common.js';
-import {$, $$, onDomLoaded} from '/util/dom.js';
+import {arrayOrDummy, DEFAULTS, loadSettings, inBG} from '/util/common.js';
+import {$, $$} from '/util/dom.js';
+import {dbExec} from '/util/storage-idb.js';
 import {collectRules, loadRules, resizeArea} from './options-rules.js';
 
 const ValueTransform = {
@@ -46,14 +47,7 @@ const ValueTransform = {
 
 const changedElements = new Set();
 
-Promise.all([
-  getCacheDate(),
-  getSettings(),
-  onDomLoaded(),
-]).then(([
-  cacheDate,
-  settings,
-]) => {
+loadSettings().then(settings => {
   renderSettings(settings);
   loadRules(settings.rules);
 
@@ -63,10 +57,10 @@ Promise.all([
   addEventListener('input', onChange, {passive: true});
   addEventListener('change', onChange, {passive: true});
 
-  import('/util/storage-idb.js')
-    .then(idb => idb.exec().count())
-    .then(cacheCount => renderSiteinfoStats(cacheCount, cacheDate));
-  import('./options-backup.js');
+  Promise.all([
+    dbExec.count(),
+    dbExec({store: 'data'}).get('cacheDate'),
+  ]).then(res => renderSiteinfoStats(...res));
 });
 
 function renderSettings(ss, {force} = {}) {
@@ -88,7 +82,7 @@ function renderSettings(ss, {force} = {}) {
 
 function renderSiteinfoStats(numRules, date) {
   $('#size').textContent = numRules;
-  date = date > 0 ? new Date(date) : '';
+  if (!+date) date = '';
   const elDate = $('#date');
   elDate.dateTime = date;
   elDate.textContent = date ? renderDate(date) : 'N/A';
@@ -116,17 +110,9 @@ function renderDate(date) {
 }
 
 async function save() {
-  const settings = await getSettings();
   const ss = collectSettings();
-  const task = inBG.writeSettings(ss);
-  if (ss.darkTheme !== settings.darkTheme) {
-    await task;
-    location.reload();
-    return;
-  }
-
+  inBG.writeSettings(ss);
   renderSettings(ss);
-
   changedElements.forEach(el => el.classList.remove('changed'));
   changedElements.clear();
   for (const el of $$('#rules .deleted'))

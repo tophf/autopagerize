@@ -1,12 +1,11 @@
 // inline 'export' keyword is used since everything in this module is expected to be exported
 
-export const RETRY_TIMEOUT = 2000;
+import {compressToUTF16, decompressFromUTF16} from './lz-string.js';
 
+export const RETRY_TIMEOUT = 2000;
+export const NOP = () => {};
 export const inBG = new Proxy({}, {
-  get(_, action) {
-    return (...data) =>
-      new Promise(r => chrome.runtime.sendMessage({action, data}, r));
-  },
+  get: (_, action) => (...data) => chrome.runtime.sendMessage({action, data}),
 });
 
 const STATUS_STYLE = `
@@ -26,114 +25,73 @@ const STATUS_STYLE = `
   transition: opacity 1s;
 `.replace(/\n\s+/g, '\n').trim();
 
-/**
- @typedef Settings
- @property {boolean} showStatus
- @property {boolean} darkTheme
- @property {number} requestInterval - seconds
- @property {number} unloadAfter - minutes
- @property {Object[]} rules
- @property {boolean} genericRulesEnabled
- @property {string[]} genericSites
- @property {string[]} exclusions
- @property {number} pageHeightThreshold - pixels
- @property {string} statusStyle
- @property {string} statusStyleError
- */
+/** @namespace Settings */
 export const DEFAULTS = Object.freeze({
   showStatus: true,
   darkTheme: false,
+  enabled: true,
+  /** seconds */
   requestInterval: 2,
+  /** minutes */
   unloadAfter: 1,
   rules: [],
   genericRulesEnabled: false,
   genericSites: ['*'],
   exclusions: [],
+  /** pixels */
   pageHeightThreshold: 400,
   statusStyle: STATUS_STYLE + '\nbackground: black;',
   statusStyleError: STATUS_STYLE + '\nbackground: maroon;',
 });
 
-// content scripts should be notified when these options are changed
-export const PROPS_TO_NOTIFY = [
-  'showStatus',
-  'statusStyle',
-  'statusStyleError',
-  'requestInterval',
-  'pageHeightThreshold',
-];
+export const getActiveTab = async () =>
+  (await chrome.tabs.query({active: true, currentWindow: true}))[0];
+
+for (const ns of ['runtime', 'tabs']) {
+  const obj = chrome[ns];
+  const fn = obj.sendMessage;
+  obj.sendMessage = async (...args) => {
+    const {stack} = new Error();
+    try {
+      return await fn.apply(obj, args);
+    } catch (err) {
+      err.stack += '\nPrior to sendMessage:\n' + stack;
+      throw err;
+    }
+  };
+}
 
 /**
  * @param {string|string[]} key
- * @return Promise<any|Settings>
+ * @return {Promise<Settings>}
  */
-export function getSettings(key = Object.keys(DEFAULTS)) {
-  return new Promise(resolve => {
-    chrome.storage.sync.get(key, async ss => {
-      const isKeyArray = Array.isArray(key);
-      if (isKeyArray ? key.some(isLZSetting) : isLZSetting(key))
-        await unpackSettings(ss);
-      for (const k of isKeyArray ? key : [key])
-        if (ss[k] === undefined)
-          ss[k] = DEFAULTS[k];
-      resolve(isKeyArray ? ss : ss[key]);
-    });
-  });
+export async function loadSettings(key = Object.keys(DEFAULTS)) {
+  const res = await chrome.storage.sync.get(key);
+  const isKeyArray = Array.isArray(key);
+  for (const k of isKeyArray ? key : [key]) {
+    let v = res[k];
+    if (v == null)
+      res[k] = DEFAULTS[k];
+    else if (v && (v = getLZ(k, v, false)))
+      res[k] = v;
+  }
+  return isKeyArray ? res : res[key];
 }
 
-export async function packSettings(ss) {
-  for (const k in ss) {
-    const lz = isLZSetting(k);
-    if (lz) {
-      const LZString = window.LZString || await loadLZString();
-      const v = lz === 'json' ? JSON.stringify(ss[k]) : ss[k];
-      // empty strings are stored as is because LZString increases them to 2 chars
-      ss[k] = v ? LZString.compressToUTF16(v) : '';
+export function getLZ(key, val, write) {
+  if (!val) return val;
+  let json;
+  const d = DEFAULTS[key];
+  if (typeof d === 'string' || (json = Array.isArray(d))) {
+    try {
+      val = write ? compressToUTF16(json ? JSON.stringify(val) : val)
+        : json ? JSON.parse(decompressFromUTF16(val)) :
+          decompressFromUTF16(val);
+    } catch (err) {
+      console.warn(err, key, val);
     }
   }
-}
-
-export async function unpackSettings(ss) {
-  for (const k in ss) {
-    const lz = isLZSetting(k);
-    if (lz) {
-      try {
-        const LZString = window.LZString || await loadLZString();
-        // empty strings are stored as is because LZString increases them to 2 chars
-        // (un-lzipping an empty string produces null)
-        const v = LZString.decompressFromUTF16(ss[k]) || '';
-        ss[k] = lz === 'json' ? JSON.parse(v) : v;
-      } catch (e) {
-        console.error('Cannot unpack', k, ss[k]);
-      }
-    }
-  }
-}
-
-export function isLZSetting(key) {
-  const v = DEFAULTS[key];
-  return typeof v === 'string' || Array.isArray(v) && 'json';
-}
-
-export function loadLZString() {
-  return new Promise(resolve => {
-    const el = document.createElement('script');
-    el.src = '/vendor/lz-string-unsafe/lz-string.min.js';
-    el.addEventListener('load', () => resolve(window.LZString), {once: true});
-    document.head.appendChild(el);
-  });
-}
-
-export function isAppEnabled() {
-  return localStorage.enabled !== 'false';
-}
-
-export function getCacheDate() {
-  return Number(localStorage.cacheDate) || 0;
-}
-
-export function setCacheDate(d = Date.now()) {
-  localStorage.cacheDate = d;
+  return val;
 }
 
 export function isGenericUrl(url) {
@@ -142,20 +100,19 @@ export function isGenericUrl(url) {
 }
 
 export function ignoreLastError() {
-  return chrome.runtime.lastError;
+  chrome.runtime.lastError; // eslint-disable-line no-unused-expressions
 }
 
 export function arrayOrDummy(v) {
   return Array.isArray(v) ? v : [];
 }
 
-export function execScript(tabId, options, ...codeParams) {
-  if (typeof options === 'function')
-    options = {code: `(${options})(${JSON.stringify(codeParams).slice(1, -1)})`};
-  return new Promise(resolve => {
-    chrome.tabs.executeScript(tabId, options, results => {
-      ignoreLastError();
-      resolve(results && results[0]);
-    });
-  });
+export function delay(seconds) {
+  const pr = Promise.withResolvers();
+  setTimeout(pr.resolve, seconds * 1000);
+  return pr.promise;
+}
+
+export function tabSend(tabId, msg) {
+  return chrome.tabs.sendMessage(tabId, msg, {frameId: 0}).catch(NOP);
 }

@@ -3,7 +3,7 @@ export {
   updateSpecificity,
 };
 
-import {arrayOrDummy, execScript, getSettings, inBG} from '/util/common.js';
+import {arrayOrDummy, inBG, loadSettings, tabSend} from '/util/common.js';
 import {$, $$} from '/util/dom.js';
 import * as popup from './popup.js';
 
@@ -15,22 +15,15 @@ async function exclude(e) {
   const pattern = e.target.url;
   await applyPerSite(pattern);
 
-  const runTerminate = {
-    code: `(${() => {
-      if (typeof run === 'function')
-        window.run({terminate: true});
-    }})()`,
-  };
-
-  let path = chrome.runtime.getManifest().browser_action.default_popup;
+  let path = chrome.runtime.getManifest().action.default_popup;
   if (!path.startsWith('/'))
     path = '/' + path;
 
-  for (const {id: tabId} of await findExcludedTabs(pattern)) {
+  for (const t of await findExcludedTabs(pattern)) {
     await Promise.all([
-      inBG.setIcon({tabId, type: 'off'}),
-      execScript(tabId, runTerminate),
-      new Promise(resolve => chrome.browserAction.setPopup({tabId, popup: path}, resolve)),
+      inBG.setIcon({tabId: t.id, type: 'off'}),
+      chrome.action.setPopup({tabId: t.id, popup: path}),
+      !t.discarded && tabSend(t.id, ['run', {terminate: true}]),
     ]);
   }
 
@@ -38,7 +31,7 @@ async function exclude(e) {
 }
 
 async function applyPerSite(pattern, listType = 'exclusions') {
-  const list = arrayOrDummy(await getSettings(listType));
+  const list = arrayOrDummy(await loadSettings(listType));
   if (!list.includes(pattern)) {
     list.push(pattern);
     inBG.writeSettings({[listType]: list});
@@ -59,17 +52,12 @@ function updateSpecificity() {
   $('#specificity').dataset.ready = '';
 }
 
-function findExcludedTabs(pattern) {
+async function findExcludedTabs(pattern) {
   const isPrefix = pattern.endsWith('*');
   const url = isPrefix ? pattern.slice(0, -1) : pattern;
   // the API can't query #hash and may return tabs with a #different-hash
   // so we need to get all tabs with the same base URL and then filter the results
   const hashlessUrl = pattern.split('#', 1)[0] + (isPrefix ? '*' : '');
-  return new Promise(resolve =>
-    chrome.tabs.query({url: hashlessUrl}, tabs => {
-      tabs = isPrefix
-        ? tabs.filter(t => t.url.startsWith(url))
-        : tabs.filter(t => t.url === url);
-      resolve(tabs);
-    }));
+  const tabs = await chrome.tabs.query({url: hashlessUrl});
+  return tabs.filter(t => isPrefix ? t.url.startsWith(url) : t.url === url);
 }
