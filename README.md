@@ -45,6 +45,19 @@ Fully reworked to reduce memory consumption and increase performance:
 * Customizable internal parameters
 * Import/export
 
+### New DOM event: `GM_AutoPagerizeNextPageDoc`
+
+Fired after downloading the new page so that other scripts may alter it like this:
+```js
+document.addEventListener('GM_AutoPagerizeNextPageDoc', e => {
+  const doc = e.relatedTarget;
+  const url = doc.URL;
+  for (const el of doc.querySelectorAll('img[alt][title]')) {
+    el.loading = 'lazy';
+  }
+});
+```
+
 ![options-dark](https://i.imgur.com/4GNQkYw.png)
 
 ### Permissions:

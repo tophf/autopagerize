@@ -132,6 +132,10 @@
     const url = requestURL;
     const doc = event.target.response;
     let elems, nextUrl;
+    document.dispatchEvent(new MouseEvent('GM_AutoPagerizeNextPageDoc', {
+      bubbles: true,
+      relatedTarget: doc,
+    }));
     try {
       for (const el of doc.getElementsByTagName('script'))
         el.inert = true;
