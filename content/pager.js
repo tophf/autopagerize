@@ -138,7 +138,7 @@
     }));
     try {
       for (const el of doc.getElementsByTagName('script'))
-        el.inert = true;
+        el.remove();
       elems = xpather.getElements(rule.pageElement, doc);
       nextUrl = getNextURL(rule.nextLink, doc, url);
     } catch (e) {
