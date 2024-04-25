@@ -64,10 +64,13 @@ document.addEventListener('GM_AutoPagerizeNextPageDoc', e => {
 
 * `wedata.net` - used to update the database of pagination rules from http://wedata.net/databases/AutoPagerize/items_all.json which is stripped of everything except XPath selectors for the page elements and RegExp for the page URL
 * `<all_urls>` - required to paginate while you browse according to the database of rules (technically, to find the "next page" and "page body" elements)
-* `webNavigation` - to schedule a pagination check when you navigate to a new URL
+* `alarms` - to schedule a database update
 * `contextMenus` - to add an "On/off" item to the context menu of the extension icon in the browser toolbar
+* `offscreen` - ManifestV3 way of handling DOM/XHR in the background script
+* `scripting` - to run the pagination script in the matching tabs
 * `storage` - to store the options of the extension
 * `tabs` - most notably to restart the paging functionality on extension update, also to notify the tabs that match the URL that you've just manually excluded in the popup
+* `webNavigation` - to schedule a pagination check when you navigate to a new URL
 
 ### How to limit the site permissions
 
