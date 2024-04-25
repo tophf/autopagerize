@@ -236,6 +236,11 @@ overrides:
       run: false
 
   - files:
+    - ui/popup-fail-detect.js
+    parserOptions:
+      sourceType: script
+
+  - files:
     - "siteinfo-updater.js"
     parserOptions:
       sourceType: script

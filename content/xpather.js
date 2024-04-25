@@ -115,6 +115,16 @@ window.xpather = {
         res = true;
         break;
 
+      case 'checkOrphan': {
+        const id = chrome.runtime.id;
+        const idCheck = id + ':terminated';
+        const orphanTerminated = () => (res = true);
+        addEventListener(idCheck, orphanTerminated);
+        dispatchEvent(new Event(id));
+        removeEventListener(idCheck, orphanTerminated);
+        break;
+      }
+
       case 'checkRules':
         res = self.xpather?.getMatchingRule;
         if (!res)
