@@ -39,8 +39,8 @@
     let v;
     if ((v = cfg.settings))
       loadSettings(v);
-    if ((v = cfg.rules) && !maybeInit(v, cfg.matchedRule))
-      setTimeout(maybeInit, requestInterval, v);
+    if ((v = cfg.launch) && (loadedURLs = {}, !maybeInit(...v)))
+      setTimeout(maybeInit, requestInterval, v[0]);
     if ((v = cfg.loadMore))
       return doLoadMore(v);
     if (cfg.terminate)
@@ -70,9 +70,7 @@
     if (!requestURL)
       return;
     let el = rule.insertBefore;
-    if (el)
-      insertPoint = xpather.getFirst(el);
-    if (!insertPoint) {
+    if (!(insertPoint = el && xpather.getFirst(el))) {
       el = xpather.getLast(rule.pageElement);
       if (!el) return;
       insertPoint = ensureNextSibling(el);

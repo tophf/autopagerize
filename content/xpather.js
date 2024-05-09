@@ -1,5 +1,6 @@
 'use strict';
 
+dispatchEvent(new Event(chrome.runtime.id));
 window.xpather = {
 
   MICROFORMAT: {
@@ -111,10 +112,6 @@ window.xpather = {
     let res;
     switch (cmd) {
 
-      case 'ping':
-        res = true;
-        break;
-
       case 'checkOrphan': {
         const id = chrome.runtime.id;
         const idCheck = id + ':terminated';
@@ -127,23 +124,8 @@ window.xpather = {
 
       case 'checkRules':
         res = self.xpather?.getMatchingRule;
-        if (!res)
-          break;
-        if ((res = res(arg))) {
-          clearTimeout(self.retryTimer);
-          delete self.retryTimer;
-          self.rules = arg;
-          self.matchedRule = res;
-          res = {
-            hasRule: true,
-            hasRun: typeof run === 'function',
-          };
-        } else {
-          self.retryTimer = setTimeout(() => {
-            if (typeof run !== 'function')
-              delete self.xpather;
-          }, arg2 * 1.5);
-        }
+        if ((xpather.launch = res && (res = res(arg)) && [arg, res]))
+          res = {run: typeof run === 'function'};
         break;
 
       case 'launch':
@@ -151,11 +133,9 @@ window.xpather = {
           break;
         if (!arg2)
           self.dispatchEvent(new Event(chrome.runtime.id));
-        // eslint-disable-next-line no-undef
-        run({rules, matchedRule, settings: arg});
+        run({[cmd]: xpather[cmd], settings: arg});
+        xpather[cmd] = null;
         self.launched = 1;
-        delete self.rules;
-        delete self.matchedRule;
         break;
 
       case 'launched':
@@ -173,4 +153,3 @@ window.xpather = {
 };
 
 chrome.runtime.onMessage.addListener(xpather.onmessage);
-dispatchEvent(new Event(chrome.runtime.id));

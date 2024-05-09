@@ -2,7 +2,7 @@
 
 import {compressToUTF16, decompressFromUTF16} from './lz-string.js';
 
-export const RETRY_TIMEOUT = 2000;
+export const RETRY_TIMEOUT = 2;
 export const NOP = () => {};
 export const inBG = new Proxy({}, {
   get: (_, action) => (...data) => chrome.runtime.sendMessage({action, data}),
@@ -107,7 +107,7 @@ export function arrayOrDummy(v) {
   return Array.isArray(v) ? v : [];
 }
 
-export function delay(seconds) {
+export function doDelay(seconds) {
   const pr = Promise.withResolvers();
   setTimeout(pr.resolve, seconds * 1000);
   return pr.promise;

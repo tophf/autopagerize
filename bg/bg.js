@@ -1,4 +1,4 @@
-import {delay, loadSettings, NOP, tabSend} from '/util/common.js';
+import {loadSettings, NOP, tabSend} from '/util/common.js';
 import {dbExec} from '/util/storage-idb.js';
 import {buildGenericRules, filterCache} from './bg-filter.js';
 import {setIcon} from './bg-icon.js';
@@ -38,12 +38,12 @@ export function getGenericRules() {
 export function toggleNav(on) {
   const args = on ? [{url: [{urlPrefix: 'http'}]}] : [];
   const fn = on ? 'addListener' : 'removeListener';
-  chrome.webNavigation.onDOMContentLoaded[fn](onDomLoaded, ...args);
+  chrome.webNavigation.onCommitted[fn](onCommitted, ...args);
   chrome.webNavigation.onHistoryStateUpdated[fn](onNavigation, ...args);
   chrome.webNavigation.onReferenceFragmentUpdated[fn](onNavigation, ...args);
 }
 
-function onDomLoaded(evt) {
+function onCommitted(evt) {
   return onNavigation(evt, true);
 }
 
@@ -69,7 +69,6 @@ export async function onNavigation(evt, first) {
   else if (await tabSend(tabId, ['launched', {terminate: true}]))
     setIcon({tabId, type: 'off'});
   lastAlive = performance.now();
-  await delay(Math.max(g.cfg.requestInterval / 2, .5));
   if (processing.get(tabId)?.ts === ts)
     processing.delete(tabId);
 }

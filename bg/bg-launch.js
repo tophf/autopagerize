@@ -1,4 +1,4 @@
-import {DEFAULTS, delay, getActiveTab, RETRY_TIMEOUT, tabSend} from '/util/common.js';
+import {DEFAULTS, doDelay, getActiveTab, RETRY_TIMEOUT, tabSend} from '/util/common.js';
 import {PROPS_TO_NOTIFY} from './bg-util.js';
 import {g} from './bg.js';
 
@@ -8,25 +8,23 @@ import {g} from './bg.js';
  */
 export async function launch(tabId, rules, {lastTry, first}) {
   let rr;
-  while (true) {
-    await delay(g.cfg.requestInterval);
-    if (!await tabSend(tabId, ['ping'])) {
-      // no deps while retrying means the tab got navigated away
-      // and already being handled in another event
-      if (lastTry === 'setTimeout')
-        return;
-      await execScript(tabId, 'xpather.js');
-    }
-    rr = await tabSend(tabId, ['checkRules', rules, !lastTry && RETRY_TIMEOUT * 1.5]) || {};
-    if (rr.hasRule || lastTry)
+  let delay = g.cfg.requestInterval;
+  if (first)
+    await execScript(tabId, 'xpather.js');
+  while (!(
+    await doDelay(delay),
+    rr = await tabSend(tabId, ['checkRules', rules])
+  )) {
+    if (rr === undefined) // navigated to another doc
+      return;
+    if (lastTry)
       break;
-    lastTry = 'setTimeout';
+    lastTry = true;
+    delay = RETRY_TIMEOUT;
   }
-
-  if (!rr.hasRule || lastTry === 'genericRules')
-    return rr.hasRule;
-
-  if (!rr.hasRun)
+  if (!rr || lastTry === 'genericRules')
+    return rr;
+  if (!rr?.run)
     await execScript(tabId, 'pager.js');
   const ss = {};
   for (const name of PROPS_TO_NOTIFY)
