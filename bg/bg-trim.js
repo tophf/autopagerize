@@ -26,7 +26,8 @@ export async function trimUrlCache(oldRules, newRules, {main = true} = {}) {
 }
 
 export function convertToMap(obj) {
-  return obj instanceof Map ? obj : new Map(arrayOrDummy(obj).map(x => [x.id, x]));
+  return obj instanceof Map ? obj
+    : new Map(arrayOrDummy(obj).map((x, i) => [-i - 1, x]));
 }
 
 function someUrlChanged() {
