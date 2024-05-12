@@ -14,6 +14,7 @@
     /** @type {String} */
     styleError: '',
   };
+  const filters = new Set();
   const orphanMessageId = chrome.runtime.id;
   /** @type {Node|HTMLElement} */
   let insertPoint;
@@ -39,6 +40,8 @@
     let v;
     if ((v = cfg.settings))
       loadSettings(v);
+    if ((v = cfg.filter))
+      filters.add(v);
     if ((v = cfg.launch) && (loadedURLs = {}, !maybeInit(...v)))
       setTimeout(maybeInit, requestInterval, v[0]);
     if ((v = cfg.loadMore))
@@ -129,6 +132,8 @@
   function addPage(event) {
     const url = requestURL;
     const doc = event.target.response;
+    // SHOULD PRECEDE stripping of scripts since a filter may need to process one
+    for (const f of filters) f(doc, url);
     let elems, nextUrl;
     document.dispatchEvent(new MouseEvent('GM_AutoPagerizeNextPageDoc', {
       bubbles: true,

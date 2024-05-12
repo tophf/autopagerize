@@ -84,7 +84,7 @@ async function maybeLaunch(tabId, url, first) {
     rules.push(...t.then ? await t : t);
   }
   if (rules.length)
-    await launch(tabId, rules, {first});
+    await launch(tabId, rules, {first, url});
 }
 
 function alivePulse() {
