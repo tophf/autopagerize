@@ -1,15 +1,10 @@
 import {offscreen} from './bg-offscreen.js';
-
-export {
-  updateSiteinfo,
-};
-
 import {arrayOrDummy} from '/util/common.js';
 import {dbExec} from '/util/storage-idb.js';
 import {buildGenericRules, buildSiteinfo} from './bg-filter.js';
 import {trimUrlCache} from './bg-trim.js';
 import {calcRuleKey, ruleKeyToUrl} from './bg-util.js';
-import {cache, cacheKeys} from './bg.js';
+import {cache, cacheKeys, keepAlive} from './bg.js';
 
 const DATA_URL = 'http://wedata.net/databases/AutoPagerize/items_all.json';
 const KNOWN_KEYS = [
@@ -19,17 +14,19 @@ const KNOWN_KEYS = [
   'pageElement',
 ];
 
-async function updateSiteinfo(portName) {
+export async function updateSiteinfo(portName) {
   try {
+    keepAlive(true);
+    const opts = {headers: {'Cache-Control': 'no-cache'}};
     /** @type {Map[]} */
     const [old, fresh] = await Promise.all([
       getCacheIndexedById(),
-      offscreen.xhr(DATA_URL, {
-        headers: {'Cache-Control': 'no-cache'},
-        timeout: 60e3,
-        portName,
-      }).then(sanitize),
+      (portName
+        ? offscreen.xhr(DATA_URL, {...opts, portName, timeout: /*same as fetch*/ 300e3})
+        : fetch(DATA_URL, {...opts}).then(r => r.text())
+      ).then(sanitize),
     ]);
+    keepAlive();
     if (!fresh.size)
       return 0;
     await removeObsoleteRules(old, fresh);

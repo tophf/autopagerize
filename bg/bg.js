@@ -21,8 +21,7 @@ toggleNav(true);
 
 g.cfg.then(ss => {
   g.cfg = ss;
-  if (ss.unloadAfter)
-    alive = setInterval(alivePulse, 25e3);
+  keepAlive();
   if (!ss.enabled)
     toggleNav(false);
 });
@@ -85,6 +84,12 @@ async function maybeLaunch(tabId, url, first) {
   }
   if (rules.length)
     await launch(tabId, rules, {first, url});
+}
+
+export function keepAlive(state = g.cfg.unloadAfter) {
+  alive = state
+    ? alive || setInterval(alivePulse, 25e3)
+    : alive && clearInterval(alive);
 }
 
 function alivePulse() {

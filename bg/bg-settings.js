@@ -2,7 +2,7 @@ import {DEFAULTS, ignoreLastError, getLZ} from '/util/common.js';
 import {trimUrlCache} from './bg-trim.js';
 import {PROPS_TO_NOTIFY, queryTabs} from './bg-util.js';
 import {offscreen} from './bg-offscreen.js';
-import {g} from './bg.js';
+import {g, keepAlive} from './bg.js';
 
 export async function writeSettings(ss) {
   const all = g.cfg instanceof Promise ? await g.cfg : g.cfg;
@@ -22,6 +22,7 @@ export async function writeSettings(ss) {
   localStorageMirror(toWrite, 'darkTheme');
   if (toNotify)
     notify(all);
+  keepAlive();
 }
 
 async function localStorageMirror(ss, key) {

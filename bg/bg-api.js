@@ -32,16 +32,15 @@ const api = {
   writeSettings,
 };
 
-chrome.contextMenus.onClicked.addListener(onChromeMenu);
-chrome.commands.onCommand.addListener(onChromeCommand);
-chrome.runtime.onMessage.addListener(onRuntimeMessage);
+chrome.alarms.onAlarm.addListener(() => {
+  updateSiteinfo('');
+});
 
-
-function onChromeMenu(info) {
+chrome.contextMenus.onClicked.addListener(info => {
   switchGlobalState(info.checked);
-}
+});
 
-async function onChromeCommand(cmd) {
+chrome.commands.onCommand.addListener(async cmd => {
   if (cmd === 'onOff') {
     await g.cfg;
     return switchGlobalState(!g.cfg.enabled);
@@ -49,9 +48,9 @@ async function onChromeCommand(cmd) {
   if (cmd.startsWith('loadMore')) {
     return tabSend((await getActiveTab()).id, ['run', {loadMore: +cmd.slice(-2)}]);
   }
-}
+});
 
-function onRuntimeMessage(msg, sender, sendResponse) {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   const fn = api[msg.action];
   if (!fn)
     return;
@@ -62,7 +61,7 @@ function onRuntimeMessage(msg, sender, sendResponse) {
   }
   if (result !== undefined)
     sendResponse(result);
-}
+});
 
 chrome.runtime.onInstalled.addListener(async info => {
   if (info.reason !== 'update' && info.reason !== 'install')

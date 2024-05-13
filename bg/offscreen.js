@@ -20,13 +20,13 @@ const commands = {
   },
   xhr(url, opts = {}) {
     return new Promise((resolve, reject) => {
-      const {headers, portName} = opts;
+      const {headers, portName, ...xhrOpts} = opts;
       const xhr = new XMLHttpRequest();
       xhr.open('GET', url);
       if (headers)
         for (const h in headers)
           xhr.setRequestHeader(h, headers[h]);
-      Object.assign(xhr, opts);
+      Object.assign(xhr, xhrOpts);
       xhr.onload = () => resolve(xhr.response);
       xhr.onerror = reject;
       xhr.ontimeout = reject;
