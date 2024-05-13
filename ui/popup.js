@@ -7,8 +7,12 @@ import {i18n} from '/util/locale.js';
 
 chrome.tabs.query({active: true, currentWindow: true}, tabs => {
   tab = tabs[0];
-  if (window.failedPage && $('#failure'))
+  if (location.search) {
     renderFailure();
+  } else {
+    import('./popup-load-more.js');
+    import('./popup-exclude.js');
+  }
 });
 
 loadSettings().then(ss => {
@@ -30,12 +34,6 @@ Object.assign($('#openOptions'), {
     e.preventDefault();
   },
 });
-if (window.failedPage && tab.url) {
-  renderFailure();
-} else {
-  import('./popup-load-more.js');
-  import('./popup-exclude.js');
-}
 
 function renderStatus() {
   const enabled = $('#status').checked;
