@@ -96,6 +96,7 @@ export function getLZ(key, val, write) {
 
 export function isGenericUrl(url) {
   return url === '^https?://.' ||
+         url === '^https?://..' ||
          url === '^https?://.+';
 }
 
