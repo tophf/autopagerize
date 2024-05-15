@@ -14,6 +14,12 @@ const KNOWN_KEYS = [
   'pageElement',
 ];
 
+chrome.alarms.get('update', a => {
+  const p = 24 * 60; // 1 day
+  if (!a || a.periodInMinutes !== p)
+    chrome.alarms.create('update', {periodInMinutes: p, when: Date.now() + 60e3});
+});
+
 export async function updateSiteinfo(portName) {
   try {
     keepAlive(true);

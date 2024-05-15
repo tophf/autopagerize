@@ -67,12 +67,6 @@ chrome.runtime.onInstalled.addListener(async info => {
   if (info.reason !== 'update' && info.reason !== 'install')
     return;
 
-  chrome.alarms.get('update', a => {
-    const p = 24 * 60; // 1 day
-    if (!a || a.periodInMinutes !== p)
-      chrome.alarms.create('update', {periodInMinutes: p});
-  });
-
   chrome.contextMenus.create({
     id: 'onOff',
     type: 'checkbox',
