@@ -4,13 +4,12 @@
 
 Fully reworked to reduce memory consumption and increase performance:
 
-* inactivity timeout of the background script is configurable, so you can choose a shorter timeout to conserve memory (~35MB) or a longer timeout to conserve CPU due to a faster checking of URL regexps (from half a second right after start to just a few milliseconds in subsequent checks).
+* inactivity timeout of the background script is configurable, so you can choose a shorter timeout to conserve memory (~30MB) or a longer timeout to conserve CPU due to a faster checking of URL regexps (from half a second right after start to just a few milliseconds in subsequent checks).
 * visited URL's rules are cached in IndexedDB to avoid re-checking thousands of rules
 * simple URL regexps are converted to the much faster literal string checks
-* the data is stored as-is in IndexedDB
+* the data is stored in IndexedDB
 * the content script is added to a web page only if its URL has a matching rule
-* the content script unregisters all of its listeners when there are no more pages to load according to the paging rules - and thus it gets removed by the garbage collector (several megabytes per each tab)
-* the content script is unloaded when the extension is toggled via the On/Off command
+* the content script unregisters all of its listeners to free up memory, when there are no more pages to load or the extension is toggled off in the popup or via a hotkey
 * simple one-time messaging is used to avoid persisting the ports for all tabs
 
 ### Differences to the original:
