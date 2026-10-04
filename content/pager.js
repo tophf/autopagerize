@@ -120,12 +120,13 @@
 
   /** @this {XMLHttpRequest} */
   function onRequestLoad(e) {
-    const ok = this.status < 400 ? addPage(this) : onRequestError(e);
+    const ok = this.status < 400 ? addPage(this) : onRequestError.call(this, e);
     onPageProcessed?.(ok);
   }
 
+  /** @this {XMLHttpRequest} */
   function onRequestError(e) {
-    statusShow({error: e.message || e});
+    statusShow({error: e.message || this.status && `HTTP Error ${this.status}` `${e}`});
     onPageProcessed?.(false);
   }
 
