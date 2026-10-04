@@ -18,7 +18,6 @@
   const orphanMessageId = chrome.runtime.id;
   /** @type {Node|HTMLElement} */
   let insertPoint;
-  let lastRequestURL = '';
   /** @type {Record<String>} */
   let loadedURLs = {};
   /** @type {function(status)} */
@@ -95,7 +94,7 @@
     else if (requestTimer)
       return;
     const url = requestURL;
-    if (!url || url === lastRequestURL || loadedURLs[url])
+    if (!url || loadedURLs[url])
       return;
     if (!url.startsWith(location.origin + '/')) {
       statusShow({error: chrome.i18n.getMessage('errorOrigin')});
@@ -107,31 +106,36 @@
       return;
     }
     requestTime = performance.now();
-    lastRequestURL = url;
     statusShow({loading: true});
 
     const xhr = new XMLHttpRequest();
     xhr.open('GET', url);
     xhr.responseType = 'document';
     xhr.timeout = 60e3;
-    xhr.onload = e => {
-      const ok = addPage(e, force);
-      onPageProcessed?.(ok);
-    };
-    xhr.onerror = xhr.ontimeout = e => {
-      statusShow({error: e.message || e});
-      onPageProcessed?.(false);
-    };
+    xhr.onload = onRequestLoad;
+    xhr.onerror = xhr.ontimeout = onRequestError;
     xhr.send();
     return true;
   }
 
+  /** @this {XMLHttpRequest} */
+  function onRequestLoad(e) {
+    const ok = this.status < 400 ? addPage(this) : onRequestError(e);
+    onPageProcessed?.(ok);
+  }
+
+  function onRequestError(e) {
+    statusShow({error: e.message || e});
+    onPageProcessed?.(false);
+  }
+
   /**
+   * @param {XMLHttpRequest} xhr
    * @return boolean - true if there are more pages
    */
-  function addPage(event) {
+  function addPage(xhr) {
     const url = requestURL;
-    const doc = event.target.response;
+    const doc = xhr.response;
     // SHOULD PRECEDE stripping of scripts since a filter may need to process one
     for (const f of filters) f(doc, url);
     let elems, nextUrl;
