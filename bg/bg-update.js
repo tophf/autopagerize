@@ -6,7 +6,8 @@ import {trimUrlCache} from './bg-trim.js';
 import {calcRuleKey, ruleKeyToUrl} from './bg-util.js';
 import {cache, cacheKeys, keepAlive} from './bg.js';
 
-const DATA_URL = 'http://wedata.net/databases/AutoPagerize/items_all.json';
+// Use HTTPS to prevent man-in-the-middle tampering of fetched pagination rules (CWE-319)
+const DATA_URL = 'https://wedata.net/databases/AutoPagerize/items_all.json';
 const KNOWN_KEYS = [
   'url',
   'nextLink',
