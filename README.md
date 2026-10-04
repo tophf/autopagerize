@@ -9,7 +9,7 @@ Fully reworked to reduce memory consumption and increase performance:
 * simple URL regexps are converted to the much faster literal string checks
 * the data is stored in IndexedDB
 * the content script is added to a web page only if its URL has a matching rule
-* the content script unregisters all of its listeners to free up memory, when there are no more pages to load or the extension is toggled off in the popup or via a hotkey
+* the content script unregisters all of its listeners to free up memory, when the extension is toggled off in the popup or via a hotkey
 * simple one-time messaging is used to avoid persisting the ports for all tabs
 
 ### Differences to the original:

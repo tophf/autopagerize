@@ -158,11 +158,7 @@
     requestURL = nextUrl;
     statusShow({loading: false});
     document.dispatchEvent(new Event('GM_AutoPagerizeNextPageLoaded', {bubbles: true}));
-    if (!nextUrl) {
-      terminate();
-    } else {
-      return true;
-    }
+    return !!nextUrl;
   }
 
   function addPageElements(url, elems) {
