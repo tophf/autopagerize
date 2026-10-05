@@ -677,7 +677,7 @@
     "url": "^http://labs\\.ceek\\.jp/hbnews/.",
     "nextLink": "//h3[@class=\"main-navi\"]/a[last()]",
     "insertBefore": "//h3[@class=\"main-navi\"]",
-    "pageElement": "//div[@class=\"entry\"][position()!=1]",
+    "pageElement": "//div[@class=\"entry\"]",
     "id": 834
   },
   {
@@ -1176,7 +1176,7 @@
   {
     "url": "^https?://(www\\.)?toyokeizai\\.net/articles/",
     "nextLink": "//*[@class=\"next\"]/a",
-    "pageElement": "id(\"article-body-inner\")/*",
+    "pageElement": "//div[contains(concat(' ', normalize-space(@class), ' '), ' article-body-inner ')]|id('article-body-inner')",
     "id": 1857
   },
   {
@@ -1910,7 +1910,7 @@
   {
     "url": "^https://(www\\.)?pcmag\\.com/.",
     "nextLink": "//a[@rel='next']",
-    "pageElement": "//div[@class='w-full']",
+    "pageElement": "//ul[contains(concat(' ', @class, ' '), ' pagination ')]/preceding-sibling::div[@class='w-full']",
     "id": 2665
   },
   {
@@ -2281,7 +2281,7 @@
   },
   {
     "url": "^https?://(?:jbpress|wedge)\\.ismedia\\.jp/articles/",
-    "nextLink": "//*[contains(@class,'next')]/descendant-or-self::a",
+    "nextLink": "//*[contains(@class,'next')]/descendant-or-self::a[contains(@href,'page=')]",
     "pageElement": "//div[contains(@class, 'article-body')][./*][not(//div[contains(@class,'skin-premium')])]",
     "id": 25843
   },
@@ -2407,9 +2407,9 @@
     "id": 26587
   },
   {
-    "url": "^https?://(?:www\\.)?photolibrary\\.jp/search/",
+    "url": "^https?://(?:www\\.)?photolibrary\\.jp/",
     "nextLink": "//span[@class='next']//a",
-    "pageElement": "//ul[@class='pList pListLarge']/li[.//@class='photo']",
+    "pageElement": "//ul[@class='pList pListLarge']/li[.//*[contains(@class, 'photo')]]",
     "id": 26590
   },
   {
@@ -5301,9 +5301,9 @@
     "id": 32962
   },
   {
-    "url": "^https://.*filehippo\\.com/.",
+    "url": "^https://(\\w+\\.)?filehippo\\.com/.",
     "nextLink": "//link[@rel='next']|//a[@class='next']",
-    "pageElement": "//ul[@class='list-programs mb-m']/li|//div[contains(concat(' ', @class, ' '), ' post-item ')]",
+    "pageElement": "//ul[@class='list-programs mb-m']/li|//div[contains(concat(' ', @class, ' '), ' post-item ') and contains(@class, 'type-post')]",
     "id": 32964
   },
   {
@@ -8455,8 +8455,8 @@
   },
   {
     "url": "^https?://(?:www\\.)?hb-nippon\\.com/",
-    "nextLink": "//li[@class='current']/following-sibling::li[1]/a",
-    "pageElement": "//div[@class='article_wrap']/p[1][following-sibling::div[@class='para_title_blue' or @class='device_box']]/following-sibling::*|//ul[@class='list']/li|//dl[@class='newslist_sky']/*|//div[@class='article_wrap'][div[@class='para_title_blue'][not(preceding-sibling::p)]]/*|id('topics')/table//tbody/tr",
+    "nextLink": "//span[contains(@class, 'current')][number()>0]/following-sibling::a[1][parent::p[@class='post-nav-links'] or not(ancestor::article)]",
+    "pageElement": "//p[@class='post-nav-links']/preceding-sibling::*[preceding-sibling::div[contains(@class, 'share_save_container')]]|\r\n//ul[contains(concat(' ', @class, ' '), ' mvp-main-blog-wrap ')]",
     "id": 58377
   },
   {
@@ -8996,9 +8996,9 @@
     "id": 62559
   },
   {
-    "url": "^https://(www\\.)?chunichi\\.co\\.jp/(chuspo|tags)/",
+    "url": "^https://www\\.chunichi\\.co\\.jp/",
     "nextLink": "descendant::li[contains(@class,\"is-active\")][1]/following-sibling::li[1]/a",
-    "pageElement": "//main//div[@class=\"l-artlst001\"]|//main//*[./div[@class=\"wrp lv2\"]][.//div[@class=\"thumb\"] and not(.//ul)]",
+    "pageElement": "//main//div[@class=\"cmp-thmb001 pt-20 pb-20\" or @class=\"l-artlst001\"]",
     "id": 62561
   },
   {
@@ -9029,7 +9029,7 @@
     "url": "^https?://togetter\\.com/li/",
     "nextLink": "//link[@rel='next']",
     "insertBefore": "id('hidden_tweet_box')/following-sibling::node()[1]",
-    "pageElement": "//div[contains(concat(' ',@class,' '),' tweet_box ')]/div[not(@id)]",
+    "pageElement": "//section[contains(concat(' ',@class,' '),' tweet_box ')]/div[not(@id)]",
     "id": 62666
   },
   {
@@ -11842,9 +11842,9 @@
     "id": 74912
   },
   {
-    "url": "^https?://.*(?:bollywoodlife|deadline|footwearnews)\\.com",
+    "url": "^https?://.*(?:bollywoodlife|deadline)\\.com",
     "nextLink": "descendant::a[contains(@class,'next')][last()]|//div[@class='nav-previous']/a|//div[contains(@class,'more-stories')]/a[contains(@class,'a-icon-right-arrow')]",
-    "pageElement": "//div[contains(@class,'a-archive-grid__story')]|//section[@class='pmc-u-margin-tb-1']//*[div[contains(@class,'o-card')]][1]|//div[@class='story_list_blk']/*|//li[@class='l-list__item'][article]|id('main')/article[@id]",
+    "pageElement": "//div[contains(@class,'a-archive-grid__story')]|//section[@class='pmc-u-margin-tb-1']//*[div[contains(@class,'o-card')]][1]|//div[@class='story_list_blk']/*|id('main')/article[@id]",
     "id": 74923
   },
   {
@@ -12052,7 +12052,7 @@
     "id": 74999
   },
   {
-    "url": "^https?://www\\.huffingtonpost\\.jp/",
+    "url": "^https?://www\\.huffingtonpost(\\.co)?\\.\\w{2}/",
     "nextLink": "//a[@rel='next']",
     "pageElement": "//div[starts-with(@id, 'zone-twilight')]//div[@class='zone__content']",
     "id": 75006
@@ -14673,7 +14673,7 @@
   {
     "url": "^https://speakerdeck\\.com/.+",
     "nextLink": "//a[@rel='next']",
-    "pageElement": "//div[@class=\"sd-main\"]//*[./a[@title]]",
+    "pageElement": "//div[@class=\"sd-main\"]//*[./div/a[@title]]",
     "id": 77646
   },
   {
@@ -14974,7 +14974,7 @@
   },
   {
     "url": "^https?://syosetu\\.com/",
-    "nextLink": "//div[@class='c-pager']/span[contains(concat(' ',@class,' '),' is-current ')]/following-sibling::a",
+    "nextLink": "//div[contains(concat(' ',@class,' '),' c-up-pager ')]//span[contains(concat(' ',@class,' '),' is-current ')]/following-sibling::a",
     "pageElement": "//ul[contains(concat(' ',@class,' '),' c-up-panel__list ')]/li",
     "id": 77750
   },
@@ -15908,7 +15908,7 @@
   {
     "url": "^https://thehackernews\\.com/",
     "nextLink": "id('blog-pager-older-link')/a",
-    "pageElement": "//article",
+    "pageElement": "id('Blog1')//div[contains(concat(' ', @class, ' '), ' body-post ')]",
     "id": 80969
   },
   {
@@ -17112,7 +17112,7 @@
   {
     "url": "^https?://kinmaweb\\.jp/archives/",
     "nextLink": "//link[@rel=\"next\"]",
-    "pageElement": "//article/section/div[2]",
+    "pageElement": "//article/section/div[contains(@class, 'kijiwrap')]",
     "id": 81579
   },
   {
@@ -17144,7 +17144,7 @@
   {
     "url": "^https://www\\.ecosia\\.org/search\\?",
     "nextLink": "//a[@data-test-id='next-button']",
-    "insertBefore": "//div[@class='pagination']",
+    "insertBefore": "//div[contains(concat(' ', @class, ' '), ' mainline__footer ')]",
     "pageElement": "//section[@data-test-id='mainline']/div[.//article]",
     "id": 81586
   },
@@ -18167,9 +18167,9 @@
     "id": 82011
   },
   {
-    "url": "^https://(www\\.)?alphapolis\\.co\\.jp/novel/*",
-    "nextLink": "//div[id(\"main\")]/div[contains(@class,\"episode-navigation\")][2]/a[contains(@class,\"next\")]",
-    "pageElement": "//div[id(\"main\")]/div[contains(@class,\"novel-body\")]",
+    "url": "^https://(www\\.)?alphapolis\\.co\\.jp/novel/\\d+",
+    "nextLink": "//a[contains(concat(' ', @class, ' '), ' next ')]",
+    "pageElement": "id('main')/div[contains(@class, 'novel-body')]",
     "id": 82017
   },
   {
@@ -18191,12 +18191,6 @@
     "insertBefore": "",
     "pageElement": "//section[@class='hub-content-feed']/article",
     "id": 82020
-  },
-  {
-    "url": "^https://2020\\.yahoo\\.co\\.jp/column/",
-    "nextLink": "//a[span/text()=\"次へ\"]",
-    "pageElement": "//section[@class=\"article__body\"]",
-    "id": 82021
   },
   {
     "url": "^https://m\\.nvshens\\.com/g/(.*)/",
@@ -18940,9 +18934,8 @@
     "id": 82189
   },
   {
-    "url": "^https://gendai\\.ismedia\\.jp/articles/-/",
+    "url": "^https://gendai\\.media/articles/-/",
     "nextLink": "//div[@class=\"nextpageTitle\"]/a",
-    "insertBefore": "",
     "pageElement": "//div[@class=\"articleBody\"]",
     "id": 82190
   },
@@ -20945,7 +20938,7 @@
     "id": 85606
   },
   {
-    "url": "^https://www.chunichi.co.jp/article/.+?",
+    "url": "^https://www\\.chunichi\\.co\\.jp/article/\\d+",
     "nextLink": "//div[@class='pager']//a[@class='btn' and span/i[contains(concat(' ', @class, ' '), ' fa-arrow-right ')]]",
     "insertBefore": "id('entry')/div[div[@class='pager']]",
     "pageElement": "id('entry')/div[(@class='block' and not(.//p[@class='hdg'])) or .//div[@class='thumb']]",
@@ -21455,8 +21448,7 @@
   {
     "url": "^https://comicvine\\.gamespot\\.com/",
     "nextLink": "//a[@title=\"Next page\"]",
-    "insertBefore": "",
-    "pageElement": "//ul[contains(@class,\"editorial\") and contains(@class,\"compact\")]",
+    "pageElement": "id('river')//*[contains(concat(' ', @class, ' '), ' editorial ')]",
     "id": 85782
   },
   {
@@ -21707,15 +21699,14 @@
     "id": 85822
   },
   {
-    "url": "^https?://www\\.racedepartment\\.com/",
+    "url": "^https?://www\\.(racedepartment\\.com|overtake\\.gg)/",
     "nextLink": "//link[@rel=\"next\"]",
     "pageElement": "descendant::*[./*[@data-author]][1]/*[@data-author]",
     "id": 85823
   },
   {
-    "url": "^https?://www\\.racedepartment\\.com/threads/?",
+    "url": "^https?://www\\.(racedepartment\\.com|overtake\\.gg)/threads/?",
     "nextLink": "//link[@rel=\"next\"]",
-    "insertBefore": "",
     "pageElement": "//div[@class=\"p-body-pageContent\"]//article[contains(concat(\" \", normalize-space(@class), \" \"), \" message \")]",
     "id": 85824
   },
@@ -23016,8 +23007,8 @@
   },
   {
     "url": "^https://young-machine\\.com/",
-    "nextLink": "//li[contains(@class, 'current')][number()>0]/following-sibling::li[1]/a",
-    "pageElement": "(//section[@class='content']|//div[@class='fc content selector'])[last()]/*[not((.|preceding-sibling::div)[contains(@class, 'pagination')])]|id('wym_custom_archive')",
+    "nextLink": "//li[contains(@class, 'current')][number()>0]/following-sibling::li[1]/a|//div[@class='wym_front_more']/a",
+    "pageElement": "(//section[@class='content']|//div[@class='fc content selector'])[last()]/*[not(preceding-sibling::div[.//li[contains(@class, 'pagePager__item-current')]])]|id('wym_custom_archive')",
     "id": 86110
   },
   {
@@ -23406,8 +23397,7 @@
   {
     "url": "^https://monomax\\.jp/archives/\\d+",
     "nextLink": "//p[@class='next-page-link']/a",
-    "insertBefore": "",
-    "pageElement": "//div[@class='pagesprit01']/preceding-sibling::*|id('writer01')",
+    "pageElement": "//div[@class='pagesprit01']/preceding-sibling::*",
     "id": 86211
   },
   {
@@ -23469,5 +23459,92 @@
     "insertBefore": "//div[@class='width-container']/node()[last()]",
     "pageElement": "//div[@class='book-product-wrapper']",
     "id": 86223
+  },
+  {
+    "url": "^https://www\\.fnn\\.jp/articles/-/\\d",
+    "nextLink": "//ul[@class='m-pager-list']/li[./span]/following-sibling::li/a",
+    "pageElement": "//div[@class=\"m-pager\"]/preceding-sibling::*[./preceding-sibling::*]",
+    "id": 86226
+  },
+  {
+    "url": "^https://jp\\.cryptonews\\.com/",
+    "nextLink": "//span[@aria-current='page'][number()>0]/following-sibling::a[1]",
+    "insertBefore": "",
+    "pageElement": "id('load_more_target')",
+    "id": 86227
+  },
+  {
+    "url": "^https://filmarks\\.com/users/",
+    "nextLink": "//a[@rel='next']",
+    "pageElement": "//div[@class='p-content']/div[.//img]",
+    "id": 86228
+  },
+  {
+    "url": "^https://shueisha\\.online/articles/",
+    "nextLink": "//a[contains(concat(' ', normalize-space(@class), ' '), ' --next ')]",
+    "insertBefore": "",
+    "pageElement": "//div[contains(concat(' ', normalize-space(@class), ' '), ' article-body ')]|//div[contains(concat(' ', normalize-space(@class), ' '), ' gallery-image ')]",
+    "id": 86231
+  },
+  {
+    "url": "^https://xxxclub\\.(cc|to)/",
+    "nextLink": "//a[contains(@class, 'active')][number()>0]/following-sibling::a[1]",
+    "insertBefore": "",
+    "pageElement": "//div[contains(concat(' ', @class, ' '), ' browsetableinside ')]/ul",
+    "id": 86233
+  },
+  {
+    "url": "^https://comic-boost\\.com/",
+    "nextLink": "//li[contains(concat(' ',@class,' '),' to-next ')]/a",
+    "insertBefore": "",
+    "pageElement": "//div[contains(concat(' ',@class,' '),' layout-book-section ')]",
+    "id": 86234
+  },
+  {
+    "url": "^https://footwearnews\\.com/",
+    "nextLink": "descendant::a[contains(@class,'next')][last()]",
+    "insertBefore": "",
+    "pageElement": "//div[@class='c-arrows']/preceding-sibling::ul[@class='l-list']",
+    "id": 86235
+  },
+  {
+    "url": "^https://www\\.cdjournal\\.com/",
+    "nextLink": "//img[@alt='next']/parent::a",
+    "insertBefore": "",
+    "pageElement": "id('NWrelart:Body release_list')[last()]/*",
+    "id": 86236
+  },
+  {
+    "url": "^https://www\\.creativeuncut\\.com/",
+    "nextLink": "//a[img[@src='imgs/next-page.jpg']]",
+    "insertBefore": "",
+    "pageElement": "//div[@class='glry']",
+    "id": 86237
+  },
+  {
+    "url": "^https://missav\\.com/",
+    "nextLink": "//span[@class='relative z-0 inline-flex shadow-sm']/a[last()][@rel='next']",
+    "pageElement": "//div[@class='grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5']",
+    "id": 86239
+  },
+  {
+    "url": "^https://www.minnano-av\\.com/",
+    "nextLink": "//div[@class='pagination']/b/a[text()='次へ']\r\n",
+    "pageElement": "//div[@class='act-video-list']",
+    "id": 86240
+  },
+  {
+    "url": "^https://mirai-dora-world-online\\.com/",
+    "nextLink": "//div[@class='sysPagination']/ul/li[last()]/a",
+    "insertBefore": "",
+    "pageElement": "//div[@class='sysItemList  aa']/ul",
+    "id": 86242
+  },
+  {
+    "url": "^https://www\\.huffpost\\.com/",
+    "nextLink": "//a[@rel='next']",
+    "insertBefore": "",
+    "pageElement": "//div[starts-with(@id, 'zone-twilight')]//div[@class='zone__content']",
+    "id": 86244
   }
 ]
