@@ -100,7 +100,7 @@
       statusShow({error: chrome.i18n.getMessage('errorOrigin')});
       return;
     }
-    const remain = requestInterval - (performance.now() - requestTime);
+    const remain = requestInterval - (requestTime ? performance.now() - requestTime : 0);
     if (!force && remain > 0) {
       requestTimer = setTimeout(request, remain, {timer: true});
       return;
